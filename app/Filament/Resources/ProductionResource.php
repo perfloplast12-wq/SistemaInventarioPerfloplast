@@ -124,7 +124,7 @@ class ProductionResource extends Resource
                                         return \App\Models\Color::where('is_active', true)
                                             ->where('name', $name)
                                             ->get()
-                                            ->mapWithKeys(fn ($c) => [$c->id => $c->variant ?: 'Estándar']);
+                                            ->mapWithKeys(fn ($c) => [$c->id => ($c->variant ?: 'Estándar') . ($c->code ? " — {$c->code}" : '')]);
                                     })
                                     ->required()
                                     ->searchable()
@@ -152,10 +152,12 @@ class ProductionResource extends Resource
                                     ->preload(),
 
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad Producida')
+                                    ->label('Cantidad de Sacos Producidos')
                                     ->numeric()
+                                    ->integer()
                                     ->required()
-                                    ->minValue(0.001)
+                                    ->minValue(1)
+                                    ->step(1)
                                     ->live()
                                     ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
                                         $productId = $get('product_id');
@@ -200,10 +202,12 @@ class ProductionResource extends Resource
                                     ->preload(),
                                 
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Cant. Consumo')
+                                    ->label('Cantidad Consumo (Sacos)')
                                     ->numeric()
+                                    ->integer()
                                     ->required()
-                                    ->minValue(0.001),
+                                    ->minValue(1)
+                                    ->step(1),
                             ])
                             ->columns(2)
                             ->addActionLabel('Añadir Materia Prima')
@@ -264,8 +268,8 @@ class ProductionResource extends Resource
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cantidad')
-                    ->numeric()
+                    ->label('Sacos')
+                    ->numeric(decimalPlaces: 0)
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('status')

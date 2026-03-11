@@ -112,8 +112,15 @@ class OrderResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->reactive()
-                                    ->afterStateUpdated(fn ($state, Forms\Set $set) => 
-                                        $set('unit_price', Product::find($state)?->sale_price ?? 0)),
+                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                        $set('unit_price', Product::find($state)?->sale_price ?? 0);
+                                        $set('color_id', null);
+                                    }),
+                                Forms\Components\Select::make('color_id')
+                                    ->label('Color')
+                                    ->relationship('color', 'name')
+                                    ->searchable()
+                                    ->preload(),
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Cantidad')
                                     ->numeric()
@@ -140,7 +147,9 @@ class OrderResource extends Resource
                             ->columns(4)
                             ->itemLabel(fn (array $state): ?string => 
                                 ($state['product_id'] ?? null) 
-                                ? Product::find($state['product_id'])?->name . ' (' . $state['quantity'] . ')' 
+                                ? Product::find($state['product_id'])?->name . 
+                                  (($state['color_id'] ?? null) ? ' (' . \App\Models\Color::find($state['color_id'])?->name . ')' : '') .
+                                  ' (' . ($state['quantity'] ?? 0) . ')' 
                                 : null),
                     ]),
             ]);

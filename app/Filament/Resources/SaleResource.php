@@ -109,16 +109,20 @@ class SaleResource extends Resource
                                                     ->label('Producto')
                                                     ->options(function (Get $get) {
                                                         $truckId = $get('../../from_truck_id');
+                                                        
+                                                        if (!$truckId) return [];
+
                                                         $products = \App\Models\Product::where('type', 'finished_product')
                                                             ->where('is_active', true)
+                                                            ->whereHas('stocks', fn($q) => $q->where('truck_id', $truckId)->where('quantity', '>', 0))
                                                             ->get();
                                                             
                                                         return $products->mapWithKeys(function ($p) use ($truckId) {
                                                             $stock = $p->stocks()
-                                                                ->when($truckId, fn($q) => $q->where('truck_id', $truckId))
+                                                                ->where('truck_id', $truckId)
                                                                 ->sum('quantity');
                                                                 
-                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " total disp.)</span>"];
+                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " disp.)</span>"];
                                                         })->toArray();
                                                     })
                                                     ->allowHtml()
@@ -150,27 +154,30 @@ class SaleResource extends Resource
                                                         $productId = $get('product_id');
                                                         $truckId = $get('../../from_truck_id');
                                                         
-                                                        if (!$productId) return [];
+                                                        if (!$productId || !$truckId) return [];
 
                                                         $product = \App\Models\Product::with('color')->find($productId);
                                                         
                                                         $stocks = \App\Models\Stock::with('color')
                                                             ->where('product_id', $productId)
+                                                            ->where('truck_id', $truckId)
                                                             ->where('quantity', '>', 0)
-                                                            ->when($truckId, fn($q) => $q->where('truck_id', $truckId))
                                                             ->get();
 
                                                         // Agrupar por color_id para sumar cantidades si hay registros dispersos
-                                                        return $stocks->groupBy('color_id')->mapWithKeys(function ($group, $colorId) use ($product) {
+                                                        return $stocks->groupBy(fn($s) => $s->color_id ?? 'null')->mapWithKeys(function ($group, $key) use ($product) {
                                                             $totalQty = $group->sum('quantity');
-                                                            $colorName = $group->first()->color?->name;
+                                                            $stockColorId = $group->first()->color_id;
+                                                            $colorName = $stockColorId ? \App\Models\Color::find($stockColorId)?->name : null;
                                                             
-                                                            if (!$colorName && $colorId === "") {
-                                                                $colorName = $product->color?->name ? "{$product->color->name} (Catálogo)" : "Sin Color (N/A)";
+                                                            if (!$colorName && $key === 'null') {
+                                                                $catalogColorId = $product->color_id;
+                                                                $catalogColor = $catalogColorId ? \App\Models\Color::find($catalogColorId)?->name : null;
+                                                                $colorName = $catalogColor ? "{$catalogColor} (Catálogo)" : "Sin Color (N/A)";
                                                             }
 
                                                             return [
-                                                                ($colorId ?: 'null') => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                                $key => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
                                                             ];
                                                         })->toArray();
                                                     })

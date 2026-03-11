@@ -34,12 +34,14 @@ class DispatchService
                 foreach ($dispatch->items as $item) {
                     // Validar stock en bodega
                     $stock = Stock::where('product_id', $item->product_id)
+                        ->where('color_id', $item->color_id)
                         ->where('warehouse_id', $dispatch->warehouse_id)
                         ->first();
 
                     if (!$stock || $stock->quantity < $item->quantity) {
+                        $colorName = $item->color?->name ?: 'Sin Color';
                         throw ValidationException::withMessages([
-                            'stock' => "Stock insuficiente en bodega para '{$item->product->name}'. Disponible: " . ($stock ? $stock->quantity : 0)
+                            'stock' => "Stock insuficiente en bodega para '{$item->product->name}' ($colorName). Disponible: " . ($stock ? $stock->quantity : 0)
                         ]);
                     }
 
@@ -47,6 +49,7 @@ class DispatchService
                     InventoryMovement::create([
                         'type' => 'transfer',
                         'product_id' => $item->product_id,
+                        'color_id' => $item->color_id,
                         'quantity' => $item->quantity,
                         'unit_cost' => $item->product->cost_price ?? 0,
                         'from_warehouse_id' => $dispatch->warehouse_id,
@@ -98,6 +101,7 @@ class DispatchService
                 InventoryMovement::create([
                     'type' => 'out',
                     'product_id' => $item->product_id,
+                    'color_id' => $item->color_id,
                     'quantity' => $item->quantity,
                     'unit_cost' => $item->unit_price,
                     'from_truck_id' => $dispatch->truck_id,

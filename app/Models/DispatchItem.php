@@ -10,6 +10,7 @@ class DispatchItem extends Model
     protected $fillable = [
         'dispatch_id',
         'product_id',
+        'color_id',
         'quantity',
         'unit_price',
         'subtotal',
@@ -29,5 +30,10 @@ class DispatchItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
     }
 }

@@ -113,7 +113,7 @@ class DispatchResource extends Resource
                                     foreach ($order->items as $orderItem) {
                                         $found = false;
                                         foreach ($currentItems as &$item) {
-                                            if ($item['product_id'] == $orderItem->product_id) {
+                                            if ($item['product_id'] == $orderItem->product_id && ($item['color_id'] ?? null) == $orderItem->color_id) {
                                                 // Sumar cantidades con precisión
                                                 $item['quantity'] = (float)number_format((float)$item['quantity'] + (float)$orderItem->quantity, 3, '.', '');
                                                 $item['subtotal'] = (float)number_format((float)$item['quantity'] * (float)$item['unit_price'], 2, '.', '');
@@ -125,6 +125,7 @@ class DispatchResource extends Resource
                                         if (!$found) {
                                             $currentItems[] = [
                                                 'product_id' => $orderItem->product_id,
+                                                'color_id' => $orderItem->color_id,
                                                 'quantity' => (float)number_format((float)$orderItem->quantity, 3, '.', ''),
                                                 'unit_price' => (float)number_format((float)$orderItem->unit_price, 2, '.', ''),
                                                 'subtotal' => (float)number_format((float)$orderItem->subtotal, 2, '.', ''),
@@ -167,8 +168,15 @@ class DispatchResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->live()
-                                    ->afterStateUpdated(fn ($state, Forms\Set $set) => 
-                                        $set('unit_price', Product::find($state)?->sale_price ?? 0)),
+                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                        $set('unit_price', Product::find($state)?->sale_price ?? 0);
+                                        $set('color_id', null);
+                                    }),
+                                Forms\Components\Select::make('color_id')
+                                    ->label('Color')
+                                    ->relationship('color', 'name')
+                                    ->searchable()
+                                    ->preload(),
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Cantidad')
                                     ->numeric()
@@ -194,7 +202,9 @@ class DispatchResource extends Resource
                             ->columns(4)
                             ->itemLabel(fn (array $state): ?string => 
                                 ($state['product_id'] ?? null) 
-                                ? Product::find($state['product_id'])?->name . ' (' . ($state['quantity'] ?? 0) . ')' 
+                                ? Product::find($state['product_id'])?->name . 
+                                  (($state['color_id'] ?? null) ? ' (' . \App\Models\Color::find($state['color_id'])?->name . ')' : '') .
+                                  ' (' . ($state['quantity'] ?? 0) . ')' 
                                 : null),
                     ]),
 
@@ -332,13 +342,17 @@ class DispatchResource extends Resource
                                 ->options(function (Forms\Get $get) {
                                     $orderId = $get('order_id');
                                     if (!$orderId) return [];
-                                    $order = \App\Models\Order::with('items.product')->find($orderId);
+                                    $order = \App\Models\Order::with('items.product', 'items.color')->find($orderId);
                                     if (!$order) return [];
                                     return $order->items->mapWithKeys(function ($item) {
-                                        return [$item->product_id => $item->product->name . ' (Max: ' . $item->quantity . ')'];
+                                        $name = $item->product->name . ($item->color ? " ({$item->color->name})" : "") . ' [Max: ' . $item->quantity . ']';
+                                        // Usamos un key compuesto para pasar el color_id
+                                        $key = $item->product_id . '|' . ($item->color_id ?? '');
+                                        return [$key => $name];
                                     })->toArray();
                                 })
-                                ->required(),
+                                ->required()
+                                ->live(),
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Cantidad Devuelta')
                                 ->numeric()
@@ -360,10 +374,14 @@ class DispatchResource extends Resource
                         ];
                     })
                     ->action(function (array $data, Dispatch $record): void {
+                        list($productId, $colorId) = explode('|', $data['product_id']);
+                        $colorId = $colorId === '' ? null : $colorId;
+
                         OrderReturn::create([
                             'dispatch_id' => $record->id,
                             'order_id' => $data['order_id'],
-                            'product_id' => $data['product_id'],
+                            'product_id' => $productId,
+                            'color_id' => $colorId,
                             'driver_id' => $record->driver_id ?: auth()->id(),
                             'truck_id' => $record->truck_id,
                             'quantity' => $data['quantity'],

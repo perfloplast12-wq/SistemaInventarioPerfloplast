@@ -129,15 +129,19 @@ class QuickSale extends Page implements HasForms
                                                     ->label('Producto')
                                                     ->options(function (Get $get) {
                                                         $warehouseId = $get('../../from_warehouse_id');
+                                                        
+                                                        if (!$warehouseId) return [];
+
                                                         $products = Product::where('is_active', true)
                                                             ->where('type', 'finished_product')
+                                                            ->whereHas('stocks', fn($q) => $q->where('warehouse_id', $warehouseId)->where('quantity', '>', 0))
                                                             ->get();
                                                             
                                                         return $products->mapWithKeys(function ($p) use ($warehouseId) {
                                                             $stock = $p->stocks()
                                                                 ->where('warehouse_id', $warehouseId)
                                                                 ->sum('quantity');
-                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " total disp.)</span>"];
+                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " disp.)</span>"];
                                                         })->toArray();
                                                     })
                                                     ->allowHtml()
@@ -169,7 +173,7 @@ class QuickSale extends Page implements HasForms
                                                         $productId = $get('product_id');
                                                         $warehouseId = $get('../../from_warehouse_id');
                                                         
-                                                        if (!$productId) return [];
+                                                        if (!$productId || !$warehouseId) return [];
 
                                                         $product = Product::with('color')->find($productId);
 
@@ -180,16 +184,19 @@ class QuickSale extends Page implements HasForms
                                                             ->get();
 
                                                         // Agrupar por color_id para sumar cantidades
-                                                        return $stocks->groupBy('color_id')->mapWithKeys(function ($group, $colorId) use ($product) {
+                                                        return $stocks->groupBy(fn($s) => $s->color_id ?? 'null')->mapWithKeys(function ($group, $key) use ($product) {
                                                             $totalQty = $group->sum('quantity');
-                                                            $colorName = $group->first()->color?->name;
+                                                            $stockColorId = $group->first()->color_id;
+                                                            $colorName = $stockColorId ? \App\Models\Color::find($stockColorId)?->name : null;
 
-                                                            if (!$colorName && $colorId === "") {
-                                                                $colorName = $product->color?->name ? "{$product->color->name} (Catálogo)" : "Sin Color (N/A)";
+                                                            if (!$colorName && $key === 'null') {
+                                                                $catalogColorId = $product->color_id;
+                                                                $catalogColor = $catalogColorId ? \App\Models\Color::find($catalogColorId)?->name : null;
+                                                                $colorName = $catalogColor ? "{$catalogColor} (Catálogo)" : "Sin Color (N/A)";
                                                             }
 
                                                             return [
-                                                                ($colorId ?: 'null') => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                                $key => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
                                                             ];
                                                         })->toArray();
                                                     })

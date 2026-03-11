@@ -32,4 +32,14 @@ class EditProduction extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $color = \App\Models\Color::find($data['color_id'] ?? null);
+        if ($color) {
+            $data['color_name_filter'] = $color->name;
+        }
+ 
+        return $data;
+    }
 }
