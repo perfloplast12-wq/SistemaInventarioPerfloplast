@@ -1,7 +1,7 @@
 @php $d = $this->getChartData(); $uid = 'chart-stkloc-'.uniqid(); @endphp
 <div>
     <div class="pb-chart-scrollable">
-        <div id="{{ $uid }}" style="min-height:360px;width:100%;min-width:800px;"></div>
+        <div id="{{ $uid }}" style="min-height:360px;width:100%;min-width:600px;"></div>
     </div>
 
     <x-filament::modal id="stock-detail-modal" width="5xl" slide-over>

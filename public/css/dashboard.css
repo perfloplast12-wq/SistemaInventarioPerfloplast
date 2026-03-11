@@ -413,6 +413,15 @@ body,
     overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--pb-border) transparent;
+    display: flex;
+    justify-content: flex-start; /* Start at left for scrolling */
+    align-items: center;
+    width: 100%;
+}
+
+.pb-chart-scrollable > div {
+    flex-shrink: 0;
+    margin: 0 auto; /* This centers the chart if it has space */
 }
 
 .pb-chart-scrollable::-webkit-scrollbar {
