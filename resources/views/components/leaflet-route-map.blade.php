@@ -28,7 +28,15 @@
             initData(encodedData) {
                 try {
                     const jsonStr = atob(encodedData);
-                    this.locations = JSON.parse(jsonStr);
+                    const raw = JSON.parse(jsonStr);
+                    // Filtro de coordenadas para Centroamérica (10 a 22 Lat, -100 a -80 Lng)
+                    // Usamos Math.max/min para evitar símbolos > y < que rompen el HTML
+                    this.locations = raw.filter(loc => {
+                        const latOk = Math.min(22, Math.max(10, loc.lat)) === loc.lat;
+                        const lngOk = Math.min(-80, Math.max(-100, loc.lng)) === loc.lng;
+                        return latOk && lngOk;
+                    });
+                    if (!this.locations.length) this.locations = raw;
                 } catch (e) {
                     console.error('Error decodificando datos del mapa:', e);
                     this.locations = [];
@@ -123,26 +131,15 @@
 
                 L.control.layers(baseMaps, null, {position: 'topright'}).addTo(this.map);
                 
-                // Agregar buscador de lugares
                 L.Control.geocoder({
                     defaultMarkGeocode: true,
                     placeholder: 'Buscar direccion...',
                     errorMessage: 'No se encontro el lugar.'
                 }).addTo(this.map);
 
-                if (this.locations.length > 0) {
-                    // Filtrar puntos que estén ridículamente lejos (ej. USA)
-                    // Guatemala está aprox entre Lat 13-19 y Lng -93 a -87
-                    const validLocations = this.locations.filter(loc => {
-                        return loc.lat > 10 && loc.lat < 22 && loc.lng > -100 && loc.lng < -80;
-                    });
-
-                    // Si todos los puntos fueran "malos", mostramos los originales para no romper el mapa
-                    const displayLocations = validLocations.length > 0 ? validLocations : this.locations;
-                    const latlngs = displayLocations.map(loc => [loc.lat, loc.lng]);
+                if (this.locations.length) {
+                    const latlngs = this.locations.map(loc => [loc.lat, loc.lng]);
                     
-                    // La linea azul ahora esta oculta visualmente (opacity 0) 
-                    // para seguir sirviendo como limite de bounds pero no molestar al piloto
                     const polyline = L.polyline(latlngs, {
                         color: '#3b82f6', 
                         weight: 0, 
