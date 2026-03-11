@@ -55,6 +55,6 @@
     </div>
 
     <div class="pb-chart-scrollable">
-        <div x-ref="canvas" wire:ignore style="min-height:360px;width:100%;min-width:600px;"></div>
+        <div x-ref="canvas" wire:ignore style="min-height:360px; width:100%; max-width:550px;"></div>
     </div>
 </div>

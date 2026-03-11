@@ -1,7 +1,7 @@
 @php $d = $this->getChartData(); $uid = 'chart-dist-'.uniqid(); @endphp
 <div>
     <div class="pb-chart-scrollable">
-        <div id="{{ $uid }}" style="min-height:360px;width:100%;min-width:600px;"></div>
+        <div id="{{ $uid }}" style="min-height:360px; width:100%; max-width:550px;"></div>
     </div>
     @script
     <script>

@@ -50,7 +50,13 @@
                     formatter: function(v){ return Number(v).toLocaleString() + ' u'; },
                     dropShadow: { enabled: false }
                 },
-                grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+                grid: { 
+                    borderColor: '#f1f5f9', 
+                    strokeDashArray: 4, 
+                    xaxis: { lines: { show: true } }, 
+                    yaxis: { lines: { show: false } },
+                    padding: { right: 50, left: 10 } 
+                },
                 yaxis: { labels: { maxWidth: 160, style: { fontWeight: '800', colors: '#475569' } } },
                 tooltip: { theme: 'dark', y: { formatter: function(v){ return Number(v).toLocaleString() + ' unidades'; } } },
                 states: {

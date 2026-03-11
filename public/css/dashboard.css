@@ -407,21 +407,20 @@ body,
     display: none !important;
 }
 
-/* Scroll constraints for charts */
 .pb-chart-scrollable {
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--pb-border) transparent;
-    display: flex;
-    justify-content: flex-start; /* Start at left for scrolling */
-    align-items: center;
+    text-align: center; /* Robust centering */
     width: 100%;
 }
 
 .pb-chart-scrollable > div {
-    flex-shrink: 0;
-    margin: 0 auto; /* This centers the chart if it has space */
+    display: inline-block; /* Allows centering via text-align */
+    text-align: left; /* Reset for chart content */
+    vertical-align: top;
+    min-width: 100%; /* Default to full width but allows min-width override in style */
 }
 
 .pb-chart-scrollable::-webkit-scrollbar {
