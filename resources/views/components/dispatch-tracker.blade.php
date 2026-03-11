@@ -4,6 +4,7 @@
     interval: null,
     error: null,
     lastUpdate: null,
+    lastCoords: null,
     loading: false,
     
     init() {
@@ -28,12 +29,42 @@
         
         navigator.geolocation.getCurrentPosition(
             async (position) => {
+                const { latitude, longitude, speed, heading, accuracy } = position.coords;
+                
+                // 1. Filtro de precisión: Si la precisión es peor a 500m, probablemente es IP fallback
+                if (accuracy > 500) {
+                    console.warn('Ubicación ignorada por baja precisión: ' + accuracy + 'm');
+                    this.error = 'Señal GPS débil (±' + Math.round(accuracy) + 'm). Buscando mejor señal...';
+                    this.loading = false;
+                    return;
+                }
+
+                // 2. Filtro de saltos imposibles: Si el último punto está a más de 50km
+                // Esto previene aparecer en USA de repente si el navegador falla.
+                if (this.lastCoords) {
+                    const R = 6371; // Radio de la Tierra en km
+                    const dLat = (latitude - this.lastCoords.lat) * Math.PI / 180;
+                    const dLon = (longitude - this.lastCoords.lng) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                              Math.cos(this.lastCoords.lat * Math.PI / 180) * Math.cos(latitude * Math.PI / 180) * 
+                              Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    const distance = R * c;
+
+                    if (distance > 50) { // Más de 50km en 30 segundos es imposible
+                        console.error('Salto de ubicación detectado e ignorado: ' + distance.toFixed(2) + 'km');
+                        this.error = 'Salto de GPS detectado. Manteniendo última ubicación válida.';
+                        this.loading = false;
+                        return;
+                    }
+                }
+
                 const data = {
                     dispatch_id: this.dispatchId,
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    speed: position.coords.speed,
-                    heading: position.coords.heading
+                    lat: latitude,
+                    lng: longitude,
+                    speed: speed,
+                    heading: heading
                 };
                 
                 try {
@@ -48,6 +79,7 @@
                     
                     if (response.ok) {
                         this.lastUpdate = new Date().toLocaleTimeString();
+                        this.lastCoords = { lat: latitude, lng: longitude };
                         this.error = null;
                     } else {
                         const errData = await response.json();

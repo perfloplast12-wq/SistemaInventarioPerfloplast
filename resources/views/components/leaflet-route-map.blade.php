@@ -131,7 +131,15 @@
                 }).addTo(this.map);
 
                 if (this.locations.length > 0) {
-                    const latlngs = this.locations.map(loc => [loc.lat, loc.lng]);
+                    // Filtrar puntos que estén ridículamente lejos (ej. USA)
+                    // Guatemala está aprox entre Lat 13-19 y Lng -93 a -87
+                    const validLocations = this.locations.filter(loc => {
+                        return loc.lat > 10 && loc.lat < 22 && loc.lng > -100 && loc.lng < -80;
+                    });
+
+                    // Si todos los puntos fueran "malos", mostramos los originales para no romper el mapa
+                    const displayLocations = validLocations.length > 0 ? validLocations : this.locations;
+                    const latlngs = displayLocations.map(loc => [loc.lat, loc.lng]);
                     
                     // La linea azul ahora esta oculta visualmente (opacity 0) 
                     // para seguir sirviendo como limite de bounds pero no molestar al piloto
