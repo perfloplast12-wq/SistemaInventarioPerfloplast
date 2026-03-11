@@ -40,15 +40,24 @@
                 },
                 series: [{ name: 'Existencia', data: @json($d['values']) }],
                 xaxis: { categories: @json($d['labels']), tickAmount: 6, labels: { style: { fontWeight: '700', colors: '#64748b' }, formatter: function(v){ return isNaN(v) ? v : (v >= 1000 ? (v/1000).toFixed(1) + 'k' : Math.round(v)); } }, axisBorder: { show: false } },
-                plotOptions: { bar: { horizontal: true, borderRadius: 6, distributed: true, dataLabels: { position: 'top' }, barHeight: '60%' } },
+                plotOptions: { 
+                    bar: { 
+                        horizontal: true, 
+                        borderRadius: 6, 
+                        distributed: true, 
+                        dataLabels: { position: 'bottom' }, 
+                        barHeight: '60%' 
+                    } 
+                },
                 colors: ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6','#06b6d4','#ec4899','#0ea5e9'],
                 legend: { show: false },
                 dataLabels: {
                     enabled: true, 
-                    offsetX: 24,
-                    style: { fontSize: '11px', fontWeight: '900', colors: ['#1e293b'] },
+                    textAnchor: 'start',
+                    offsetX: 10,
+                    style: { fontSize: '11px', fontWeight: '900', colors: ['#ffffff'] },
                     formatter: function(v){ return Number(v).toLocaleString() + ' u'; },
-                    dropShadow: { enabled: false }
+                    dropShadow: { enabled: true, top: 1, left: 1, blur: 1, opacity: 0.8 }
                 },
                 grid: { 
                     borderColor: '#f1f5f9', 

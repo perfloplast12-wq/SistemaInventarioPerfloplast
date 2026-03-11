@@ -420,7 +420,8 @@ body,
     display: inline-block; /* Allows centering via text-align */
     text-align: left; /* Reset for chart content */
     vertical-align: top;
-    min-width: 100%; /* Default to full width but allows min-width override in style */
+    width: auto; /* Shrink to content to allow centering */
+    min-width: 0; /* Clear previous min-width */
 }
 
 .pb-chart-scrollable::-webkit-scrollbar {
