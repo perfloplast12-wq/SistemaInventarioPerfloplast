@@ -1,0 +1,67 @@
+# Laravel Standard
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.env
+.env.backup
+.env.production
+/storage/app/public/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/.phpunit.cache
+
+# Project Specific (Temporary/Debug/Fix scripts)
+debug_*.php
+check_*.php
+fix_*.php
+force_fix*.php
+test-*.php
+mock_*.php
+clean_*.php
+simple_*.php
+tech_*.php
+drop_tables.php
+
+# Project Specific Logs/Data
+migration_error*
+stocks_*
+missing_indexes.json
+*.log
+*.sql
+*.json
+!composer.json
+!package.json
+!package-lock.json
+!stocks_schema.json
+!missing_indexes.json
+
+
+# IDE - VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - JetBrains
+.idea/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini

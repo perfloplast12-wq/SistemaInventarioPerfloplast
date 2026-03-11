@@ -1,0 +1,158 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Sale;
+use App\Models\InventoryMovement;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+class SaleService
+{
+    /**
+     * Confirma la venta, genera movimientos de salida y descuenta stock.
+     */
+    public function confirm(Sale $sale): void
+    {
+        if ($sale->status !== 'draft') {
+            throw ValidationException::withMessages(['status' => 'Solo se pueden confirmar ventas en borrador.']);
+        }
+
+        // 1. Recalcular totales antes de validar
+        $this->recalculateTotals($sale);
+
+        // 2. Validaciones básicas
+        if (empty($sale->customer_name)) {
+            throw ValidationException::withMessages(['customer_name' => 'El nombre del cliente es requerido.']);
+        }
+
+        if (!$sale->from_warehouse_id && !$sale->from_truck_id) {
+            throw ValidationException::withMessages(['origin' => 'Debe seleccionar un origen (Bodega o Camión).']);
+        }
+
+        if ($sale->items()->count() === 0) {
+            throw ValidationException::withMessages(['items' => 'La venta debe tener al menos un producto.']);
+        }
+
+        // 3. Validar Stock Estricto
+        foreach ($sale->items as $item) {
+            $product = $item->product;
+            
+            // Resolvemos stock disponible usando el mismo helper que InventoryMovement usaría (implícito)
+            $stockQuery = \App\Models\Stock::where('product_id', $item->product_id);
+            if ($sale->from_warehouse_id) {
+                $stockQuery->where('warehouse_id', $sale->from_warehouse_id);
+            } else {
+                $stockQuery->where('truck_id', $sale->from_truck_id);
+            }
+            
+            $available = (float) $stockQuery->value('quantity') ?? 0;
+            
+            if ($available < (float)$item->quantity) {
+                throw ValidationException::withMessages([
+                    'items' => "Stock insuficiente para '{$product->name}'. Disponible: " . number_format($available, 2) . ", Requerido: " . number_format($item->quantity, 2)
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($sale) {
+            // 4. Crear movimientos de inventario (OUT)
+            foreach ($sale->items as $item) {
+                InventoryMovement::create([
+                    'type'              => 'out',
+                    'product_id'        => $item->product_id,
+                    'quantity'          => $item->quantity,
+                    'unit_cost'         => $item->product->cost_price ?? 0,
+                    'from_warehouse_id' => $sale->from_warehouse_id,
+                    'from_truck_id'     => $sale->from_truck_id,
+                    'note'              => "Venta #{$sale->sale_number}",
+                    'created_by'        => auth()->id(),
+                    'source_type'       => 'sale',
+                    'source_id'         => $sale->id,
+                ]);
+            }
+
+            // 5. Actualizar estado
+            $sale->update(['status' => 'confirmed']);
+
+            // 6. Generar Factura
+            app(InvoiceService::class)->generateFromSale($sale);
+        });
+    }
+
+    /**
+     * Cancela la venta y revierte el stock eliminando los movimientos.
+     */
+    public function cancel(Sale $sale): void
+    {
+        if ($sale->status !== 'confirmed') {
+            if ($sale->status === 'draft') {
+                $sale->update(['status' => 'cancelled']);
+                return;
+            }
+            throw ValidationException::withMessages(['status' => 'Estado no cancelable.']);
+        }
+
+        DB::transaction(function () use ($sale) {
+            // Revertir stock (Eliminar movimientos asociados)
+            InventoryMovement::where('source_type', 'sale')
+                ->where('source_id', $sale->id)
+                ->get()
+                ->each(fn ($m) => $m->delete());
+
+            $sale->update(['status' => 'cancelled']);
+        });
+    }
+
+    /**
+     * Calcula Subtotal, Descuento y Total
+     */
+    public function recalculateTotals(Sale $sale): void
+    {
+        $subtotal = $sale->items->sum(fn($i) => (float)$i->quantity * (float)$i->unit_price);
+        
+        $discountAmount = 0;
+        if ($sale->discount_type === 'percent') {
+            $discountAmount = $subtotal * (min(100, max(0, (float)$sale->discount_value)) / 100);
+        } elseif ($sale->discount_type === 'fixed') {
+            $discountAmount = min($subtotal, max(0, (float)$sale->discount_value));
+        }
+
+        $total = max(0, $subtotal - $discountAmount);
+
+        $sale->update([
+            'discount_amount' => $discountAmount,
+            'total' => $total,
+        ]);
+        
+        // Actualizar subtotales de items si no están sincronizados
+        foreach ($sale->items as $item) {
+            $itemSubtotal = (float)$item->quantity * (float)$item->unit_price;
+            if (abs((float)$item->subtotal - $itemSubtotal) > 0.001) {
+                $item->update(['subtotal' => $itemSubtotal]);
+            }
+        }
+    }
+
+    /**
+     * Registra un pago y valida balance
+     */
+    public function recordPayment(Sale $sale, array $data): void
+    {
+        $amount = (float) ($data['amount'] ?? 0);
+        if ($amount <= 0) {
+            throw ValidationException::withMessages(['amount' => 'El monto debe ser mayor a 0.']);
+        }
+
+        if ($amount > ($sale->balance + 0.01)) {
+             throw ValidationException::withMessages(['amount' => 'El pago excede el saldo pendiente (Q ' . number_format($sale->balance, 2) . ').']);
+        }
+
+        $sale->payments()->create([
+            'method' => $data['method'],
+            'amount' => $amount,
+            'payment_date' => $data['payment_date'] ?? now(),
+            'notes' => $data['notes'] ?? null,
+        ]);
+    }
+}

@@ -1,0 +1,18 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*;
+
+@source '../../../../resources/views/filament/**/*;
+
+@theme {
+    --color-main-primary: rgb(242,241,235);
+    --color-main-secondary: rgb: rg(204,197,181);
+    --color-main-black: rgb(40,43,47);
+    --color-main-white: rgb(255,255,255);
+    --color-main-accent: rgb(241, 202, 59);
+   
+}
+
+.fi-body{
+    @apply bg-main-primary text-main-black;
+}

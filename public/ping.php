@@ -1,0 +1,1 @@
+<?php echo "ok" . date("H:i:s"); ?>
