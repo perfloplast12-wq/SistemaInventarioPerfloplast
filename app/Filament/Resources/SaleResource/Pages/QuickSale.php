@@ -129,14 +129,15 @@ class QuickSale extends Page implements HasForms
                                                     ->label('Producto')
                                                     ->options(function (Get $get) {
                                                         $warehouseId = $get('../../from_warehouse_id');
-                                                        $products = Product::with('stocks')
+                                                        $products = Product::where('is_active', true)
                                                             ->where('type', 'finished_product')
-                                                            ->where('is_active', true)
                                                             ->get();
                                                             
                                                         return $products->mapWithKeys(function ($p) use ($warehouseId) {
-                                                            $stock = $p->stocks->where('warehouse_id', $warehouseId)->sum('quantity');
-                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " disp.)</span>"];
+                                                            $stock = $p->stocks()
+                                                                ->where('warehouse_id', $warehouseId)
+                                                                ->sum('quantity');
+                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " total disp.)</span>"];
                                                         })->toArray();
                                                     })
                                                     ->allowHtml()
@@ -144,6 +145,7 @@ class QuickSale extends Page implements HasForms
                                                     ->searchable()
                                                     ->live()
                                                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                                        $set('color_id', null);
                                                         if (!$state) {
                                                             $set('unit_price', null);
                                                             $set('quantity', null);
@@ -159,7 +161,30 @@ class QuickSale extends Page implements HasForms
                                                             $set('quantity', 1);
                                                         }
                                                     })
-                                                    ->columnSpan(['default' => 12, 'md' => 6]),
+                                                    ->columnSpan(['default' => 12, 'md' => 4]),
+
+                                                Select::make('color_id')
+                                                    ->label('Color')
+                                                    ->options(function (Get $get) {
+                                                        $productId = $get('product_id');
+                                                        $warehouseId = $get('../../from_warehouse_id');
+                                                        
+                                                        if (!$productId) return [];
+
+                                                        return \App\Models\Stock::with('color')
+                                                            ->where('product_id', $productId)
+                                                            ->where('warehouse_id', $warehouseId)
+                                                            ->where('quantity', '>', 0)
+                                                            ->get()
+                                                            ->mapWithKeys(fn ($s) => [
+                                                                $s->color_id => ($s->color?->name ?? 'N/A') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
+                                                            ])->toArray();
+                                                    })
+                                                    ->allowHtml()
+                                                    ->required()
+                                                    ->searchable()
+                                                    ->live()
+                                                    ->columnSpan(['default' => 12, 'md' => 3]),
                                                 TextInput::make('quantity')
                                                     ->label('Cant.')
                                                     ->numeric()
@@ -172,7 +197,7 @@ class QuickSale extends Page implements HasForms
                                                         $qty = (float)($state ?: 0);
                                                         $set('subtotal', $qty * $price);
                                                     })
-                                                    ->columnSpan(['default' => 4, 'md' => 2]),
+                                                    ->columnSpan(['default' => 4, 'md' => 1]),
                                                 TextInput::make('unit_price')
                                                     ->label('Precio Q')
                                                     ->numeric()
@@ -336,6 +361,7 @@ class QuickSale extends Page implements HasForms
                     
                     $sale->items()->create([
                         'product_id' => $item['product_id'],
+                        'color_id' => $item['color_id'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'subtotal' => (float)$item['quantity'] * (float)$item['unit_price'],

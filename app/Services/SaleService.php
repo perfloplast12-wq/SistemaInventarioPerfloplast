@@ -39,7 +39,9 @@ class SaleService
             $product = $item->product;
             
             // Resolvemos stock disponible usando el mismo helper que InventoryMovement usaría (implícito)
-            $stockQuery = \App\Models\Stock::where('product_id', $item->product_id);
+            $stockQuery = \App\Models\Stock::where('product_id', $item->product_id)
+                ->where('color_id', $item->color_id);
+                
             if ($sale->from_warehouse_id) {
                 $stockQuery->where('warehouse_id', $sale->from_warehouse_id);
             } else {
@@ -49,8 +51,9 @@ class SaleService
             $available = (float) $stockQuery->value('quantity') ?? 0;
             
             if ($available < (float)$item->quantity) {
+                $colorName = $item->color ? $item->color->name : 'N/A';
                 throw ValidationException::withMessages([
-                    'items' => "Stock insuficiente para '{$product->name}'. Disponible: " . number_format($available, 2) . ", Requerido: " . number_format($item->quantity, 2)
+                    'items' => "Stock insuficiente para '{$product->name}' color '{$colorName}'. Disponible: " . number_format($available, 2) . ", Requerido: " . number_format($item->quantity, 2)
                 ]);
             }
         }
@@ -61,6 +64,7 @@ class SaleService
                 InventoryMovement::create([
                     'type'              => 'out',
                     'product_id'        => $item->product_id,
+                    'color_id'          => $item->color_id,
                     'quantity'          => $item->quantity,
                     'unit_cost'         => $item->product->cost_price ?? 0,
                     'from_warehouse_id' => $sale->from_warehouse_id,

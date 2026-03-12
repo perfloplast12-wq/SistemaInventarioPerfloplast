@@ -109,20 +109,16 @@ class SaleResource extends Resource
                                                     ->label('Producto')
                                                     ->options(function (Get $get) {
                                                         $truckId = $get('../../from_truck_id');
-                                                        
-                                                        $products = \App\Models\Product::with('stocks')
-                                                            ->where('type', 'finished_product')
+                                                        $products = \App\Models\Product::where('type', 'finished_product')
                                                             ->where('is_active', true)
                                                             ->get();
                                                             
                                                         return $products->mapWithKeys(function ($p) use ($truckId) {
-                                                            $stock = 0;
-                                                            if ($truckId) {
-                                                                $stock = $p->stocks->where('truck_id', $truckId)->sum('quantity');
-                                                            } else {
-                                                                $stock = $p->stocks->sum('quantity');
-                                                            }
-                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " disp.)</span>"];
+                                                            $stock = $p->stocks()
+                                                                ->when($truckId, fn($q) => $q->where('truck_id', $truckId))
+                                                                ->sum('quantity');
+                                                                
+                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " total disp.)</span>"];
                                                         })->toArray();
                                                     })
                                                     ->allowHtml()
@@ -130,6 +126,7 @@ class SaleResource extends Resource
                                                     ->searchable()
                                                     ->live()
                                                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                                        $set('color_id', null); // Reset color on product change
                                                         if (!$state) {
                                                             $set('unit_price', null);
                                                             $set('quantity', null);
@@ -145,7 +142,30 @@ class SaleResource extends Resource
                                                             $set('quantity', 1);
                                                         }
                                                     })
-                                                    ->columnSpan(['default' => 12, 'md' => 6]),
+                                                    ->columnSpan(['default' => 12, 'md' => 4]),
+
+                                                Forms\Components\Select::make('color_id')
+                                                    ->label('Color')
+                                                    ->options(function (Get $get) {
+                                                        $productId = $get('product_id');
+                                                        $truckId = $get('../../from_truck_id');
+                                                        
+                                                        if (!$productId) return [];
+
+                                                        return \App\Models\Stock::with('color')
+                                                            ->where('product_id', $productId)
+                                                            ->where('quantity', '>', 0)
+                                                            ->when($truckId, fn($q) => $q->where('truck_id', $truckId))
+                                                            ->get()
+                                                            ->mapWithKeys(fn ($s) => [
+                                                                $s->color_id => ($s->color?->name ?? 'N/A') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
+                                                            ])->toArray();
+                                                    })
+                                                    ->allowHtml()
+                                                    ->required()
+                                                    ->searchable()
+                                                    ->live()
+                                                    ->columnSpan(['default' => 12, 'md' => 3]),
 
                                                 Forms\Components\TextInput::make('quantity')
                                                     ->label('Cant.')
@@ -159,7 +179,7 @@ class SaleResource extends Resource
                                                         $qty = (float)($state ?: 0);
                                                         $set('subtotal', $qty * $price);
                                                     })
-                                                    ->columnSpan(['default' => 4, 'md' => 2]),
+                                                    ->columnSpan(['default' => 4, 'md' => 1]),
 
                                                 Forms\Components\TextInput::make('unit_price')
                                                     ->label('Precio Q')

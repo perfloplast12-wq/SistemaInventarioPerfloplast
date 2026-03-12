@@ -53,11 +53,11 @@ class StockService
 
             // Invertir lógica
             match ($m->type) {
-                'in' => $this->decreaseStock($m->product_id, $this->resolveTo($m), $qty),
-                'out' => $this->increaseStock($m->product_id, $this->resolveFrom($m), $qty),
-                'transfer' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty),
+                'in' => $this->decreaseStock($m->product_id, $this->resolveTo($m), $qty, $m->color_id),
+                'out' => $this->increaseStock($m->product_id, $this->resolveFrom($m), $qty, $m->color_id),
+                'transfer' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty, $m->color_id),
                 'adjust' => $this->revertAdjust($m, $qty),
-                'return' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty),
+                'return' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty, $m->color_id),
                 default => null,
             };
         });
@@ -70,7 +70,7 @@ class StockService
         $to = $this->resolveTo($m);
         if (!$to) throw ValidationException::withMessages(['to_warehouse_id' => 'Entrada requiere destino.']);
         
-        $this->increaseStock($m->product_id, $to, $qty);
+        $this->increaseStock($m->product_id, $to, $qty, $m->color_id);
     }
 
     private function handleOut(InventoryMovement $m, float $qty): void
@@ -78,7 +78,7 @@ class StockService
         $from = $this->resolveFrom($m);
         if (!$from) throw ValidationException::withMessages(['from_warehouse_id' => 'Salida requiere origen.']);
         
-        $this->decreaseStock($m->product_id, $from, $qty);
+        $this->decreaseStock($m->product_id, $from, $qty, $m->color_id);
     }
 
     private function handleTransfer(InventoryMovement $m, float $qty): void
@@ -94,7 +94,7 @@ class StockService
             throw ValidationException::withMessages(['to_warehouse_id' => 'Origen y destino no pueden ser el mismo.']);
         }
 
-        $this->transferStock($m->product_id, $from, $to, $qty);
+        $this->transferStock($m->product_id, $from, $to, $qty, $m->color_id);
     }
 
     private function handleReturn(InventoryMovement $m, float $qty): void
@@ -106,7 +106,7 @@ class StockService
             throw ValidationException::withMessages(['from_truck_id' => 'Devolución requiere origen (Camión) y destino (Bodega).']);
         }
 
-        $this->transferStock($m->product_id, $from, $to, $qty);
+        $this->transferStock($m->product_id, $from, $to, $qty, $m->color_id);
     }
 
     private function handleAdjust(InventoryMovement $m, float $qty): void
@@ -116,9 +116,9 @@ class StockService
 
         // Si qty es negativo, restamos. Si positivo, sumamos.
         if ($qty >= 0) {
-            $this->increaseStock($m->product_id, $loc, $qty);
+            $this->increaseStock($m->product_id, $loc, $qty, $m->color_id);
         } else {
-            $this->decreaseStock($m->product_id, $loc, abs($qty));
+            $this->decreaseStock($m->product_id, $loc, abs($qty), $m->color_id);
         }
     }
 
@@ -129,18 +129,19 @@ class StockService
 
         // Invertir operación
         if ($qty >= 0) {
-            $this->decreaseStock($m->product_id, $loc, $qty);
+            $this->decreaseStock($m->product_id, $loc, $qty, $m->color_id);
         } else {
-            $this->increaseStock($m->product_id, $loc, abs($qty));
+            $this->increaseStock($m->product_id, $loc, abs($qty), $m->color_id);
         }
     }
 
     // ── Métodos Core (Estrictos) ───────────────────────
 
-    public function increaseStock(int $productId, array $location, float $qty): void
+    public function increaseStock(int $productId, array $location, float $qty, ?int $colorId = null): void
     {
         $stock = Stock::query()
             ->where('product_id', $productId)
+            ->where('color_id', $colorId)
             ->where('warehouse_id', $location['warehouse_id'])
             ->where('truck_id', $location['truck_id'])
             ->lockForUpdate()
@@ -149,6 +150,7 @@ class StockService
         if (!$stock) {
             $stock = Stock::create([
                 'product_id'   => $productId,
+                'color_id'     => $colorId,
                 'warehouse_id' => $location['warehouse_id'],
                 'truck_id'     => $location['truck_id'],
                 'quantity'     => 0,
@@ -159,10 +161,11 @@ class StockService
         $stock->save();
     }
 
-    public function decreaseStock(int $productId, array $location, float $qty): void
+    public function decreaseStock(int $productId, array $location, float $qty, ?int $colorId = null): void
     {
         $stock = Stock::query()
             ->where('product_id', $productId)
+            ->where('color_id', $colorId)
             ->where('warehouse_id', $location['warehouse_id'])
             ->where('truck_id', $location['truck_id'])
             ->lockForUpdate()
@@ -175,8 +178,10 @@ class StockService
                 ? "Bodega" 
                 : "Camión";
             
+            $colorName = $colorId ? (\App\Models\Color::find($colorId)?->name ?? "ID:$colorId") : "N/A";
+
             throw ValidationException::withMessages([
-                'quantity' => "Stock insuficiente en {$label}. Disponible: {$current}, Requerido: {$qty}"
+                'quantity' => "Stock insuficiente en {$label} para color '{$colorName}'. Disponible: {$current}, Requerido: {$qty}"
             ]);
         }
 
@@ -184,12 +189,12 @@ class StockService
         $stock->save();
     }
 
-    public function transferStock(int $productId, array $from, array $to, float $qty): void
+    public function transferStock(int $productId, array $from, array $to, float $qty, ?int $colorId = null): void
     {
         // Primero retirar (valida stock)
-        $this->decreaseStock($productId, $from, $qty);
+        $this->decreaseStock($productId, $from, $qty, $colorId);
         // Luego agregar
-        $this->increaseStock($productId, $to, $qty);
+        $this->increaseStock($productId, $to, $qty, $colorId);
     }
 
     // ── Helpers ────────────────────────────────────────
