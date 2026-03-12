@@ -22,7 +22,6 @@ class TrackingController extends Controller
 
         $dispatch = Dispatch::findOrFail($validated['dispatch_id']);
 
-        // Solo permitir rastreo si el despacho está en proceso
         if ($dispatch->status !== 'in_progress') {
             return response()->json(['message' => 'Dispatch not in progress'], 403);
         }
@@ -33,5 +32,15 @@ class TrackingController extends Controller
             'message' => 'Location recorded',
             'location' => $location
         ], 201);
+    }
+
+    public function show(Dispatch $dispatch)
+    {
+        $locations = $dispatch->locations()
+            ->orderBy('created_at', 'asc')
+            ->select(['lat', 'lng', 'created_at'])
+            ->get();
+
+        return response()->json($locations);
     }
 }

@@ -310,7 +310,8 @@ class DispatchResource extends Resource
                     ->modalCancelActionLabel('Cerrar')
                     ->modalWidth('6xl')
                     ->modalContent(fn (Dispatch $record) => view('components.leaflet-route-map', [
-                        'locations' => $record->locations()->orderBy('created_at', 'asc')->get()
+                        'locations' => $record->locations()->orderBy('created_at', 'asc')->get(),
+                        'dispatchId' => $record->id
                     ])),
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->status === 'pending'),

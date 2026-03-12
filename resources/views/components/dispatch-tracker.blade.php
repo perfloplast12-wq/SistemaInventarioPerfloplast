@@ -22,7 +22,13 @@
     async sendLocation() {
         this.loading = true;
         if (!navigator.geolocation) {
-            this.error = 'Geolocalización no soportada.';
+            this.error = 'Geolocalización no soportada por este navegador.';
+            this.loading = false;
+            return;
+        }
+
+        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+            this.error = 'SEGURIDAD: El GPS requiere HTTPS. En Laravel Herd, activa el candado del sitio.';
             this.loading = false;
             return;
         }
@@ -31,10 +37,18 @@
             async (position) => {
                 const { latitude, longitude, speed, heading, accuracy } = position.coords;
                 
-                // 1. Filtro de precisión: Si la precisión es peor a 500m, probablemente es IP fallback
-                if (accuracy > 500) {
-                    console.warn('Ubicación ignorada por baja precisión: ' + accuracy + 'm');
-                    this.error = 'Señal GPS débil (±' + Math.round(accuracy) + 'm). Buscando mejor señal...';
+                // 1. Filtro de precisión mejorado:
+                // Si la precisión es de satélite (< 100m), es perfecta.
+                // Si es de WiFi/Torres (100m - 5000m), es aceptable pero aproximada.
+                // Si es de IP (> 5000m), avisamos al usuario.
+                this.error = null;
+                if (accuracy > 100) {
+                    this.error = 'Señal Aproximada (±' + (accuracy > 1000 ? Math.round(accuracy/1000) + 'km' : Math.round(accuracy) + 'm') + '). Buscando mejor señal...';
+                    console.warn('Baja precisión: ' + accuracy + 'm');
+                }
+
+                if (accuracy > 20000) { // Solo bloqueamos si es un error masivo (> 20km)
+                    this.error = ' Error: Ubicación no confiable (±' + Math.round(accuracy/1000) + 'km). Intenta activar el GPS real.';
                     this.loading = false;
                     return;
                 }

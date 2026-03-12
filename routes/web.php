@@ -15,3 +15,6 @@ Route::get('/admin/sales/{sale}/pdf', [\App\Http\Controllers\SalePdfController::
 
 Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::class, 'store'])
     ->name('api.tracking');
+
+Route::get('/api/tracking/{dispatch}', [\App\Http\Controllers\Api\TrackingController::class, 'show'])
+    ->name('api.tracking.show');
