@@ -171,14 +171,15 @@ class QuickSale extends Page implements HasForms
                                                         
                                                         if (!$productId) return [];
 
-                                                        return \App\Models\Stock::with('color')
+                                                        $stocks = \App\Models\Stock::with('color')
                                                             ->where('product_id', $productId)
                                                             ->where('warehouse_id', $warehouseId)
                                                             ->where('quantity', '>', 0)
-                                                            ->get()
-                                                            ->mapWithKeys(fn ($s) => [
-                                                                $s->color_id => ($s->color?->name ?? 'N/A') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
-                                                            ])->toArray();
+                                                            ->get();
+
+                                                        return $stocks->mapWithKeys(fn ($s) => [
+                                                            ($s->color_id ?? 'null') => ($s->color?->name ?? 'Sin Color (N/A)') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
+                                                        ])->toArray();
                                                     })
                                                     ->allowHtml()
                                                     ->required()
@@ -359,9 +360,11 @@ class QuickSale extends Page implements HasForms
                 foreach ($data['items'] as $item) {
                     if (empty($item['product_id'])) continue;
                     
+                    $colorId = ($item['color_id'] === 'null') ? null : $item['color_id'];
+
                     $sale->items()->create([
                         'product_id' => $item['product_id'],
-                        'color_id' => $item['color_id'],
+                        'color_id' => $colorId,
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'subtotal' => (float)$item['quantity'] * (float)$item['unit_price'],

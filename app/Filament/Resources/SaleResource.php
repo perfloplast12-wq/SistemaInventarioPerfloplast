@@ -152,14 +152,15 @@ class SaleResource extends Resource
                                                         
                                                         if (!$productId) return [];
 
-                                                        return \App\Models\Stock::with('color')
+                                                        $stocks = \App\Models\Stock::with('color')
                                                             ->where('product_id', $productId)
                                                             ->where('quantity', '>', 0)
                                                             ->when($truckId, fn($q) => $q->where('truck_id', $truckId))
-                                                            ->get()
-                                                            ->mapWithKeys(fn ($s) => [
-                                                                $s->color_id => ($s->color?->name ?? 'N/A') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
-                                                            ])->toArray();
+                                                            ->get();
+
+                                                        return $stocks->mapWithKeys(fn ($s) => [
+                                                            ($s->color_id ?? 'null') => ($s->color?->name ?? 'Sin Color (N/A)') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
+                                                        ])->toArray();
                                                     })
                                                     ->allowHtml()
                                                     ->required()

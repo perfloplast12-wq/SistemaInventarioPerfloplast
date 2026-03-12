@@ -40,10 +40,17 @@ class CreateSale extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Calculate totals in backend
+        // Calculate totals in backend and normalize color_id
         $subtotal = 0;
-        foreach ($this->data['items'] ?? [] as $item) {
-            $subtotal += (float)($item['subtotal'] ?? 0);
+        if (isset($data['items'])) {
+            foreach ($data['items'] as $key => $item) {
+                $subtotal += (float)($item['subtotal'] ?? 0);
+                
+                // Convert string 'null' from select back to actual null for database
+                if (isset($item['color_id']) && $item['color_id'] === 'null') {
+                    $data['items'][$key]['color_id'] = null;
+                }
+            }
         }
 
         $discountType = $data['discount_type'] ?? 'none';
