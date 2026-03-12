@@ -29,6 +29,29 @@ class EditSale extends EditRecord
     {
         // Forzar origen a camión virtualmente para que la vista lo reconozca si existiera un campo
         $data['origin_type'] = 'truck';
+        
+        // Convertir null a 'null' para que coincida con la opción del selector al cargar
+        if (isset($data['items'])) {
+            foreach ($data['items'] as $key => $item) {
+                if (!isset($item['color_id']) || $item['color_id'] === null) {
+                    $data['items'][$key]['color_id'] = 'null';
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Normalizar color_id de 'null' de vuelta a null
+        if (isset($data['items'])) {
+            foreach ($data['items'] as $key => $item) {
+                if (isset($item['color_id']) && $item['color_id'] === 'null') {
+                    $data['items'][$key]['color_id'] = null;
+                }
+            }
+        }
         return $data;
     }
 

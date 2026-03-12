@@ -171,15 +171,27 @@ class QuickSale extends Page implements HasForms
                                                         
                                                         if (!$productId) return [];
 
+                                                        $product = Product::with('color')->find($productId);
+
                                                         $stocks = \App\Models\Stock::with('color')
                                                             ->where('product_id', $productId)
                                                             ->where('warehouse_id', $warehouseId)
                                                             ->where('quantity', '>', 0)
                                                             ->get();
 
-                                                        return $stocks->mapWithKeys(fn ($s) => [
-                                                            ($s->color_id ?? 'null') => ($s->color?->name ?? 'Sin Color (N/A)') . " — <span class='text-emerald-600 font-bold'>(" . ($s->quantity + 0) . " disp.)</span>"
-                                                        ])->toArray();
+                                                        // Agrupar por color_id para sumar cantidades
+                                                        return $stocks->groupBy('color_id')->mapWithKeys(function ($group, $colorId) use ($product) {
+                                                            $totalQty = $group->sum('quantity');
+                                                            $colorName = $group->first()->color?->name;
+
+                                                            if (!$colorName && $colorId === "") {
+                                                                $colorName = $product->color?->name ? "{$product->color->name} (Catálogo)" : "Sin Color (N/A)";
+                                                            }
+
+                                                            return [
+                                                                ($colorId ?: 'null') => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                            ];
+                                                        })->toArray();
                                                     })
                                                     ->allowHtml()
                                                     ->required()
