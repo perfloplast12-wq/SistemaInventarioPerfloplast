@@ -134,13 +134,26 @@
 
                 // Iconos
                 const houseIcon = L.divIcon({
-                    html: `<div class='bg-slate-800 p-2 rounded-lg border-2 border-white shadow-lg text-white'><svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' stroke-width='2'/></svg></div>`,
-                    className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+                    html: `<div class='flex flex-col items-center'>
+                             <div class='bg-slate-900 p-2 rounded-lg border-2 border-white shadow-xl text-white'>
+                               <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' stroke-width='2'/></svg>
+                             </div>
+                             <div class='w-2 h-2 bg-slate-900 rotate-45 -mt-1 shadow-lg'></div>
+                           </div>`,
+                    className: '', iconSize: [36, 42], iconAnchor: [18, 42]
                 });
 
                 const truckIcon = L.divIcon({
-                    html: `<div class='bg-emerald-500 p-2 rounded-full border-2 border-white shadow-xl text-white animate-pulse ring-4 ring-emerald-500/20'><svg class='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' stroke-width='2'/></svg></div>`,
-                    className: '', iconSize: [40, 40], iconAnchor: [20, 20]
+                    html: `<div class='flex flex-col items-center pointer-events-none'>
+                             <div class='relative'>
+                               <div class='absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-25'></div>
+                               <div class='relative bg-emerald-500 p-2.5 rounded-xl border-2 border-white shadow-2xl text-white ring-4 ring-emerald-500/10'>
+                                 <svg class='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' stroke-width='2'/></svg>
+                               </div>
+                             </div>
+                             <div class='w-3 h-3 bg-emerald-500 rotate-45 -mt-1.5 border-r-2 border-b-2 border-white shadow-lg'></div>
+                           </div>`,
+                    className: '', iconSize: [44, 52], iconAnchor: [22, 52]
                 });
 
                 L.marker(pts[0], { icon: houseIcon }).addTo(this.map);
