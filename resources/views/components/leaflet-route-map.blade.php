@@ -5,13 +5,12 @@
         stats: { distance: 0, duration: 0 },
         async init() {
             try {
-                // Pequeña espera para que el DOM se asiente (especialmente en modales)
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 400));
                 await this.loadAssets();
                 await this.render();
             } catch (e) {
-                console.error('Map Init Detail:', e);
-                this.isLoaded = true; // Quitar el cargando aunque falle
+                console.error('Map Init Fail:', e);
+                this.isLoaded = true;
             }
         },
         async loadAssets() {
@@ -21,10 +20,7 @@
                 if (document.getElementById(id)) return Promise.resolve();
                 return new Promise(resolve => {
                     const link = document.createElement('link');
-                    link.id = id;
-                    link.rel = 'stylesheet';
-                    link.href = url;
-                    link.onload = resolve;
+                    link.id = id; link.rel = 'stylesheet'; link.href = url; link.onload = resolve;
                     document.head.appendChild(link);
                 });
             };
@@ -33,9 +29,7 @@
                 if (document.getElementById(id)) return Promise.resolve();
                 return new Promise(resolve => {
                     const script = document.createElement('script');
-                    script.id = id;
-                    script.src = url;
-                    script.onload = resolve;
+                    script.id = id; script.src = url; script.onload = resolve;
                     document.head.appendChild(script);
                 });
             };
@@ -49,150 +43,97 @@
             const el = this.$refs.mapContainer;
             if (!el || typeof L === 'undefined') return;
 
-            // Limpieza absoluta
-            if (el._leaflet_id) {
-                el._leaflet_id = null;
-                el.innerHTML = '';
-            }
+            if (el._leaflet_id) { el._leaflet_id = null; el.innerHTML = ''; }
 
-            // Inicializar mapa con centro por defecto en Guatemala
-            this.map = L.map(el, { 
-                zoomControl: false,
-                fadeAnimation: true,
-                markerZoomAnimation: true
-            }).setView([15.47, -90.37], 7);
-
+            this.map = L.map(el, { zoomControl: false }).setView([15.47, -90.37], 7);
             L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
-            // Capas con fallback de OpenStreetMap (más fiable)
-            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OSM',
-                maxZoom: 19
-            });
+            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM', maxZoom: 19 });
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 18 });
             
-            const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; CartoDB',
-                maxZoom: 20
-            });
-
-            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '&copy; Esri',
-                maxZoom: 18
-            });
-
-            // Default
             osm.addTo(this.map);
+            L.control.layers({ 'Calle': osm, 'Satelite': satellite }, null, { position: 'topright' }).addTo(this.map);
 
-            L.control.layers({ 
-                'Calle (OSM)': osm,
-                'Premium (Carto)': carto,
-                'Satelite (Esri)': satellite 
-            }, null, { position: 'topright' }).addTo(this.map);
-
-            // Procesar datos
             let raw = [];
-            try { 
-                const b64 = '{{ base64_encode(json_encode($locations)) }}';
-                raw = JSON.parse(atob(b64)); 
-            } catch(e) { console.error('Data decode fail'); }
+            try { raw = JSON.parse(atob('{{ base64_encode(json_encode($locations)) }}')); } catch(e) {}
+            const locations = raw.filter(l => l.lat > 10 && l.lat < 22 && l.lng > -100 && l.lng < -80);
+            const pts = (locations.length > 0 ? locations : raw).map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
 
-            const filtered = raw.filter(l => {
-                const lat = parseFloat(l.lat);
-                const lng = parseFloat(l.lng);
-                return lat > 10 && lat < 22 && lng > -100 && lng < -80;
-            });
-
-            const locations = filtered.length > 0 ? filtered : raw;
-
-            if (locations.length > 0) {
-                const pts = locations.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
-                
-                // OSRM para ruteo
+            if (pts.length > 0) {
+                // Ruteo
                 let routeCoords = pts;
                 if (pts.length >= 2) {
                     try {
                         const query = pts.map(p => p[1] + ',' + p[0]).join(';');
-                        const response = await fetch('https://router.project-osrm.org/route/v1/driving/' + query + '?overview=full&geometries=geojson');
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.routes && data.routes[0]) {
-                                routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                                this.stats.distance = (data.routes[0].distance / 1000).toFixed(1);
-                                this.stats.duration = Math.round(data.routes[0].duration / 60);
+                        const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + query + '?overview=full&geometries=geojson');
+                        if (r.ok) {
+                            const d = await r.json();
+                            if (d.routes && d.routes[0]) {
+                                routeCoords = d.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                                this.stats.distance = (d.routes[0].distance / 1000).toFixed(1);
+                                this.stats.duration = Math.round(d.routes[0].duration / 60);
                             }
                         }
                     } catch(e) {}
                 }
 
-                // Dibujar Línea
-                const line = L.polyline(routeCoords, {
-                    color: '#10b981',
-                    weight: 6,
-                    opacity: 0.85,
-                    lineJoin: 'round'
-                }).addTo(this.map);
+                const line = L.polyline(routeCoords, { color: '#10b981', weight: 6, opacity: 0.85, lineJoin: 'round' }).addTo(this.map);
 
-                // Iconos
-                const houseIcon = L.divIcon({
-                    html: `<div class='flex flex-col items-center'>
-                             <div class='bg-slate-900 p-2 rounded-lg border-2 border-white shadow-xl text-white'>
-                               <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' stroke-width='2'/></svg>
-                             </div>
-                             <div class='w-2 h-2 bg-slate-900 rotate-45 -mt-1 shadow-lg'></div>
-                           </div>`,
-                    className: '', iconSize: [36, 42], iconAnchor: [18, 42]
-                });
+                // Iconos con Estilo Inline Garantizado
+                const houseIconHtml = `<div style='display:flex;flex-direction:column;align-items:center;'>
+                                        <div style='background:#1e293b;padding:8px;border-radius:8px;border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,0.3);color:#fff;'>
+                                          <svg style='width:20px;height:20px;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' stroke-width='2'/></svg>
+                                        </div>
+                                        <div style='width:10px;height:10px;background:#1e293b;transform:rotate(45deg);margin-top:-6px;border-right:2px solid #fff;border-bottom:2px solid #fff;'></div>
+                                      </div>`;
 
-                const truckIcon = L.divIcon({
-                    html: `<div class='flex flex-col items-center pointer-events-none'>
-                             <div class='relative'>
-                               <div class='absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-25'></div>
-                               <div class='relative bg-emerald-500 p-2.5 rounded-xl border-2 border-white shadow-2xl text-white ring-4 ring-emerald-500/10'>
-                                 <svg class='w-7 h-7' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' stroke-width='2'/></svg>
-                               </div>
-                             </div>
-                             <div class='w-3 h-3 bg-emerald-500 rotate-45 -mt-1.5 border-r-2 border-b-2 border-white shadow-lg'></div>
-                           </div>`,
-                    className: '', iconSize: [44, 52], iconAnchor: [22, 52]
-                });
+                const truckIconHtml = `<div style='display:flex;flex-direction:column;align-items:center;position:relative;'>
+                                        <div style='position:absolute;width:60px;height:60px;background:rgba(34,197,94,0.3);border-radius:50%;top:-5px;animation:pulse-marker 2s infinite;'></div>
+                                        <div style='background:#22c55e;padding:10px;border-radius:12px;border:3px solid #fff;box-shadow:0 10px 20px rgba(0,0,0,0.4);color:#fff;position:relative;z-index:2;'>
+                                          <svg style='width:28px;height:28px;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' stroke-width='2'/></svg>
+                                        </div>
+                                        <div style='width:12px;height:12px;background:#22c55e;transform:rotate(45deg);margin-top:-7px;border-right:3px solid #fff;border-bottom:3px solid #fff;position:relative;z-index:1;'></div>
+                                      </div>`;
 
-                L.marker(pts[0], { icon: houseIcon }).addTo(this.map);
-                L.marker(pts[pts.length - 1], { icon: truckIcon }).addTo(this.map);
+                L.marker(pts[0], { icon: L.divIcon({ html: houseIconHtml, className: '', iconSize: [36, 42], iconAnchor: [18, 42] }) }).addTo(this.map);
+                L.marker(pts[pts.length - 1], { 
+                    icon: L.divIcon({ html: truckIconHtml, className: '', iconSize: [48, 56], iconAnchor: [24, 56] }),
+                    zIndexOffset: 1000 
+                }).addTo(this.map).bindPopup('<b>Camion en ruta</b>');
 
-                this.map.fitBounds(line.getBounds(), { padding: [50, 50] });
+                this.map.fitBounds(line.getBounds(), { padding: [60, 60] });
             }
 
             this.isLoaded = true;
-            // Forzar detección de tamaño en varios intervalos
-            for(let t of [100, 300, 1000]) {
-                setTimeout(() => this.map.invalidateSize(), t);
-            }
+            for(let t of [100, 500, 1000]) setTimeout(() => this.map.invalidateSize(), t);
         }
     }"
 >
+    <style>
+        @keyframes pulse-marker { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+        .leaflet-container { font-family: inherit !important; background: #f8fafc !important; }
+    </style>
+
     {{-- Stats Overlay --}}
-    <div x-show="isLoaded && stats.distance > 0" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 -translate-y-4"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         class="absolute top-4 left-4 z-[1000] bg-white/95 dark:bg-gray-800/95 backdrop-blur shadow-2xl rounded-xl border border-white/20 p-4 flex gap-6 shrink-0">
+    <div x-show="isLoaded && stats.distance > 0" x-transition 
+         class="absolute top-4 left-4 z-[1000] bg-white/95 dark:bg-gray-800/95 backdrop-blur shadow-2xl rounded-xl border border-white/20 p-4 flex gap-6">
         <div class="flex flex-col">
-            <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Distancia</p>
-            <p class="text-lg font-black text-slate-900 dark:text-white" x-text="stats.distance + ' km'"></p>
+            <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Distancia</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white" x-text="stats.distance + ' km'"></span>
         </div>
         <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
         <div class="flex flex-col">
-            <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Tiempo Est.</p>
-            <p class="text-lg font-black text-slate-900 dark:text-white" x-text="stats.duration + ' min'"></p>
+            <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Tiempo Est.</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white" x-text="stats.duration + ' min'"></span>
         </div>
     </div>
 
-    {{-- Loading --}}
+    {{-- Loading Shade --}}
     <div x-show="!isLoaded" class="absolute inset-0 z-[2000] bg-white dark:bg-gray-900 flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-xs font-bold text-gray-400 uppercase tracking-tighter">Procesando Mapa...</p>
+        <span class="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] animate-pulse">Optimizando Mapa...</span>
     </div>
 
     {{-- Map Container --}}
-    <div x-ref="mapContainer" id="map-{{ md5(uniqid()) }}" class="w-full h-[500px]" style="height: 500px; min-height: 500px;" wire:ignore></div>
+    <div x-ref="mapContainer" class="w-full h-[500px]" style="height: 500px;" wire:ignore></div>
 </div>
