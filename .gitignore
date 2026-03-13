@@ -47,8 +47,6 @@ missing_indexes.json
 !composer.json
 !package.json
 !package-lock.json
-!stocks_schema.json
-!missing_indexes.json
 
 
 # IDE - VS Code
