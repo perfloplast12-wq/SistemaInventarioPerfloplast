@@ -246,11 +246,17 @@ class AdminPanelProvider extends PanelProvider
                         max-height: 4.8rem !important;
                         width: auto !important;
                         object-fit: contain;
-                        mix-blend-mode: screen; /* Oculta pixeles casi negros residuales */
-                        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)) contrast(1.05) brightness(1.05);
+                        mix-blend-mode: screen; 
+                        filter: contrast(1.5) brightness(0.9) saturate(1.1);
+                        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
+                        mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
+                        -webkit-mask-composite: source-in;
+                        mask-composite: intersect;
                         image-rendering: auto;
                         -webkit-font-smoothing: antialiased;
-                        margin-left: 0.5rem; /* Ajuste fino para centrar visualmente con los íconos */
+                        -moz-osx-font-smoothing: grayscale;
+                        transform: translateZ(0);
+                        margin-left: 0.5rem;
                     }
 
                     .fi-simple-main .logo-container img {
@@ -262,8 +268,13 @@ class AdminPanelProvider extends PanelProvider
                         object-fit: contain;
                         mix-blend-mode: screen;
                         image-rendering: auto;
-                        transition: transform 0.3s ease;
-                        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+                        transition: all 0.3s ease;
+                        filter: contrast(1.5) brightness(0.9);
+                        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
+                        mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
+                        -webkit-mask-composite: source-in;
+                        mask-composite: intersect;
+                        -webkit-font-smoothing: antialiased;
                     }
 
                             .fi-simple-main .logo-container img:hover {
