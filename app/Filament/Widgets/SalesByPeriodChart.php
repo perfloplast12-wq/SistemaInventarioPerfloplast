@@ -22,7 +22,7 @@ class SalesByPeriodChart extends Widget
     public function getChartData(): array
     {
         $filters = $this->filters ?? [];
-        $start = Carbon::parse($filters['startDate'] ?? now()->startOfMonth())->startOfDay();
+        $start   = Carbon::parse($filters['startDate'] ?? now()->subMonths(2)->startOfMonth())->startOfDay();
         $end   = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
 
         $days        = max(1, $start->diffInDays($end));

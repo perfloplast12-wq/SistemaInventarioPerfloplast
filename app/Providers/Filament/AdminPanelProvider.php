@@ -18,9 +18,13 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-use Hasnayeen\Themes\ThemesPlugin;
-use Hasnayeen\Themes\Http\Middleware\SetTheme;
+// use Hasnayeen\Themes\ThemesPlugin;
+// use Hasnayeen\Themes\Http\Middleware\SetTheme;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\HtmlString;
+use Filament\View\PanelsRenderHook;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,20 +35,291 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->plugins([
-                ThemesPlugin::make(),
+                // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
+            ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
             ->renderHook(
-                \Filament\View\PanelsRenderHook::HEAD_END,
-                fn () => new \Illuminate\Support\HtmlString(
-                    '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">' .
-                    '<link href="/css/dashboard.css?v=' . filemtime(public_path('css/dashboard.css')) . '" rel="stylesheet">' .
-                    '<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js"></script>'
-                )
+                PanelsRenderHook::HEAD_END,
+                function () {
+                    $settings = Cache::remember('appearance_settings', 1800, function () {
+                        return Setting::whereIn('key', [
+                            'primary_color_1',
+                            'primary_color_2',
+                            'sidebar_width',
+                            'border_radius',
+                            'glass_effect',
+                            'mesh_background',
+                            'button_layout',
+                            'shadow_depth',
+                            'bg_color',
+                            'sidebar_bg_color',
+                            'card_bg_color',
+                            'text_color'
+                        ])->pluck('value', 'key')->toArray();
+                    });
+
+                    $p1 = $settings['primary_color_1'] ?? '#6366f1';
+                    $p2 = $settings['primary_color_2'] ?? '#3b82f6';
+                    $sw = ($settings['sidebar_width'] ?? 14) . 'rem';
+                    $br = ($settings['border_radius'] ?? 12) . 'px';
+                    
+                    $isGlass = (bool)($settings['glass_effect'] ?? true);
+                    $btnStyle = $settings['button_layout'] ?? 'pill';
+                    $shadowDepth = $settings['shadow_depth'] ?? 'medium';
+
+                    $bgColor = $settings['bg_color'] ?? '#f8fafc';
+                    $sidebarBg = $settings['sidebar_bg_color'] ?? '#ffffff';
+                    $cardBg = $settings['card_bg_color'] ?? '#ffffff';
+                    $textColor = $settings['text_color'] ?? '#1e293b';
+
+                    $shadows = [
+                        'none' => 'none',
+                        'soft' => '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+                        'medium' => '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                        'deep' => '0 25px 50px -12px rgb(0 0 0 / 0.15)',
+                    ];
+                    $selectedShadow = $shadows[$shadowDepth] ?? $shadows['medium'];
+
+                    $btnRadius = match($btnStyle) {
+                        'square' => '2px',
+                        'pill' => '9999px',
+                        default => $br,
+                    };
+
+                    // Use a static version string or a more reliable cache for the file time
+                    $v = '1.0.0'; 
+                    try {
+                        $path = public_path('css/dashboard.css');
+                        if (file_exists($path)) {
+                            $v = filemtime($path);
+                        }
+                    } catch (\Exception $e) {}
+
+                    $styles = "
+                        <style>
+                            :root {
+                                --p-1: {$p1};
+                                --p-2: {$p2};
+                                --fi-sidebar-width: {$sw};
+                                --fi-main-content-max-width: 100%;
+                                --premium-shadow: {$selectedShadow};
+                                --btn-radius: {$btnRadius};
+                                --border-radius: {$br};
+                                --bg-color: {$bgColor};
+                                --sidebar-bg: {$sidebarBg};
+                                --card-bg: {$cardBg};
+                                --text-primary: {$textColor};
+                                --text-muted: color-mix(in srgb, var(--text-primary), transparent 40%);
+                                --border-color: rgba(0,0,0,0.08);
+                                --main-gradient: linear-gradient(135deg, var(--p-1), var(--p-2));
+                            }
+
+                            .dark {
+                                --bg-color: #040609;
+                                --sidebar-bg: #090e16;
+                                --card-bg: #0e1420;
+                                --text-primary: #f8fafc;
+                                --border-color: rgba(255,255,255,0.04);
+                                --premium-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
+                            }
+                            
+                            body {
+                                background-color: var(--bg-color) !important;
+                                background-image: 
+                                    radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 70%) 0, transparent 60%), 
+                                    radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 70%) 0, transparent 60%),
+                                    linear-gradient(180deg, 
+                                        var(--bg-color) 0%, 
+                                        color-mix(in srgb, var(--bg-color), var(--p-1) 25%) 40%, 
+                                        color-mix(in srgb, var(--bg-color), var(--p-2) 80%) 100%
+                                    ) !important;
+                                background-attachment: fixed !important;
+                                color: var(--text-primary) !important;
+                                transition: background-color 0.8s ease;
+                                min-height: 100vh;
+                                font-family: 'Outfit', sans-serif !important;
+                                overflow-x: hidden;
+                            }
+
+                            .dark body {
+                                background-image: 
+                                    radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 60%) 0, transparent 50%), 
+                                    radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 60%) 0, transparent 50%),
+                                    linear-gradient(180deg, 
+                                        #040609 0%, 
+                                        color-mix(in srgb, #040609, var(--p-1) 30%) 50%, 
+                                        color-mix(in srgb, #040609, var(--p-2) 90%) 100%
+                                    ) !important;
+                            }
+                            
+                            .fi-layout, .fi-main { background: transparent !important; }
+
+                            .fi-topbar, .fi-sidebar-item-active, .fi-btn-color-primary {
+                                background: var(--main-gradient) !important;
+                                color: #ffffff !important;
+                                border: none !important;
+                            }
+                            
+                            .fi-sidebar-item-active, .fi-btn-color-primary {
+                                box-shadow: 0 4px 15px -1px color-mix(in srgb, var(--p-1), transparent 60%) !important;
+                            }
+
+                            .fi-topbar {
+                                height: 5.5rem !important;
+                                border-bottom: none !important;
+                                backdrop-filter: blur(20px) !important;
+                                -webkit-backdrop-filter: blur(20px) !important;
+                                background-color: color-mix(in srgb, var(--p-1), transparent 85%) !important;
+                            }
+
+                            .fi-card, .fi-section, .fi-sidebar {
+                                border-radius: var(--border-radius) !important;
+                                border: 1px solid var(--border-color) !important;
+                            }
+
+                            " . ($isGlass ? "
+                            .fi-card, .fi-section {
+                                background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
+                                backdrop-filter: blur(16px) !important;
+                                -webkit-backdrop-filter: blur(16px) !important;
+                            }
+                            .fi-sidebar {
+                                background-color: transparent !important;
+                                backdrop-filter: blur(10px) !important;
+                            }
+                            " : "
+                            .fi-sidebar { background-color: var(--sidebar-bg) !important; }
+                            .fi-card, .fi-section { background-color: var(--card-bg) !important; }
+                            ") . "
+
+                            .fi-card, .fi-section { box-shadow: var(--premium-shadow) !important; }
+
+                            @media (min-width: 1024px) {
+                                .fi-sidebar {
+                                    position: fixed !important;
+                                    width: var(--fi-sidebar-width) !important;
+                                }
+                                .fi-main-ctn {
+                                    margin-inline-start: var(--fi-sidebar-width) !important;
+                                    width: calc(100vw - var(--fi-sidebar-width)) !important;
+                                }
+                                .fi-main { width: 100% !important; padding: 2rem !important; }
+                                .fi-main > div { max-width: none !important; width: 100% !important; }
+                            }
+
+                            .fi-header-heading { font-weight: 800 !important; }
+                            .fi-sidebar-group-label { font-weight: 700 !important; color: var(--p-1) !important; }
+
+                    /* Optimización para el Logo en Sidebar */
+                    .fi-sidebar-header {
+                        height: 5.5rem !important;
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-start !important;
+                        padding-left: 1.5rem !important; /* Base padding of sidebar nav */
+                        padding-right: 1.5rem;
+                        margin-bottom: 0rem; /* Reducido para mejor alineación */
+                    }
+
+                    .fi-sidebar-header > div, 
+                    .fi-sidebar-header > a {
+                        width: 100%;
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    /* Efecto de rectangulo que coincide con los items del nav */
+                    .fi-sidebar-header .fi-logo-container,
+                    .fi-sidebar-header a > div {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 100%;
+                        padding: 0.5rem;
+                        border-radius: var(--border-radius, 12px);
+                        transition: all 0.2s ease;
+                    }
+
+                    .fi-logo {
+                        height: 4.8rem !important;
+                        max-height: 4.8rem !important;
+                        width: auto !important;
+                        object-fit: contain;
+                        mix-blend-mode: screen; /* Oculta pixeles casi negros residuales */
+                        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)) contrast(1.05) brightness(1.05);
+                        image-rendering: auto;
+                        -webkit-font-smoothing: antialiased;
+                        margin-left: 0.5rem; /* Ajuste fino para centrar visualmente con los íconos */
+                    }
+
+                    .fi-simple-main .logo-container img {
+                        height: auto !important;
+                        max-height: 220px !important;
+                        width: auto !important;
+                        margin: 0 auto;
+                        display: block;
+                        object-fit: contain;
+                        mix-blend-mode: screen;
+                        image-rendering: auto;
+                        transition: transform 0.3s ease;
+                        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+                    }
+
+                            .fi-simple-main .logo-container img:hover {
+                                transform: scale(1.04) translateY(-5px);
+                                filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
+                            }
+
+                            .dark .fi-simple-main .logo-container img {
+                                filter: drop-shadow(0 0 30px color-mix(in srgb, var(--p-1), transparent 80%));
+                            }
+
+                            .group\/logo:hover svg {
+                                filter: drop-shadow(0 0 8px var(--p-1));
+                                transform: translateY(-2px);
+                            }
+
+                            /* Refinamiento de la página de Login */
+                            .fi-simple-layout {
+                                display: flex !important;
+                                align-items: center !important;
+                                justify-content: center !important;
+                                min-height: 100vh !important;
+                            }
+
+                            .fi-simple-main {
+                                background-color: color-mix(in srgb, var(--card-bg), transparent 10%) !important;
+                                backdrop-filter: blur(24px) !important;
+                                -webkit-backdrop-filter: blur(24px) !important;
+                                border: 1px solid var(--border-color) !important;
+                                border-radius: 2rem !important;
+                                box-shadow: var(--premium-shadow) !important;
+                                padding: 3rem !important;
+                                max-width: 28rem !important;
+                            }
+                        </style>
+                    ";
+
+                    return new HtmlString("
+                        <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
+                        <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
+                        <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
+                        {$styles}
+                    ");
+                }
             )
 
             
             ->login(\App\Filament\Pages\Auth\Login::class)
+
+            ->brandLogo(asset('images/logo-perfloplast-premium.png') . '?v=' . (file_exists(public_path('images/logo-perfloplast-premium.png')) ? filemtime(public_path('images/logo-perfloplast-premium.png')) : time()))
+            ->brandLogoHeight('5rem')
+            ->brandName('PERFLOPLAST')
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.logo')
+            )
 
             ->colors([
                 'primary' => Color::Lime,
@@ -88,8 +363,8 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
 
-                  // ✅ OBLIGATORIO para que el plugin aplique el tema y aparezca bien
-                SetTheme::class,
+                // ✅ OBLIGATORIO para que el plugin aplique el tema y aparezca bien
+                // SetTheme::class,
             ])
 
             ->authMiddleware([

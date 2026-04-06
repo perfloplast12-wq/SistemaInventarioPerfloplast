@@ -110,14 +110,14 @@
                     <div><div class="pb-tile-hdr-title">Ventas vs Producción</div><div class="pb-tile-hdr-sub">Ingresos (Q) · Unidades · Doble Eje</div></div>
                     <span class="pb-tile-hdr-badge">Comercial</span>
                 </div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\SalesByPeriodChart::class, [], key('s1-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\SalesByPeriodChart::class, ['filters' => $this->filters], key('s1-'.$fk))</div>
             </div>
             <div class="gc-4">
                 <div class="pb-tile-hdr">
                     <div><div class="pb-tile-hdr-title">Alertas de Suministro</div><div class="pb-tile-hdr-sub">Normal / Alerta / Crítico</div></div>
                     <span class="pb-tile-hdr-badge">{{ $s['lowStock'] }} alerta</span>
                 </div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryStatusChart::class, [], key('s2-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryStatusChart::class, ['filters' => $this->filters], key('s2-'.$fk))</div>
             </div>
         </div>
 
@@ -125,18 +125,18 @@
         <div class="pb-grid">
             <div class="gc-4">
                 <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Tendencia Rentabilidad</div><div class="pb-tile-hdr-sub">Ingresos vs Ganancia Neta</div></div></div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\ProfitabilityTrendChart::class, [], key('s3-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\ProfitabilityTrendChart::class, ['filters' => $this->filters], key('s3-'.$fk))</div>
             </div>
             <div class="gc-4">
                 <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Stock por Ubicación</div><div class="pb-tile-hdr-sub">Bodegas y Camiones</div></div></div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\StockByLocationChart::class, [], key('s4-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\StockByLocationChart::class, ['filters' => $this->filters], key('s4-'.$fk))</div>
             </div>
             <div class="gc-4">
                 <div class="pb-tile-hdr">
                     <div><div class="pb-tile-hdr-title">Ranking de Operadores Logísticos</div><div class="pb-tile-hdr-sub">Rendimiento por Despachos Finalizados</div></div>
                     <span class="pb-tile-hdr-badge">Top Gp</span>
                 </div>
-                <div class="pb-widget" style="padding:0">@livewire(\App\Filament\Widgets\LogisticsRankingWidget::class, [], key('s5-'.$fk))</div>
+                <div class="pb-widget" style="padding:0">@livewire(\App\Filament\Widgets\LogisticsRankingWidget::class, ['filters' => $this->filters], key('s5-'.$fk))</div>
             </div>
         </div>
 
@@ -147,14 +147,14 @@
                     <div><div class="pb-tile-hdr-title">Panel Logístico — Viajes por Camión</div><div class="pb-tile-hdr-sub">Despachos por vehículo en el período</div></div>
                     <span class="pb-tile-hdr-badge">Logística</span>
                 </div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\LogisticsWidget::class, [], key('s6-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\LogisticsWidget::class, ['filters' => $this->filters], key('s6-'.$fk))</div>
             </div>
             <div class="gc-6">
                 <div class="pb-tile-hdr">
                     <div><div class="pb-tile-hdr-title">Top 5 Productos por Rentabilidad</div><div class="pb-tile-hdr-sub">Mayor margen bruto en ventas confirmadas</div></div>
                     <span class="pb-tile-hdr-badge">Comercial</span>
                 </div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\TopSellingProductsChart::class, [], key('s7-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\TopSellingProductsChart::class, ['filters' => $this->filters], key('s7-'.$fk))</div>
             </div>
         </div>
 
@@ -162,11 +162,11 @@
         <div class="pb-grid">
             <div class="gc-5">
                 <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Distribución Materia Prima</div><div class="pb-tile-hdr-sub">% Stock por tipo de insumo (kg)</div></div></div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryDistributionChart::class, [], key('s8-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryDistributionChart::class, ['filters' => $this->filters], key('s8-'.$fk))</div>
             </div>
             <div class="gc-7">
                 <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Actividad de Almacén</div><div class="pb-tile-hdr-sub">Movimientos de inventario por día</div></div></div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryMovementsTrendChart::class, [], key('s9-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryMovementsTrendChart::class, ['filters' => $this->filters], key('s9-'.$fk))</div>
             </div>
         </div>
 
@@ -177,7 +177,7 @@
                     <div><div class="pb-tile-hdr-title">Rendimiento Operativo por Turno</div><div class="pb-tile-hdr-sub">Gauge · Comparación · Tendencia</div></div>
                     <span class="pb-tile-hdr-badge">Producción</span>
                 </div>
-                <div class="pb-widget">@livewire(\App\Filament\Widgets\ProductionByShiftChart::class, [], key('s10-'.$fk))</div>
+                <div class="pb-widget">@livewire(\App\Filament\Widgets\ProductionByShiftChart::class, ['filters' => $this->filters], key('s10-'.$fk))</div>
             </div>
         </div>
 

@@ -39,9 +39,10 @@ class QuickSale extends Page implements HasForms
     {
         return [
             \Filament\Actions\Action::make('back')
-                ->label('Volver')
+                ->label('Volver a Inventario')
+                ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(SaleResource::getUrl('index')),
+                ->url(route('filament.admin.pages.inventario')),
         ];
     }
 
@@ -165,7 +166,7 @@ class QuickSale extends Page implements HasForms
                                                             $set('quantity', 1);
                                                         }
                                                     })
-                                                    ->columnSpan(['default' => 12, 'md' => 4]),
+                                                    ->columnSpan(['default' => 12, 'md' => 3]),
 
                                                 Select::make('color_id')
                                                     ->label('Color')
@@ -186,17 +187,18 @@ class QuickSale extends Page implements HasForms
                                                         // Agrupar por color_id para sumar cantidades
                                                         return $stocks->groupBy(fn($s) => $s->color_id ?? 'null')->mapWithKeys(function ($group, $key) use ($product) {
                                                             $totalQty = $group->sum('quantity');
-                                                            $stockColorId = $group->first()->color_id;
-                                                            $colorName = $stockColorId ? \App\Models\Color::find($stockColorId)?->name : null;
+                                                            $stockRecord = $group->first();
+                                                            $stockColor = $stockRecord->color;
+                                                            
+                                                            $colorLabel = $stockColor ? $stockColor->display_name : null;
 
-                                                            if (!$colorName && $key === 'null') {
-                                                                $catalogColorId = $product->color_id;
-                                                                $catalogColor = $catalogColorId ? \App\Models\Color::find($catalogColorId)?->name : null;
-                                                                $colorName = $catalogColor ? "{$catalogColor} (Catálogo)" : "Sin Color (N/A)";
+                                                            if (!$colorLabel && $key === 'null') {
+                                                                $catalogColor = $product->color;
+                                                                $colorLabel = $catalogColor ? "{$catalogColor->display_name} (Catálogo)" : "Sin Color (N/A)";
                                                             }
 
                                                             return [
-                                                                $key => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                                $key => ($colorLabel ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
                                                             ];
                                                         })->toArray();
                                                     })
@@ -217,7 +219,7 @@ class QuickSale extends Page implements HasForms
                                                         $qty = (float)($state ?: 0);
                                                         $set('subtotal', $qty * $price);
                                                     })
-                                                    ->columnSpan(['default' => 4, 'md' => 1]),
+                                                    ->columnSpan(['default' => 4, 'md' => 2]),
                                                 TextInput::make('unit_price')
                                                     ->label('Precio Q')
                                                     ->numeric()
@@ -409,7 +411,7 @@ class QuickSale extends Page implements HasForms
                 ->success()
                 ->send();
 
-            $this->redirect(SaleResource::getUrl('index'));
+            $this->redirect(route('filament.admin.pages.inventario'));
 
         } catch (\Exception $e) {
             Notification::make()

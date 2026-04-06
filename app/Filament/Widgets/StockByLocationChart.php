@@ -24,13 +24,31 @@ class StockByLocationChart extends Widget
     {
         $warehouseStock = Stock::whereNotNull('warehouse_id')
             ->select('warehouse_id', DB::raw('SUM(quantity) as total'))
-            ->groupBy('warehouse_id')->with('warehouse')->get()
-            ->mapWithKeys(fn($s) => [$s->warehouse?->name ?? 'Bodega' => (float)$s->total]);
+            ->groupBy('warehouse_id')
+            ->get()
+            ->map(function($s) {
+                $w = Warehouse::withTrashed()->find($s->warehouse_id);
+                return [
+                    'name' => $w?->name ?? 'Bodega Desconocida',
+                    'total' => (float)$s->total
+                ];
+            })
+            ->groupBy('name')
+            ->map(fn($group) => $group->sum('total'));
 
         $truckStock = Stock::whereNotNull('truck_id')
             ->select('truck_id', DB::raw('SUM(quantity) as total'))
-            ->groupBy('truck_id')->with('truck')->get()
-            ->mapWithKeys(fn($s) => [$s->truck?->name ?? 'Camión' => (float)$s->total]);
+            ->groupBy('truck_id')
+            ->get()
+            ->map(function($s) {
+                $t = \App\Models\Truck::withTrashed()->find($s->truck_id);
+                return [
+                    'name' => $t?->name ?? ($t?->plate ?? 'Camión Desconocido'),
+                    'total' => (float)$s->total
+                ];
+            })
+            ->groupBy('name')
+            ->map(fn($group) => $group->sum('total'));
 
         $labels = array_merge($warehouseStock->keys()->toArray(), $truckStock->keys()->toArray());
         $values = array_merge($warehouseStock->values()->toArray(), $truckStock->values()->toArray());

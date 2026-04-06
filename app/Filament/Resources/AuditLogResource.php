@@ -41,41 +41,50 @@ class AuditLogResource extends Resource
         return $form->schema([
             Forms\Components\Split::make([
                 Forms\Components\Section::make('Resumen de Actividad')
+                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
                     ->schema([
                         Forms\Components\Placeholder::make('summary_html')
-                            ->label('¿Qué cambió?')
+                            ->label('')
                             ->content(fn ($record) => new \Illuminate\Support\HtmlString(
                                 '<div class="prose dark:prose-invert max-w-none">' . 
-                                nl2br(static::humanChangesSummary($record)) . 
+                                static::humanChangesSummary($record) . 
                                 '</div>'
                             )),
                         
                         Forms\Components\Textarea::make('description')
-                            ->label('Contexto')
+                            ->label('Contexto / Nota')
+                            ->placeholder('Sin descripción adicional')
                             ->disabled()
-                            ->rows(2),
+                            ->rows(2)
+                            ->visible(fn ($record) => !empty($record->description)),
                     ])->grow(),
 
                 Forms\Components\Section::make('Información del Evento')
+                    ->icon('heroicon-o-information-circle')
                     ->schema([
                         Forms\Components\TextInput::make('event')
                             ->label('Acción')
                             ->disabled()
-                            ->formatStateUsing(fn ($state) => static::humanEvent($state)),
+                            ->formatStateUsing(fn ($state) => static::humanEvent($state))
+                            ->prefixIcon('heroicon-o-bolt'),
 
                         Forms\Components\TextInput::make('module')
                             ->label('Módulo')
                             ->disabled()
-                            ->formatStateUsing(fn ($state) => static::humanModule($state)),
+                            ->formatStateUsing(fn ($state) => static::humanModule($state))
+                            ->prefixIcon('heroicon-o-cube'),
 
-                        Forms\Components\TextInput::make('user.name')
+                        Forms\Components\TextInput::make('user_name')
                             ->label('Usuario Responsable')
-                            ->disabled(),
+                            ->disabled()
+                            ->default(fn ($record) => $record->user?->name ?? 'Sistema / Automatizado')
+                            ->prefixIcon('heroicon-o-user'),
 
                         Forms\Components\TextInput::make('created_at')
                             ->label('Fecha y Hora')
                             ->disabled()
-                            ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->format('d/m/Y H:i:s')),
+                            ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->format('d/m/Y H:i:s'))
+                            ->prefixIcon('heroicon-o-calendar'),
                     ])->columnSpan(1),
             ])->columnSpanFull(),
 
@@ -85,6 +94,7 @@ class AuditLogResource extends Resource
                     Forms\Components\Tabs::make('json_tabs')
                         ->tabs([
                             Forms\Components\Tabs\Tab::make('Antes')
+                                ->icon('heroicon-o-arrow-path')
                                 ->schema([
                                     Forms\Components\Textarea::make('old_values')
                                         ->label('')
@@ -93,6 +103,7 @@ class AuditLogResource extends Resource
                                         ->formatStateUsing(fn ($state) => static::prettyJson($state)),
                                 ]),
                             Forms\Components\Tabs\Tab::make('Después')
+                                ->icon('heroicon-o-arrow-right-circle')
                                 ->schema([
                                     Forms\Components\Textarea::make('new_values')
                                         ->label('')
@@ -101,6 +112,7 @@ class AuditLogResource extends Resource
                                         ->formatStateUsing(fn ($state) => static::prettyJson($state)),
                                 ]),
                             Forms\Components\Tabs\Tab::make('Metadatos')
+                                ->icon('heroicon-o-globe-alt')
                                 ->schema([
                                     Forms\Components\Grid::make(2)
                                         ->schema([
@@ -135,28 +147,44 @@ class AuditLogResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
-                    // ✅ respeta tu zona horaria configurada en APP_TIMEZONE
                     ->dateTime('d/m/Y H:i:s', config('app.timezone'))
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn ($record) => $record->created_at->diffForHumans()),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuario')
+                    ->default('Sistema / Automatizado')
+                    ->weight('bold')
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('module')
                     ->label('Módulo')
                     ->badge()
+                    ->color(fn ($state) => match($state) {
+                        'inventory' => 'info',
+                        'sales' => 'success',
+                        'products' => 'warning',
+                        'production' => 'primary',
+                        default => 'gray'
+                    })
+                    ->formatStateUsing(fn ($state) => static::humanModule($state))
                     ->searchable()
-                    ->sortable()
-                    ->formatStateUsing(fn ($state) => static::humanModule($state)),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('event')
                     ->label('Acción')
                     ->badge()
+                    ->color(fn ($state) => match($state) {
+                        'deleted' => 'danger',
+                        'created' => 'success',
+                        'updated' => 'info',
+                        'login' => 'primary',
+                        default => 'gray'
+                    })
+                    ->formatStateUsing(fn ($state) => static::humanEvent($state))
                     ->searchable()
-                    ->sortable()
-                    ->formatStateUsing(fn ($state) => static::humanEvent($state)),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('ip_address')
                     ->label('IP')
@@ -177,6 +205,7 @@ class AuditLogResource extends Resource
                 Tables\Filters\SelectFilter::make('module')
                     ->label('Módulo')
                     ->options(fn () => AuditLog::query()
+                        ->whereNotNull('module')
                         ->select('module')
                         ->distinct()
                         ->pluck('module', 'module')
@@ -187,6 +216,7 @@ class AuditLogResource extends Resource
                 Tables\Filters\SelectFilter::make('event')
                     ->label('Acción')
                     ->options(fn () => AuditLog::query()
+                        ->whereNotNull('event')
                         ->select('event')
                         ->distinct()
                         ->pluck('event', 'event')
@@ -195,7 +225,7 @@ class AuditLogResource extends Resource
                     ),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('Ver'),
+                Tables\Actions\ViewAction::make()->label('Ver Detalle')->icon('heroicon-o-eye')->color('gray'),
             ])
             ->bulkActions([]);
     }
@@ -413,13 +443,33 @@ class AuditLogResource extends Resource
         $new = is_array($new) ? $new : [];
 
         if ($record->event === 'created') {
-            return "✨ **Registro creado.** Estos son algunos de los datos ingresados:\n" . 
-                   collect($new)->take(8)->map(fn($v, $k) => "- **" . static::humanLabelForKey($k) . "**: " . static::humanValue($k, $v))->implode("\n");
+            $data = collect($new)->take(12)->map(function($v, $k) {
+                return "<div class='flex items-center gap-2 mb-1'><span class='text-gray-400'>•</span> <b>" . static::humanLabelForKey($k) . ":</b> " . static::humanValue($k, $v) . "</div>";
+            })->implode("");
+            
+            return "<div class='bg-green-50 dark:bg-green-950/20 border-l-4 border-green-500 p-4 rounded-r-lg'>
+                        <div class='flex items-center gap-2 text-green-700 dark:text-green-400 font-black mb-2'>
+                            <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'></path></svg>
+                            REGISTRO CREADO
+                        </div>
+                        <div class='text-sm opacity-90'>Datos principales ingresados:</div>
+                        <div class='mt-3 text-sm'>{$data}</div>
+                    </div>";
         }
 
         if ($record->event === 'deleted') {
-            return "🗑️ **Registro eliminado.** Se borró el registro que contenía:\n" . 
-                   collect($old)->take(5)->map(fn($v, $k) => "- **" . static::humanLabelForKey($k) . "**: " . static::humanValue($k, $v))->implode("\n");
+            $data = collect($old)->take(8)->map(function($v, $k) {
+                return "<div class='flex items-center gap-2 mb-1'><span class='text-gray-400'>•</span> <b>" . static::humanLabelForKey($k) . ":</b> " . static::humanValue($k, $v) . "</div>";
+            })->implode("");
+
+            return "<div class='bg-red-50 dark:bg-red-950/20 border-l-4 border-red-500 p-4 rounded-r-lg'>
+                        <div class='flex items-center gap-2 text-red-700 dark:text-red-400 font-black mb-2'>
+                            <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'></path></svg>
+                            REGISTRO ELIMINADO
+                        </div>
+                        <div class='text-sm opacity-90'>Contenido del registro antes de borrar:</div>
+                        <div class='mt-3 text-sm'>{$data}</div>
+                    </div>";
         }
 
         $keys = array_unique(array_merge(array_keys($old), array_keys($new)));
@@ -442,13 +492,30 @@ class AuditLogResource extends Resource
                 $afterText  = '********';
             }
 
-            $lines[] = "• **{$label}**: de \"{$beforeText}\" a \"{$afterText}\"";
+            $lines[] = "<div class='py-2 border-b border-gray-100 dark:border-gray-800 last:border-0'>
+                            <div class='text-xs font-bold text-gray-500 uppercase tracking-wider mb-1'>{$label}</div>
+                            <div class='flex items-center gap-3 flex-wrap'>
+                                <span class='px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-sm line-through decoration-red-400/50'>{$beforeText}</span>
+                                <svg class='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M14 5l7 7m0 0l-7 7m7-7H3'></path></svg>
+                                <span class='px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-sm font-bold'>{$afterText}</span>
+                            </div>
+                        </div>";
         }
 
         if (empty($lines)) {
-            return "Se realizó una actualización pero no se detectaron cambios en campos principales.";
+            return "<div class='text-gray-500 italic p-4 text-center'>Actualización técnica realizada sin cambios en campos visibles.</div>";
         }
 
-        return "🔄 **Se actualizaron los siguientes campos:**\n\n" . implode("\n", $lines);
+        $allChanges = implode("", $lines);
+
+        return "<div class='bg-blue-50 dark:bg-blue-950/20 border-l-4 border-blue-500 p-4 rounded-r-lg mb-4'>
+                    <div class='flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold'>
+                        <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'></path></svg>
+                        CAMBIOS DETECTADOS
+                    </div>
+                </div>
+                <div class='space-y-1'>
+                    {$allChanges}
+                </div>";
     }
 }

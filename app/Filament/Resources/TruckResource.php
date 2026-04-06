@@ -59,7 +59,7 @@ class TruckResource extends Resource
                         ->label('Placa')
                         ->required()
                         ->maxLength(20)
-                        ->unique(ignoreRecord: true)
+                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get){
                             if (blank($get('name')) && filled($state)) {
@@ -67,9 +67,17 @@ class TruckResource extends Resource
                             }
                         }),
 
+                    Forms\Components\Select::make('driver_id')
+                        ->label('Piloto / Conductor')
+                        ->relationship('driver', 'name', fn ($query) => $query->role('conductor'))
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Seleccione un usuario con rol de conductor.')
+                        ->required(),
+
                     Forms\Components\TextInput::make('driver_name')
-                        ->label('Piloto')
-                        ->required()
+                        ->label('Piloto Auxiliar (Opcional)')
+                        ->helperText('Nombre del piloto si no es un usuario del sistema.')
                         ->maxLength(120),
 
                     Forms\Components\TextInput::make('brand')
@@ -93,11 +101,15 @@ class TruckResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('plate')->label('Placa')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('driver_name')->label('Piloto')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('driver.name')->label('Piloto (Usuario)')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('driver_name')->label('Piloto Aux.')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('brand')->label('Marca')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('model')->label('Modelo')->searchable()->sortable(),
                 Tables\Columns\ToggleColumn::make('is_active')->label('Activo')->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y H:i:s')->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
 
@@ -114,10 +126,14 @@ class TruckResource extends Resource
 
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

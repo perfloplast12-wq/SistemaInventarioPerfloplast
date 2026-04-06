@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Color extends Model
 {
-    use Auditable;
+    use Auditable, SoftDeletes;
 
     protected string $auditModule = 'catalogs';
     use HasFactory;
@@ -30,11 +31,23 @@ class Color extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        if ($this->variant) {
+        if ($this->variant && $this->variant !== 'Opcional') {
             return "{$this->name} - {$this->variant} ({$this->code})";
         }
 
         return "{$this->name} ({$this->code})";
+    }
+
+    /**
+     * More descriptive label for grouped selects
+     */
+    public function getDescriptiveLabelAttribute(): string
+    {
+        $label = ($this->variant && $this->variant !== 'Opcional') ? $this->variant : 'Estándar';
+        if ($this->code) {
+            $label .= " — {$this->code}";
+        }
+        return $label;
     }
 
     public function productions(): HasMany

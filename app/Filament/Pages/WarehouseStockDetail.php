@@ -19,6 +19,17 @@ class WarehouseStockDetail extends Page implements HasTable
     protected static bool $shouldRegisterNavigation = false; // Hidden from sidebar
     protected static string $view = 'filament.pages.warehouse-stock-detail';
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('volver')
+                ->label('Volver a Inventario')
+                ->icon('heroicon-o-arrow-left')
+                ->url(route('filament.admin.pages.inventario'))
+                ->color('gray'),
+        ];
+    }
+
     public ?int $warehouseId = null;
     public ?string $productType = null;
     public ?string $warehouseName = null;
@@ -55,7 +66,7 @@ class WarehouseStockDetail extends Page implements HasTable
                     ->where('warehouse_id', $this->warehouseId)
                     ->where('quantity', '!=', 0)
                     ->whereHas('product', fn (Builder $q) => $q->where('type', $this->productType))
-                    ->with('product')
+                    ->with(['product', 'color'])
             )
             ->defaultSort('quantity', 'desc')
             ->columns([
@@ -64,9 +75,14 @@ class WarehouseStockDetail extends Page implements HasTable
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('color.display_name')
+                    ->label('Color')
+                    ->placeholder('N/A')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Existencia')
-                    ->numeric(decimalPlaces: 0)
+                    ->numeric(decimalPlaces: 2)
                     ->sortable()
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),

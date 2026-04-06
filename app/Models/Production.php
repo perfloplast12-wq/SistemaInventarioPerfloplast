@@ -30,6 +30,7 @@ class Production extends Model
 
     protected $casts = [
         'production_date' => 'datetime',
+        'quantity' => 'decimal:3',
     ];
 
     public function product(): BelongsTo

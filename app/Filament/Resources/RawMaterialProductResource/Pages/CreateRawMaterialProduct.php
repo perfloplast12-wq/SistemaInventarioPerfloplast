@@ -15,11 +15,16 @@ class CreateRawMaterialProduct extends CreateRecord
     {
         return [
             \Filament\Actions\Action::make('volver')
-                ->label('Volver')
+                ->label('Volver a Inventario')
                 ->icon('heroicon-o-arrow-left')
-                ->url($this->getResource()::getUrl('index'))
+                ->url(route('filament.admin.pages.inventario'))
                 ->color('gray'),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return route('filament.admin.pages.inventario');
     }
 
     protected function afterCreate(): void

@@ -73,12 +73,13 @@ class FinishedProductResource extends Resource
                     Forms\Components\TextInput::make('sku')
                         ->label('SKU / Código (opcional)')
                         ->maxLength(60)
-                        ->unique(ignoreRecord: true),
+                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at')),
 
                     Forms\Components\Grid::make(3)->schema([
                         Forms\Components\TextInput::make('sale_price')
                             ->label('Precio de venta')
                             ->numeric()
+                            ->step(0.01)
                             ->prefix('Q')
                             ->required()
                             ->default(0),
@@ -97,10 +98,7 @@ class FinishedProductResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\TextInput::make('units_per_presentation')
-                            ->label('Factor Conversión (Base/Pres)')
-                            ->numeric()
-                            ->helperText('Ej: 55 si es un saco de 55kg')
+                        Forms\Components\Hidden::make('units_per_presentation')
                             ->default(1),
 
                         Forms\Components\Placeholder::make('stock_total_display')
@@ -109,14 +107,6 @@ class FinishedProductResource extends Resource
                             ->extraAttributes(['class' => 'font-bold text-primary-600']),
                     ]),
 
-                    Forms\Components\Select::make('color_id')
-                        ->label('Color (Catálogo)')
-                        ->options(fn () => \App\Models\Color::where('is_active', true)
-                            ->get()
-                            ->mapWithKeys(fn ($c) => [$c->id => $c->display_name]))
-                        ->searchable()
-                        ->preload()
-                        ->placeholder('Opcional'),
 
                     Forms\Components\Textarea::make('description')
                         ->label('Descripción (opcional)')
@@ -133,30 +123,6 @@ class FinishedProductResource extends Resource
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('Receta / Composición')
-                ->description('Defina qué materias primas se consumen para producir una unidad de este producto.')
-                ->collapsible()
-                ->schema([
-                    Forms\Components\Repeater::make('recipes')
-                        ->relationship()
-                        ->schema([
-                            Forms\Components\Select::make('raw_material_id')
-                                ->label('Materia Prima')
-                                ->options(fn () => \App\Models\Product::where('type', 'raw_material')->pluck('name', 'id'))
-                                ->required()
-                                ->searchable()
-                                ->preload(),
-                            Forms\Components\TextInput::make('quantity')
-                                ->label('Cantidad necesaria (u. base)')
-                                ->numeric()
-                                ->required()
-                                ->minValue(0.0001)
-                                ->helperText('Ej: Si usa 0.5kg por unidad, ponga 0.5'),
-                        ])
-                        ->columns(2)
-                        ->addActionLabel('Añadir Ingrediente')
-                        ->itemLabel(fn (array $state): ?string => \App\Models\Product::find($state['raw_material_id'] ?? null)?->name ?? 'Nuevo Ingrediente'),
-                ]),
         ]);
     }
 
@@ -181,11 +147,6 @@ class FinishedProductResource extends Resource
                         default => 'success',
                     }),
 
-                Tables\Columns\TextColumn::make('color.code')
-                    ->label('Color')
-                    ->badge()
-                    ->color('gray')
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('sale_price')
                     ->label('Precio')
@@ -195,6 +156,9 @@ class FinishedProductResource extends Resource
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Activo')
                     ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('register_entry')
@@ -207,13 +171,6 @@ class FinishedProductResource extends Resource
                             ->options(Warehouse::where('is_active', true)->pluck('name', 'id'))
                             ->required()
                             ->searchable(),
-                        Forms\Components\Select::make('color_id')
-                            ->label('Color')
-                            ->options(fn () => \App\Models\Color::where('is_active', true)
-                                ->get()
-                                ->mapWithKeys(fn ($c) => [$c->id => $c->display_name]))
-                            ->searchable()
-                            ->preload(),
                         Forms\Components\TextInput::make('quantity')
                             ->label('Cantidad a Ingresar')
                             ->numeric()
@@ -227,10 +184,10 @@ class FinishedProductResource extends Resource
                         InventoryMovement::create([
                             'type' => 'in',
                             'product_id' => $record->id,
-                            'color_id' => $data['color_id'] ?? null,
+                            'color_id' => null,
                             'to_warehouse_id' => $data['to_warehouse_id'],
                             'quantity' => $data['quantity'],
-                            'unit_cost' => $record->purchase_cost ?? $record->sale_price ?? 0,
+                            'unit_cost' => 0,
                             'note' => $data['note'] ?? 'Entrada rápida desde catálogo',
                             'created_by' => auth()->id(),
                         ]);
@@ -251,6 +208,15 @@ class FinishedProductResource extends Resource
                     ])),
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('id', 'desc');
     }

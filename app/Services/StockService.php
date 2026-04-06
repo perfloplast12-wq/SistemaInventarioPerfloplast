@@ -51,13 +51,15 @@ class StockService
             $qty = (float) $m->quantity;
             if (abs($qty) == 0) return;
 
-            // Invertir lógica
+            $from = $this->resolveFrom($m);
+            $to = $this->resolveTo($m);
+
+            // Invertir lógica: lo que entró se quita, lo que salió se agrega
             match ($m->type) {
-                'in' => $this->decreaseStock($m->product_id, $this->resolveTo($m), $qty, $m->color_id),
-                'out' => $this->increaseStock($m->product_id, $this->resolveFrom($m), $qty, $m->color_id),
-                'transfer' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty, $m->color_id),
+                'in' => $to ? $this->decreaseStock($m->product_id, $to, $qty, $m->color_id) : null,
+                'out' => $from ? $this->increaseStock($m->product_id, $from, $qty, $m->color_id) : null,
+                'transfer', 'return' => ($from && $to) ? $this->transferStock($m->product_id, $to, $from, $qty, $m->color_id) : null,
                 'adjust' => $this->revertAdjust($m, $qty),
-                'return' => $this->transferStock($m->product_id, $this->resolveTo($m), $this->resolveFrom($m), $qty, $m->color_id),
                 default => null,
             };
         });
@@ -137,8 +139,9 @@ class StockService
 
     // ── Métodos Core (Estrictos) ───────────────────────
 
-    public function increaseStock(int $productId, array $location, float $qty, ?int $colorId = null): void
+    public function increaseStock(?int $productId, ?array $location, float $qty, ?int $colorId = null): void
     {
+        if (!$productId || !$location) return;
         $stock = Stock::query()
             ->where('product_id', $productId)
             ->where('color_id', $colorId)
@@ -161,8 +164,9 @@ class StockService
         $stock->save();
     }
 
-    public function decreaseStock(int $productId, array $location, float $qty, ?int $colorId = null): void
+    public function decreaseStock(?int $productId, ?array $location, float $qty, ?int $colorId = null): void
     {
+        if (!$productId || !$location) return;
         $stock = Stock::query()
             ->where('product_id', $productId)
             ->where('color_id', $colorId)

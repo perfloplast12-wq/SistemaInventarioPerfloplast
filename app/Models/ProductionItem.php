@@ -16,6 +16,10 @@ class ProductionItem extends Model
         'quantity',
     ];
 
+    protected $casts = [
+        'quantity' => 'decimal:3',
+    ];
+
     public function production(): BelongsTo
     {
         return $this->belongsTo(Production::class);

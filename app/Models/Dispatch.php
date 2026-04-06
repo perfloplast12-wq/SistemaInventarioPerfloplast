@@ -30,7 +30,7 @@ class Dispatch extends Model
 
     protected $casts = [
         'dispatch_date' => 'datetime',
-        'total_value' => 'decimal:2',
+        'total_value' => 'decimal:3',
     ];
 
     public function driver(): BelongsTo

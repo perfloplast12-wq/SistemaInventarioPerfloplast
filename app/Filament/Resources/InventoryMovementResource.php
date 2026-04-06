@@ -36,89 +36,81 @@ class InventoryMovementResource extends Resource
         $type = request()->query('type');
 
         return $form->schema([
-            Forms\Components\Section::make('Guía de Uso')
-                ->collapsible()
-                ->compact()
+            Forms\Components\Section::make('Producto y Cantidad')
                 ->schema([
-                    Forms\Components\Placeholder::make('guide')
-                        ->label('')
-                        ->content(new \Illuminate\Support\HtmlString('
-                            <div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700">
-                                <p class="font-bold">¿Cuándo usar este módulo?</p>
-                                <ul class="list-disc ml-5 mt-1 text-sm">
-                                    <li><b>Entradas:</b> Para registrar compras de materia prima.</li>
-                                    <li><b>Transferencias:</b> Para mover carga al camión (Carga) o entre bodegas.</li>
-                                    <li><b>Ajustes:</b> Solo para corregir errores de inventario físico.</li>
-                                </ul>
-                                <p class="mt-2 text-xs italic italic">Nota: Las Ventas y los Despachos de pedidos se registran automáticamente en sus propios módulos.</p>
-                            </div>
-                        ')),
+                    Forms\Components\Grid::make(3)
+                        ->schema([
+                            Forms\Components\Select::make('product_id')
+                                ->label('Producto')
+                                ->options(\App\Models\Product::where('is_active', true)->pluck('name', 'id'))
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(function ($state, Forms\Set $set, Get $get) {
+                                    if (!$state) return;
+                                    $product = \App\Models\Product::find($state);
+                                    if ($product) {
+                                        $set('product_category', $product->type);
+                                        // Auto-Select movement type if empty
+                                        if (!$get('type')) {
+                                            if ($product->type === 'raw_material') $set('type', 'in');
+                                            if ($product->type === 'finished_product') $set('type', 'transfer');
+                                        }
+                                    }
+                                })
+                                ->columnSpan(1),
+
+                            Forms\Components\Select::make('color_id')
+                                ->label('Color/Variante')
+                                ->options(function(Get $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) return [];
+
+                                    return \App\Models\Stock::query()
+                                        ->where('product_id', $productId)
+                                        ->where('quantity', '>', 0)
+                                        ->with('color')
+                                        ->get()
+                                        ->mapWithKeys(fn($s) => [
+                                            ($s->color_id) => $s->color ? $s->color->display_name : '(Sin Variante)'
+                                        ])
+                                        ->toArray();
+                                })
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->visible(fn (Get $get) => $get('product_category') === 'finished_product' || \App\Models\Product::find($get('product_id'))?->type === 'finished_product')
+                                ->columnSpan(1),
+
+                            Forms\Components\TextInput::make('quantity')
+                                ->label('Cantidad')
+                                ->numeric()
+                                ->extraInputAttributes(['step' => '0.01'])
+                                ->required()
+                                ->dehydrateStateUsing(function ($state, Get $get) {
+                                    $qty = (float) $state;
+                                    if ($get('type') === 'adjust' && $get('adjustment_direction') === 'subtract') {
+                                        return -$qty;
+                                    }
+                                    return $qty;
+                                })
+                                ->columnSpan(1),
+                            
+                            Forms\Components\Hidden::make('product_category'),
+                        ]),
                 ]),
 
-            Forms\Components\Section::make('Detalles del Producto')
-                ->schema([
-                    Forms\Components\ToggleButtons::make('product_category')
-                        ->label('Categoría a Mover')
-                        ->options([
-                            'raw_material' => 'Materia Prima',
-                            'finished_product' => 'Producto Terminado',
-                        ])
-                        ->colors([
-                            'raw_material' => 'info',
-                            'finished_product' => 'success',
-                        ])
-                        ->inline()
-                        ->required()
-                        ->live()
-                        ->default(function () {
-                            $t = request()->query('type') ?? request()->route('record')?->type;
-                            if ($t === 'in') return 'raw_material';
-                            if ($t === 'out') return 'finished_product';
-                            return null;
-                        })
-                        ->afterStateUpdated(fn (Forms\Set $set) => $set('product_id', null))
-                        ->columnSpan(2),
-
-                    Forms\Components\Select::make('product_id')
-                        ->label('Producto')
-                        ->options(function (Get $get) {
-                            $cat = $get('product_category');
-                            if (!$cat) return [];
-                            return \App\Models\Product::where('type', $cat)
-                                ->where('is_active', true)
-                                ->pluck('name', 'id');
-                        })
-                        ->searchable()
-                        ->preload()
-                        ->required()
-                        ->live()
-                        ->columnSpan(2),
-
-                    Forms\Components\TextInput::make('quantity')
-                        ->label('Cantidad')
-                        ->numeric()
-                        ->minValue(0.001)
-                        ->required()
-                        ->dehydrateStateUsing(function ($state, Get $get) {
-                            $qty = (float) $state;
-                            if ($get('type') === 'adjust' && $get('adjustment_direction') === 'subtract') {
-                                return -$qty;
-                            }
-                            return $qty;
-                        })
-                        ->columnSpan(2),
-                ])->columns(1),
-
-            Forms\Components\Section::make('Configuración del Movimiento')
+            Forms\Components\Section::make('Datos de la Operación')
                 ->schema([
                     Forms\Components\Select::make('type')
                         ->label('Tipo de movimiento')
                         ->options([
-                            'in'       => 'Entrada (Compra de Materia Prima)',
-                            'out'      => 'Salida (Consumo Manual / Venta Directa)',
-                            'transfer' => 'Transferencia (Cargar Camión / Entre Bodegas)',
-                            'return'   => 'Devolución (Sobrante de Camión -> Bodega)',
-                            'adjust'   => 'Ajuste (Corrección por Daño o Pérdida)',
+                            'in'       => 'Entrada (Ingreso por Compra)',
+                            'out'      => 'Salida (Consumo o Descarte)',
+                            'transfer' => 'Traslado (Mover entre Bodega/Camión)',
+                            'return'   => 'Retorno (Devolución de Ruta)',
+                            'adjust'   => 'Ajuste (Corrección de Inventario)',
                         ])
                         ->default($type)
                         ->disabled(fn() => !empty($type))
@@ -150,19 +142,40 @@ class InventoryMovementResource extends Resource
                         ->columnSpan(1),
 
                     Forms\Components\Select::make('adjustment_direction')
-                        ->label('Acción de Ajuste')
+                        ->label('¿Qué desea hacer?')
                         ->options([
-                            'add'      => 'Sumar al stock (+)',
-                            'subtract' => 'Restar del stock (-)',
+                            'add'      => 'Sumar (Hay MÁS en físico que en sistema)',
+                            'subtract' => 'Restar (Hay MENOS en físico que en sistema)',
                         ])
                         ->visible(fn (Get $get) => $get('type') === 'adjust')
                         ->required(fn (Get $get) => $get('type') === 'adjust')
                         ->live()
                         ->columnSpan(1),
 
+                    Forms\Components\ToggleButtons::make('adjustment_location_type')
+                        ->label('¿Dónde se hará el ajuste?')
+                        ->options([
+                            'warehouse' => 'En Bodega',
+                            'truck' => 'En Camión',
+                        ])
+                        ->colors([
+                            'warehouse' => 'info',
+                            'truck' => 'warning',
+                        ])
+                        ->icons([
+                            'warehouse' => 'heroicon-m-building-office',
+                            'truck' => 'heroicon-m-truck',
+                        ])
+                        ->inline()
+                        ->visible(fn(Get $get) => $get('type') === 'adjust')
+                        ->required(fn(Get $get) => $get('type') === 'adjust')
+                        ->live()
+                        ->columnSpan(2),
+
                     Forms\Components\TextInput::make('unit_cost')
                         ->label('Costo unitario')
                         ->numeric()
+                        ->step(0.01)
                         ->prefix('Q')
                         ->visible(function (Get $get) {
                             if ($get('type') !== 'in') return false;
@@ -184,7 +197,10 @@ class InventoryMovementResource extends Resource
                                     $get('type') === 'out' || 
                                     ($get('type') === 'transfer' && in_array($get('motive'), ['load', 'internal_wh']))
                                 )
-                                ->required()
+                                ->required(fn(Get $get) => 
+                                    $get('type') === 'out' || 
+                                    ($get('type') === 'transfer' && in_array($get('motive'), ['load', 'internal_wh']))
+                                )
                                 ->columnSpan(1),
 
                             Forms\Components\Select::make('from_truck_id')
@@ -195,32 +211,43 @@ class InventoryMovementResource extends Resource
                                     $get('type') === 'return' ||
                                     ($get('type') === 'transfer' && in_array($get('motive'), ['unload', 'transshipment']))
                                 )
-                                ->required()
+                                ->required(fn(Get $get) => 
+                                    $get('type') === 'return' ||
+                                    ($get('type') === 'transfer' && in_array($get('motive'), ['unload', 'transshipment']))
+                                )
                                 ->columnSpan(1),
 
                             // ─── DESTINO ──────────────
                             Forms\Components\Select::make('to_warehouse_id')
-                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '📍 Ubicación a Corregir' : '🎯 Bodega de Destino')
+                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '📍 Seleccione Bodega a Corregir' : '🎯 Bodega de Destino')
                                 ->options(Warehouse::query()->where('is_active', true)->pluck('name', 'id'))
                                 ->searchable()
                                 ->visible(fn(Get $get) => 
                                     $get('type') === 'in' || 
                                     $get('type') === 'return' ||
-                                    ($get('type') === 'adjust' && !$get('to_truck_id')) ||
+                                    ($get('type') === 'adjust' && $get('adjustment_location_type') === 'warehouse') ||
                                     ($get('type') === 'transfer' && in_array($get('motive'), ['unload', 'internal_wh']))
                                 )
-                                ->required()
+                                ->required(fn(Get $get) => 
+                                    $get('type') === 'in' || 
+                                    $get('type') === 'return' ||
+                                    ($get('type') === 'adjust' && $get('adjustment_location_type') === 'warehouse') ||
+                                    ($get('type') === 'transfer' && in_array($get('motive'), ['unload', 'internal_wh']))
+                                )
                                 ->columnSpan(1),
 
                             Forms\Components\Select::make('to_truck_id')
-                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '🚚 Camión a Corregir' : '🎯 Camión de Destino')
+                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '🚚 Seleccione Camión a Corregir' : '🎯 Camión de Destino')
                                 ->options(Truck::query()->where('is_active', true)->pluck('name', 'id'))
                                 ->searchable()
                                 ->visible(fn(Get $get) => 
-                                    ($get('type') === 'adjust' && !$get('to_warehouse_id')) ||
+                                    ($get('type') === 'adjust' && $get('adjustment_location_type') === 'truck') ||
                                     ($get('type') === 'transfer' && in_array($get('motive'), ['load', 'transshipment']))
                                 )
-                                ->required()
+                                ->required(fn(Get $get) => 
+                                    ($get('type') === 'adjust' && $get('adjustment_location_type') === 'truck') ||
+                                    ($get('type') === 'transfer' && in_array($get('motive'), ['load', 'transshipment']))
+                                )
                                 ->columnSpan(1),
                         ])
                         ->visible(fn(Get $get) => in_array($get('type'), ['in', 'out', 'transfer', 'return', 'adjust'])),

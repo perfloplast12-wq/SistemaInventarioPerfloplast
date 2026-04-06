@@ -37,10 +37,7 @@ class Dashboard extends Page
 
     public function mount(): void
     {
-        $this->filters = [
-            'startDate' => now()->startOfDay()->format('Y-m-d'),
-            'endDate'   => now()->endOfDay()->format('Y-m-d'),
-        ];
+        $this->setPeriod('this_month');
         $this->customStart = $this->filters['startDate'];
         $this->customEnd   = $this->filters['endDate'];
     }

@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
+    use SoftDeletes, \App\Models\Concerns\Auditable;
+
+    protected string $auditModule = 'invoices';
     protected $fillable = [
         'invoice_number',
         'sale_id',
@@ -27,11 +31,11 @@ class Invoice extends Model
 
     protected $casts = [
         'invoice_date' => 'datetime',
-        'subtotal' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'total' => 'decimal:2',
-        'amount_paid' => 'decimal:2',
-        'change_amount' => 'decimal:2',
+        'subtotal' => 'decimal:3',
+        'discount_amount' => 'decimal:3',
+        'total' => 'decimal:3',
+        'amount_paid' => 'decimal:3',
+        'change_amount' => 'decimal:3',
     ];
 
     public function items(): HasMany

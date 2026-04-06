@@ -13,7 +13,13 @@ class ListFinishedProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\Action::make('volver')
+                ->label('Volver a Inventario')
+                ->icon('heroicon-o-arrow-left')
+                ->url(route('filament.admin.pages.inventario'))
+                ->color('gray'),
+
+            Actions\CreateAction::make()->label('Crear Producto terminado'),
         ];
     }
 }

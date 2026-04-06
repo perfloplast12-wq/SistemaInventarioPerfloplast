@@ -146,7 +146,7 @@ class SaleResource extends Resource
                                                             $set('quantity', 1);
                                                         }
                                                     })
-                                                    ->columnSpan(['default' => 12, 'md' => 4]),
+                                                    ->columnSpan(['default' => 12, 'md' => 3]),
 
                                                 Forms\Components\Select::make('color_id')
                                                     ->label('Color')
@@ -167,17 +167,18 @@ class SaleResource extends Resource
                                                         // Agrupar por color_id para sumar cantidades si hay registros dispersos
                                                         return $stocks->groupBy(fn($s) => $s->color_id ?? 'null')->mapWithKeys(function ($group, $key) use ($product) {
                                                             $totalQty = $group->sum('quantity');
-                                                            $stockColorId = $group->first()->color_id;
-                                                            $colorName = $stockColorId ? \App\Models\Color::find($stockColorId)?->name : null;
+                                                            $stockRecord = $group->first();
+                                                            $stockColor = $stockRecord->color;
                                                             
-                                                            if (!$colorName && $key === 'null') {
-                                                                $catalogColorId = $product->color_id;
-                                                                $catalogColor = $catalogColorId ? \App\Models\Color::find($catalogColorId)?->name : null;
-                                                                $colorName = $catalogColor ? "{$catalogColor} (Catálogo)" : "Sin Color (N/A)";
+                                                            $colorLabel = $stockColor ? $stockColor->display_name : null;
+                                                            
+                                                            if (!$colorLabel && $key === 'null') {
+                                                                $catalogColor = $product->color;
+                                                                $colorLabel = $catalogColor ? "{$catalogColor->display_name} (Catálogo)" : "Sin Color (N/A)";
                                                             }
 
                                                             return [
-                                                                $key => ($colorName ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                                $key => ($colorLabel ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
                                                             ];
                                                         })->toArray();
                                                     })
@@ -190,8 +191,9 @@ class SaleResource extends Resource
                                                 Forms\Components\TextInput::make('quantity')
                                                     ->label('Cant.')
                                                     ->numeric()
+                                                    ->step(0.01)
                                                     ->default(1)
-                                                    ->minValue(0.001)
+                                                    ->minValue(0.01)
                                                     ->required()
                                                     ->live(debounce: 500)
                                                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
@@ -199,11 +201,12 @@ class SaleResource extends Resource
                                                         $qty = (float)($state ?: 0);
                                                         $set('subtotal', $qty * $price);
                                                     })
-                                                    ->columnSpan(['default' => 4, 'md' => 1]),
+                                                    ->columnSpan(['default' => 4, 'md' => 2]),
 
                                                 Forms\Components\TextInput::make('unit_price')
                                                     ->label('Precio Q')
                                                     ->numeric()
+                                                    ->step(0.01)
                                                     ->required()
                                                     ->readOnly() 
                                                     ->dehydrated()
@@ -250,6 +253,7 @@ class SaleResource extends Resource
                                             Forms\Components\TextInput::make('discount_value')
                                                 ->label('Valor Descuento')
                                                 ->numeric()
+                                                ->step(0.01)
                                                 ->default(0)
                                                 ->minValue(0)
                                                 ->visible(fn (Get $get) => $get('discount_type') !== 'none')
@@ -275,6 +279,7 @@ class SaleResource extends Resource
                                             Forms\Components\TextInput::make('payment_amount')
                                                 ->label('Monto Recibido')
                                                 ->numeric()
+                                                ->step(0.01)
                                                 ->prefix('Q')
                                                 ->default(0),
                                         ])->columns(2),
@@ -574,11 +579,6 @@ class SaleResource extends Resource
                         };
                         return response()->stream($callback, 200, $headers);
                     }),
-                Tables\Actions\Action::make('quick_sale')
-                    ->label('Venta Rápida')
-                    ->icon('heroicon-o-bolt')
-                    ->color('warning')
-                    ->url(fn (): string => SaleResource::getUrl('quick')),
             ])
             ->defaultSort('created_at', 'desc')
             ->striped();

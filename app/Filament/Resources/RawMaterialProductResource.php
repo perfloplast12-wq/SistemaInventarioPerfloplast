@@ -73,7 +73,7 @@ class RawMaterialProductResource extends Resource
                     Forms\Components\TextInput::make('sku')
                         ->label('SKU / Código (opcional)')
                         ->maxLength(60)
-                        ->unique(ignoreRecord: true),
+                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at')),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\Select::make('unit_of_measure_id')
@@ -91,10 +91,7 @@ class RawMaterialProductResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\TextInput::make('units_per_presentation')
-                            ->label('¿Cuánto pesa/trae cada empaque?')
-                            ->numeric()
-                            ->helperText('Ej: Si el saco es de 50KG, pon "50". Si es de 100LB, pon "100".')
+                        Forms\Components\Hidden::make('units_per_presentation')
                             ->default(1),
 
                         Forms\Components\Placeholder::make('stock_total_display')
@@ -118,6 +115,7 @@ class RawMaterialProductResource extends Resource
                                 Forms\Components\TextInput::make('initial_stock')
                                     ->label('Cantidad Inicial')
                                     ->numeric()
+                                    ->step(0.01)
                                     ->dehydrated(false)
                                     ->helperText('En la unidad de medida base (KG)'),
 
@@ -128,9 +126,6 @@ class RawMaterialProductResource extends Resource
                             ])
                         ]),
 
-                    Forms\Components\TextInput::make('color')
-                        ->label('Color / Variación (opcional)')
-                        ->maxLength(80),
 
                     Forms\Components\Toggle::make('is_active')
                         ->label('Activo')
@@ -172,15 +167,12 @@ class RawMaterialProductResource extends Resource
                         default => 'success',
                     }),
 
-                Tables\Columns\TextColumn::make('purchase_cost')
-                    ->label('Costo')
-                    ->money('GTQ')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Activo')
                     ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('register_entry')
@@ -235,7 +227,7 @@ class RawMaterialProductResource extends Resource
                             'product_id' => $record->id,
                             'to_warehouse_id' => $data['to_warehouse_id'],
                             'quantity' => $qty,
-                            'unit_cost' => $record->purchase_cost ?? 0,
+                            'unit_cost' => 0,
                             'note' => $data['note'] ?? 'Entrada por ' . ($data['entry_unit'] === 'presentation' ? 'Sacos' : 'Unidad Base'),
                             'created_by' => auth()->id(),
                         ]);
@@ -256,6 +248,15 @@ class RawMaterialProductResource extends Resource
                     ])),
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('id', 'desc');
     }

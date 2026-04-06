@@ -30,6 +30,12 @@ class StockByLocationTable extends TableWidget
                     ->searchable()
                     ->sortable(),
 
+                // ── Color ────────────────────────────
+                Tables\Columns\TextColumn::make('color.display_name')
+                    ->label('Color')
+                    ->placeholder('N/A')
+                    ->sortable(),
+
                 // ── Tipo badge ───────────────────────
                 Tables\Columns\TextColumn::make('location_type_badge')
                     ->label('Tipo')
@@ -68,7 +74,7 @@ class StockByLocationTable extends TableWidget
                 // ── Existencia ───────────────────────
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Existencia')
-                    ->numeric(decimalPlaces: 3)
+                    ->numeric(decimalPlaces: 2)
                     ->sortable(),
             ])
             ->filters([
@@ -107,12 +113,15 @@ class StockByLocationTable extends TableWidget
     protected function getTableQuery(): Builder
     {
         return Stock::query()
-            ->with(['product', 'warehouse', 'truck'])
+            ->with(['product', 'warehouse', 'truck', 'color'])
             ->where('quantity', '!=', 0)
             ->when($this->locationName, function (Builder $query) {
                 $query->where(function (Builder $q) {
                     $q->whereHas('warehouse', fn ($sub) => $sub->where('name', $this->locationName))
-                      ->orWhereHas('truck', fn ($sub) => $sub->where('name', $this->locationName));
+                      ->orWhereHas('truck', fn ($sub) => 
+                        $sub->where('name', $this->locationName)
+                            ->orWhere('plate', $this->locationName)
+                      );
                 });
             });
     }

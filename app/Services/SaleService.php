@@ -34,31 +34,34 @@ class SaleService
             throw ValidationException::withMessages(['items' => 'La venta debe tener al menos un producto.']);
         }
 
-        // 3. Validar Stock Estricto
-        foreach ($sale->items as $item) {
-            $product = $item->product;
-            
-            // Resolvemos stock disponible usando el mismo helper que InventoryMovement usaría (implícito)
-            $stockQuery = \App\Models\Stock::where('product_id', $item->product_id)
-                ->where('color_id', $item->color_id);
-                
-            if ($sale->from_warehouse_id) {
-                $stockQuery->where('warehouse_id', $sale->from_warehouse_id);
-            } else {
-                $stockQuery->where('truck_id', $sale->from_truck_id);
-            }
-            
-            $available = (float) $stockQuery->value('quantity') ?? 0;
-            
-            if ($available < (float)$item->quantity) {
-                $colorName = $item->color ? $item->color->name : 'N/A';
-                throw ValidationException::withMessages([
-                    'items' => "Stock insuficiente para '{$product->name}' color '{$colorName}'. Disponible: " . number_format($available, 2) . ", Requerido: " . number_format($item->quantity, 2)
-                ]);
-            }
-        }
-
         DB::transaction(function () use ($sale) {
+            // Eager load items and products within the transaction for consistent state
+            $sale->load(['items.product', 'items.color']);
+
+            // 3. Validar Stock Estricto (Dentro de la transacción para evitar race conditions)
+            foreach ($sale->items as $item) {
+                $product = $item->product;
+                
+                $stockQuery = \App\Models\Stock::where('product_id', $item->product_id)
+                    ->where('color_id', $item->color_id);
+                    
+                if ($sale->from_warehouse_id) {
+                    $stockQuery->where('warehouse_id', $sale->from_warehouse_id);
+                } else {
+                    $stockQuery->where('truck_id', $sale->from_truck_id);
+                }
+                
+                // Bloqueamos para lectura el stock para asegurar que nadie más lo use mientras confirmamos
+                $available = (float) $stockQuery->lockForUpdate()->value('quantity') ?? 0;
+                
+                if ($available < (float)$item->quantity) {
+                    $colorName = $item->color ? $item->color->name : 'N/A';
+                    throw ValidationException::withMessages([
+                        'items' => "Stock insuficiente para '{$product->name}' color '{$colorName}'. Disponible: " . number_format($available, 2) . ", Requerido: " . number_format($item->quantity, 2)
+                    ]);
+                }
+            }
+
             // 4. Crear movimientos de inventario (OUT)
             foreach ($sale->items as $item) {
                 InventoryMovement::create([

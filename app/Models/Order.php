@@ -52,7 +52,7 @@ class Order extends Model
             if (empty($order->order_number)) {
                 $lastOrder = static::orderBy('id', 'desc')->first();
                 $nextId = $lastOrder ? $lastOrder->id + 1 : 1;
-                $order->order_number = 'P-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+                $order->order_number = 'ORD-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
             }
         });
     }

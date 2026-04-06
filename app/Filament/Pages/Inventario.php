@@ -25,7 +25,6 @@ class Inventario extends Page
     public int $totalProducts = 0;
     public int $rawMaterials = 0;
     public int $finishedProducts = 0;
-    public float $inventoryValue = 0;
     public int $criticalStockCount = 0;
     public int $pendingOrdersCount = 0;
     public int $last24hMovements = 0;
@@ -38,15 +37,6 @@ class Inventario extends Page
         $this->rawMaterials = Product::query()->where('type', 'raw_material')->count();
         $this->finishedProducts = Product::query()->where('type', 'finished_product')->count();
 
-        // Valorización (Unificada)
-        $this->inventoryValue = (float) Product::query()
-            ->with(['stocks'])
-            ->get()
-            ->sum(function ($p) {
-                $stock = $p->stocks->sum('quantity');
-                $cost = (float)($p->cost_price ?: ($p->purchase_cost ?: ($p->type === 'finished_product' ? $p->sale_price : 0)));
-                return $stock * $cost;
-            });
 
         // Stock Crítico (Sincronizado <= 10 Presentaciones en Bodega)
         $this->criticalStockCount = Product::query()
@@ -74,14 +64,10 @@ class Inventario extends Page
         $products = Product::query()
             ->where('type', $type)
             ->where('is_active', true)
-            ->with(['stocks'])
-            ->get()
             ->map(function ($product) {
                 return [
                     'name' => $product->name,
                     'stock' => (float)$product->stocks->sum('quantity'),
-                    'price' => (float)($product->type === 'finished_product' ? $product->sale_price : $product->purchase_cost),
-                    'price_label' => $product->type === 'finished_product' ? 'Venta' : 'Costo',
                 ];
             })
             ->sortByDesc('stock')
@@ -115,10 +101,6 @@ class Inventario extends Page
         return FinishedProductResource::getUrl('index');
     }
 
-    public function getQuickSaleUrl(): string
-    {
-        return \App\Filament\Resources\SaleResource::getUrl('quick');
-    }
 
 
 
@@ -179,14 +161,15 @@ class Inventario extends Page
             // Top Products for Quick View
             $topProducts = Stock::where('warehouse_id', $warehouse->id)
                 ->where('quantity', '>', 0)
+                ->whereHas('product') // Only active products
                 ->with(['product.unitOfMeasure'])
                 ->get()
                 ->sortByDesc('quantity')
                 ->take(3)
                 ->map(fn($s) => [
-                    'name' => $s->product->name,
+                    'name' => $s->product?->name ?? 'N/A',
                     'qty' => $s->quantity,
-                    'unit' => $s->product->unitOfMeasure?->abbreviation ?? 'u'
+                    'unit' => $s->product?->unitOfMeasure?->abbreviation ?? 'u'
                 ]);
 
             $result[] = [
@@ -221,7 +204,6 @@ class Inventario extends Page
                 $product = $m->product?->name ?? 'Producto';
                 $qty     = number_format((float)$m->quantity, 0);
                 $unit    = $m->product?->unitOfMeasure?->abbreviation ?? 'u';
-
                 // Build description based on type
                 $desc = match($m->type) {
                     'in'       => "Ingreso de {$qty}{$unit} de {$product}",

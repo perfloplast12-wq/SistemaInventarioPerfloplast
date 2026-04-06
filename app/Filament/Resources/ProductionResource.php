@@ -105,26 +105,13 @@ class ProductionResource extends Resource
 
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\Select::make('color_name_filter')
-                                    ->label('Color')
-                                    ->options(fn () => \App\Models\Color::where('is_active', true)
-                                        ->pluck('name', 'name')
-                                        ->unique())
-                                    ->required()
-                                    ->searchable()
-                                    ->live()
-                                    ->afterStateUpdated(fn (Forms\Set $set) => $set('color_id', null))
-                                    ->dehydrated(false),
-
                                 Forms\Components\Select::make('color_id')
-                                    ->label('Variante')
-                                    ->options(function (Forms\Get $get) {
-                                        $name = $get('color_name_filter');
-                                        if (!$name) return [];
+                                    ->label('Color / Variante')
+                                    ->options(function () {
                                         return \App\Models\Color::where('is_active', true)
-                                            ->where('name', $name)
                                             ->get()
-                                            ->mapWithKeys(fn ($c) => [$c->id => ($c->variant ?: 'Estándar') . ($c->code ? " — {$c->code}" : '')]);
+                                            ->groupBy(fn ($c) => trim($c->name))
+                                            ->map(fn ($colors) => $colors->pluck('descriptive_label', 'id'));
                                     })
                                     ->required()
                                     ->searchable()
@@ -152,29 +139,12 @@ class ProductionResource extends Resource
                                     ->preload(),
 
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad de Sacos Producidos')
+                                    ->label('Cantidad Producida')
                                     ->numeric()
-                                    ->integer()
+                                    ->step(0.01)
                                     ->required()
-                                    ->minValue(1)
-                                    ->step(1)
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
-                                        $productId = $get('product_id');
-                                        if (!$productId || !$state) return;
-
-                                        $product = \App\Models\Product::with('recipes')->find($productId);
-                                        if (!$product || $product->recipes->isEmpty()) return;
-
-                                        $items = [];
-                                        foreach ($product->recipes as $recipe) {
-                                            $items[] = [
-                                                'product_id' => $recipe->raw_material_id,
-                                                'quantity' => (float)$state * (float)$recipe->quantity,
-                                            ];
-                                        }
-                                        $set('items', $items);
-                                    }),
+                                    ->minValue(0.01)
+                                    ->live(onBlur: true),
                             ]),
 
                         Forms\Components\Placeholder::make('status_display')
@@ -202,12 +172,11 @@ class ProductionResource extends Resource
                                     ->preload(),
                                 
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad Consumo (Sacos)')
+                                    ->label('Cantidad Consumo')
                                     ->numeric()
-                                    ->integer()
+                                    ->step(0.01)
                                     ->required()
-                                    ->minValue(1)
-                                    ->step(1),
+                                    ->minValue(0.01),
                             ])
                             ->columns(2)
                             ->addActionLabel('Añadir Materia Prima')
@@ -252,10 +221,8 @@ class ProductionResource extends Resource
                     ->label('Producto Producido')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('color.code')
+                Tables\Columns\TextColumn::make('color.display_name')
                     ->label('Color')
-                    ->badge()
-                    ->color('gray')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('color.name')
@@ -268,8 +235,8 @@ class ProductionResource extends Resource
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Sacos')
-                    ->numeric(decimalPlaces: 0)
+                    ->label('Cantidad')
+                    ->numeric(decimalPlaces: 2)
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('status')

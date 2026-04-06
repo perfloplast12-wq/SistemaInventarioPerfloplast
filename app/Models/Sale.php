@@ -51,9 +51,9 @@ class Sale extends Model
 
     protected $casts = [
         'sale_date' => 'datetime',
-        'total' => 'decimal:2',
-        'discount_value' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
+        'total' => 'decimal:3',
+        'discount_value' => 'decimal:3',
+        'discount_amount' => 'decimal:3',
     ];
 
     public function items(): HasMany

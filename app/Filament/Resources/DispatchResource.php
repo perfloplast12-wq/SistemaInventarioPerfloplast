@@ -67,8 +67,13 @@ class DispatchResource extends Resource
                             ->required()
                             ->searchable()
                             ->live()
-                            ->afterStateUpdated(fn ($state, Forms\Set $set) => 
-                                $set('driver_name', Truck::find($state)?->driver_name ?? '')),
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                $truck = Truck::find($state);
+                                if ($truck) {
+                                    $set('driver_id', $truck->driver_id);
+                                    $set('driver_name', $truck->driver_name);
+                                }
+                            }),
                         Forms\Components\Select::make('driver_id')
                             ->label('Piloto / Conductor')
                             ->relationship('driver', 'name', fn ($query) => $query->role('conductor'))
@@ -126,7 +131,7 @@ class DispatchResource extends Resource
                                             $currentItems[] = [
                                                 'product_id' => $orderItem->product_id,
                                                 'color_id' => $orderItem->color_id,
-                                                'quantity' => (float)number_format((float)$orderItem->quantity, 3, '.', ''),
+                                                'quantity' => (float)number_format((float)$orderItem->quantity, 2, '.', ''),
                                                 'unit_price' => (float)number_format((float)$orderItem->unit_price, 2, '.', ''),
                                                 'subtotal' => (float)number_format((float)$orderItem->subtotal, 2, '.', ''),
                                             ];
@@ -150,7 +155,7 @@ class DispatchResource extends Resource
                             ->extraAttributes(['class' => 'text-xl font-bold text-primary-600']),
                         Forms\Components\Placeholder::make('total_products_display')
                             ->label('Unidades Totales')
-                            ->content(fn (Forms\Get $get) => round(collect($get('items'))->sum('quantity'), 3)),
+                            ->content(fn (Forms\Get $get) => round(collect($get('items'))->sum('quantity'), 2)),
                         Forms\Components\Placeholder::make('product_types_display')
                             ->label('Tipos de Producto')
                             ->content(fn (Forms\Get $get) => collect($get('items'))->unique('product_id')->count()),
@@ -180,6 +185,7 @@ class DispatchResource extends Resource
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Cantidad')
                                     ->numeric()
+                                    ->step(0.01)
                                     ->required()
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(fn ($state, $get, Forms\Set $set) => 
@@ -187,6 +193,7 @@ class DispatchResource extends Resource
                                 Forms\Components\TextInput::make('unit_price')
                                     ->label('Valor Unitario (Q)')
                                     ->numeric()
+                                    ->step(0.01)
                                     ->required()
                                     ->prefix('Q')
                                     ->live(onBlur: true)
@@ -356,6 +363,7 @@ class DispatchResource extends Resource
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Cantidad Devuelta')
                                 ->numeric()
+                                ->step(0.01)
                                 ->required()
                                 ->minValue(0.01),
                             Forms\Components\Select::make('reason')

@@ -1,7 +1,85 @@
-@php $d = $this->getChartData(); $uid = 'chart-stkloc-'.uniqid(); @endphp
-<div>
-    <div class="pb-chart-scrollable">
-        <div id="{{ $uid }}" style="min-height:360px;width:100%;min-width:600px;"></div>
+<div x-data="{
+    chart: null,
+    init() {
+        this.render();
+        Livewire.hook('commit', ({ component, succeed }) => {
+            succeed(() => {
+                this.$nextTick(() => { this.render(); });
+            });
+        });
+    },
+    render() {
+        if (this.chart) this.chart.destroy();
+        const data = @js($this->getChartData());
+        this.chart = new ApexCharts(this.$refs.canvas, {
+            chart: { 
+                type: 'donut', 
+                height: 450, 
+                toolbar: { show: false }, 
+                fontFamily: 'Outfit, sans-serif',
+                events: {
+                    dataPointSelection: (event, chartContext, config) => {
+                        var label = config.w.config.labels[config.dataPointIndex];
+                        $wire.openDetail(label);
+                    }
+                }
+            },
+            series: data.values,
+            labels: data.labels,
+            stroke: { show: false },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '75%',
+                        labels: {
+                            show: true,
+                            name: { show: true, fontSize: '14px', fontWeight: '600', color: '#64748b', offsetY: -10 },
+                            value: { 
+                                show: true, 
+                                fontSize: '22px', 
+                                fontWeight: '800', 
+                                color: '#1e293b', 
+                                offsetY: 10,
+                                formatter: function(v){ return Number(v).toLocaleString() + ' u'; }
+                            },
+                            total: {
+                                show: true,
+                                label: 'Total Stock',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                color: '#64748b',
+                                formatter: function(w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString() + ' u';
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            colors: ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6','#06b6d4','#ec4899','#0ea5e9'],
+            legend: { 
+                show: true, 
+                position: 'bottom',
+                horizontalAlign: 'center',
+                fontSize: '12px',
+                fontWeight: '600',
+                labels: { colors: '#64748b' },
+                markers: { radius: 12 }
+            },
+            dataLabels: { enabled: false },
+            tooltip: { 
+                theme: 'dark', 
+                y: { 
+                    formatter: function(v){ return v.toFixed(2) + ' unidades'; } 
+                } 
+            },
+            states: { active: { filter: { type: 'none' } } }
+        });
+        this.chart.render();
+    }
+}">
+    <div class="flex justify-center items-center">
+        <div x-ref="canvas" wire:ignore style="min-height:450px; width:100%; max-width:600px;"></div>
     </div>
 
     <x-filament::modal id="stock-detail-modal" width="5xl" slide-over>
@@ -17,67 +95,4 @@
             </div>
         @endif
     </x-filament::modal>
-
-    @script
-    <script>
-    (function(){
-        var el = document.getElementById('{{ $uid }}');
-        if (!el) return;
-        function init() {
-            if (typeof ApexCharts === 'undefined') { setTimeout(init, 200); return; }
-            var chart = new ApexCharts(el, {
-                chart: { 
-                    type: 'bar', 
-                    height: 360, 
-                    toolbar: { show: false }, 
-                    fontFamily: 'Outfit, sans-serif',
-                    events: {
-                        dataPointSelection: function(event, chartContext, config) {
-                            var label = config.w.config.xaxis.categories[config.dataPointIndex];
-                            $wire.openDetail(label);
-                        }
-                    }
-                },
-                series: [{ name: 'Existencia', data: @json($d['values']) }],
-                xaxis: { categories: @json($d['labels']), tickAmount: 6, labels: { style: { fontWeight: '700', colors: '#64748b' }, formatter: function(v){ return isNaN(v) ? v : (v >= 1000 ? (v/1000).toFixed(1) + 'k' : Math.round(v)); } }, axisBorder: { show: false } },
-                plotOptions: { 
-                    bar: { 
-                        horizontal: true, 
-                        borderRadius: 6, 
-                        distributed: true, 
-                        dataLabels: { position: 'bottom' }, 
-                        barHeight: '60%' 
-                    } 
-                },
-                colors: ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6','#06b6d4','#ec4899','#0ea5e9'],
-                legend: { show: false },
-                dataLabels: {
-                    enabled: true, 
-                    textAnchor: 'start',
-                    offsetX: 10,
-                    style: { fontSize: '11px', fontWeight: '900', colors: ['#ffffff'] },
-                    formatter: function(v){ return Number(v).toLocaleString() + ' u'; },
-                    dropShadow: { enabled: true, top: 1, left: 1, blur: 1, opacity: 0.8 }
-                },
-                grid: { 
-                    borderColor: '#f1f5f9', 
-                    strokeDashArray: 4, 
-                    xaxis: { lines: { show: true } }, 
-                    yaxis: { lines: { show: false } },
-                    padding: { right: 50, left: 10 } 
-                },
-                yaxis: { labels: { maxWidth: 160, style: { fontWeight: '800', colors: '#475569' } } },
-                tooltip: { theme: 'dark', y: { formatter: function(v){ return Number(v).toLocaleString() + ' unidades'; } } },
-                states: {
-                    active: {
-                        filter: { type: 'none' }
-                    }
-                }
-            });
-            chart.render();
-        }
-        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
-    })();
-    </script>
-    @endscript
 </div>

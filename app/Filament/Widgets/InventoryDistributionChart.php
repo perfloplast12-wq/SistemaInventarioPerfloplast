@@ -20,7 +20,7 @@ class InventoryDistributionChart extends Widget
             ->sortByDesc('stocks_sum_quantity');
 
         $labels = $data->pluck('name')->toArray();
-        $series = $data->pluck('stocks_sum_quantity')->map(fn($v) => round((float)$v))->toArray();
+        $series = $data->pluck('stocks_sum_quantity')->map(fn($v) => (float)$v)->toArray();
 
         return compact('labels', 'series');
     }

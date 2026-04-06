@@ -64,6 +64,7 @@ class InvoiceResource extends Resource
                     ->url(fn (Invoice $record): string => route('invoices.print', $record))
                     ->openUrlInNewTab(),
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('export_csv')
@@ -158,6 +159,7 @@ class InvoiceResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('bulk_export_csv')
                         ->label('Exportar Seleccionados')
                         ->icon('heroicon-o-table-cells')

@@ -16,6 +16,11 @@ class Login extends BaseLogin
         ];
     }
 
+    public function getHeading(): string
+    {
+        return '';
+    }
+
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([

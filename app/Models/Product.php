@@ -6,9 +6,11 @@ use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Product extends Model
 {
-    use Auditable;
+    use Auditable, SoftDeletes;
 
     protected string $auditModule = 'products';
     protected $fillable = [
@@ -20,19 +22,20 @@ class Product extends Model
         'units_per_presentation',
         'is_active',
         'description',
-        'color',
         'color_id',
         'sale_price',
         'cost_price',
         'purchase_cost',
+        'presentation_sale_price',
     ];
 
     protected $casts = [
         'units_per_presentation' => 'decimal:4',
         'is_active' => 'boolean',
-        'sale_price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
-        'purchase_cost' => 'decimal:2',
+        'sale_price' => 'decimal:3',
+        'cost_price' => 'decimal:3',
+        'purchase_cost' => 'decimal:3',
+        'presentation_sale_price' => 'decimal:3',
     ];
 
     public function scopeIsActive($query)
