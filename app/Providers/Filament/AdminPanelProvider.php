@@ -96,6 +96,8 @@ class AdminPanelProvider extends PanelProvider
                         }
                     } catch (\Exception $e) {}
 
+                    $logoUrl = asset('images/logo-perfloplast-transparent.png');
+
                     $styles = "
                         <style>
                             :root {
@@ -246,45 +248,26 @@ class AdminPanelProvider extends PanelProvider
                         max-height: 4.8rem !important;
                         width: auto !important;
                         object-fit: contain;
-                        mix-blend-mode: screen; 
-                        filter: contrast(1.5) brightness(0.9) saturate(1.1);
-                        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
-                        mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
-                        -webkit-mask-composite: source-in;
-                        mask-composite: intersect;
                         image-rendering: auto;
                         -webkit-font-smoothing: antialiased;
                         -moz-osx-font-smoothing: grayscale;
                         transform: translateZ(0);
                         margin-left: 0.5rem;
+                        
+                        /* MODO CLARO: Darken elimina el fondo gris claro permitiendo que el logo se funda con el sidebar */
+                        mix-blend-mode: darken;
+                        filter: none;
                     }
-
-                    .fi-simple-main .logo-container img {
-                        height: auto !important;
-                        max-height: 220px !important;
-                        width: auto !important;
-                        margin: 0 auto;
-                        display: block;
-                        object-fit: contain;
+                    
+                    /* ESTILO PARA MODO OSCURO */
+                    html.dark .fi-logo {
+                        /* Inversión total: fondo gris pasa a negro, letras claras relucen en neón */
                         mix-blend-mode: screen;
-                        image-rendering: auto;
-                        transition: all 0.3s ease;
-                        filter: contrast(1.5) brightness(0.9);
-                        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
-                        mask-image: linear-gradient(to bottom, transparent, black 10% 90%, transparent), linear-gradient(to right, transparent, black 10% 90%, transparent);
-                        -webkit-mask-composite: source-in;
-                        mask-composite: intersect;
-                        -webkit-font-smoothing: antialiased;
+                        filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
                     }
 
-                            .fi-simple-main .logo-container img:hover {
-                                transform: scale(1.04) translateY(-5px);
-                                filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
-                            }
 
-                            .dark .fi-simple-main .logo-container img {
-                                filter: drop-shadow(0 0 30px color-mix(in srgb, var(--p-1), transparent 80%));
-                            }
+
 
                             .group\/logo:hover svg {
                                 filter: drop-shadow(0 0 8px var(--p-1));
