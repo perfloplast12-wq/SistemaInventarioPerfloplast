@@ -34,6 +34,7 @@ class UserResource extends Resource
             'production'  => 'Producción',
             'accounting'  => 'Contabilidad',
             'conductor'   => 'Conductor / Piloto',
+            'mantenimiento' => 'Mantenimiento',
             'viewer'      => 'Solo lectura',
         ];
     }
@@ -359,6 +360,7 @@ class UserResource extends Resource
                             'production' => 'Producción',
                             'accounting' => 'Contabilidad',
                             'conductor' => 'Conductor / Piloto',
+                            'mantenimiento' => 'Mantenimiento',
                             'viewer' => 'Solo lectura',
                         ];
 
@@ -395,6 +397,7 @@ class UserResource extends Resource
                                 'production' => 'Producción',
                                 'accounting' => 'Contabilidad',
                                 'conductor' => 'Conductor / Piloto',
+                                'mantenimiento' => 'Mantenimiento',
                                 'viewer' => 'Solo lectura',
                             ])
                             ->required(),

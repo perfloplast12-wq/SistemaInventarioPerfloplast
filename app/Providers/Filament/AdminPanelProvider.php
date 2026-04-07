@@ -141,7 +141,7 @@ class AdminPanelProvider extends PanelProvider
                                 transition: background-color 0.8s ease;
                                 min-height: 100vh;
                                 font-family: 'Outfit', sans-serif !important;
-                                overflow-x: hidden;
+                                overflow-x: clip; /* Usar clip en lugar de hidden para evitar problemas con sticky/fixed */
                             }
 
                             .dark body {
@@ -178,13 +178,13 @@ class AdminPanelProvider extends PanelProvider
                             .fi-card, .fi-section, .fi-sidebar {
                                 border-radius: var(--border-radius) !important;
                                 border: 1px solid var(--border-color) !important;
+                                overflow: visible !important; /* Esencial para que los dropdowns no se corten */
                             }
 
                             " . ($isGlass ? "
                             .fi-card, .fi-section {
                                 background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
-                                backdrop-filter: blur(16px) !important;
-                                -webkit-backdrop-filter: blur(16px) !important;
+                                /* Retirado backdrop-filter aquí para evitar bugs de superposición de menú (z-index traps) */
                             }
                             .fi-sidebar {
                                 background-color: transparent !important;
@@ -215,13 +215,13 @@ class AdminPanelProvider extends PanelProvider
 
                     /* Optimización para el Logo en Sidebar */
                     .fi-sidebar-header {
-                        height: 5.5rem !important;
+                        height: 6.5rem !important; /* Aumentado ligeramente para dar aire */
                         display: flex;
                         align-items: center;
                         justify-content: flex-start !important;
-                        padding-left: 1.5rem !important; /* Base padding of sidebar nav */
+                        padding-left: 1.5rem !important; 
                         padding-right: 1.5rem;
-                        margin-bottom: 0rem; /* Reducido para mejor alineación */
+                        margin-bottom: 0.5rem; /* Separación con el primer item */
                     }
 
                     .fi-sidebar-header > div, 
@@ -231,21 +231,20 @@ class AdminPanelProvider extends PanelProvider
                         align-items: center;
                     }
 
-                    /* Efecto de rectangulo que coincide con los items del nav */
                     .fi-sidebar-header .fi-logo-container,
                     .fi-sidebar-header a > div {
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         width: 100%;
-                        padding: 0.5rem;
+                        padding: 0.25rem;
                         border-radius: var(--border-radius, 12px);
                         transition: all 0.2s ease;
                     }
 
                     .fi-logo {
-                        height: 4.8rem !important;
-                        max-height: 4.8rem !important;
+                        height: auto !important;
+                        max-height: 3.5rem !important; /* Reducido para que no pise los items */
                         width: auto !important;
                         object-fit: contain;
                         image-rendering: auto;
@@ -253,6 +252,22 @@ class AdminPanelProvider extends PanelProvider
                         -moz-osx-font-smoothing: grayscale;
                         transform: translateZ(0);
                         margin-left: 0.5rem;
+                    }
+
+                    /* FIX CRITICO PARA DROPDOWNS */
+                    .fi-dropdown-panel, 
+                    .tippy-box, 
+                    [data-tippy-root] {
+                        z-index: 99999 !important;
+                    }
+
+                    .fi-main-ctn {
+                        overflow: visible !important;
+                    }
+                    
+                    .fi-main {
+                        overflow: visible !important;
+                    }
                         
                         /* MODO CLARO: Darken elimina el fondo gris claro permitiendo que el logo se funda con el sidebar */
                         mix-blend-mode: darken;
