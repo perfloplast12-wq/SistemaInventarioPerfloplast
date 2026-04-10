@@ -18,12 +18,18 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, bcmath, curl, dom, gd, libxml, zip
 
-      - name: Create storage directories
+      - name: Create storage and bootstrap directories
         run: |
           mkdir -p storage/framework/cache
           mkdir -p storage/framework/sessions
           mkdir -p storage/framework/views
           mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+          touch storage/framework/cache/.gitkeep
+          touch storage/framework/sessions/.gitkeep
+          touch storage/framework/views/.gitkeep
+          touch storage/logs/.gitkeep
+          touch bootstrap/cache/.gitkeep
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts

@@ -38,6 +38,8 @@ fi
 
 # 3. Fix folder permissions
 echo "Setting permissions for storage and bootstrap/cache..."
+mkdir -p /home/site/wwwroot/storage
+mkdir -p /home/site/wwwroot/bootstrap/cache
 chmod -R 775 /home/site/wwwroot/storage
 chmod -R 775 /home/site/wwwroot/bootstrap/cache
 chown -R www-data:www-data /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache || echo "Chown skipped (normal on some tiers)"
