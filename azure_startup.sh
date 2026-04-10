@@ -2,50 +2,45 @@
 
 # Configuration
 LOG_FILE="/home/site/wwwroot/startup_log.txt"
-
-# Redirect stdout and stderr to the log file
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "--- Startup script started at $(date) ---"
 
-# 1. Remove the default Azure welcome page if it exists
+# 1. Clean up default Azure welcome page
 if [ -f "/home/site/wwwroot/hostingstart.html" ]; then
     echo "Removing hostingstart.html..."
     rm "/home/site/wwwroot/hostingstart.html"
 fi
 
-# 2. Configure Nginx to point to /public
-# Azure PHP 8.2 images usually have the config at /etc/nginx/sites-available/default
-NGINX_CONF="/etc/nginx/sites-available/default"
+# 2. Install custom Nginx configuration
+NGINX_CONF_DEST="/etc/nginx/sites-available/default"
+NGINX_CONF_SRC="/home/site/wwwroot/nginx_default"
 
-if [ -f "$NGINX_CONF" ]; then
-    echo "Updating Nginx configuration to use Laravel's /public folder..."
-    
-    # Replace the root path
-    sed -i 's|root /home/site/wwwroot;|root /home/site/wwwroot/public;|g' "$NGINX_CONF"
-    
-    # Ensure index.php is prioritized
-    sed -i 's|index index.html index.htm index.php;|index index.php index.html index.htm;|g' "$NGINX_CONF"
-    
-    # Try to reload Nginx
+if [ -f "$NGINX_CONF_SRC" ]; then
+    echo "Installing custom Nginx configuration..."
+    cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
     echo "Reloading Nginx..."
-    service nginx reload || nginx -s reload || echo "Nginx reload failed, but config was updated."
+    service nginx reload || nginx -s reload
 else
-    echo "Warning: Nginx configuration file not found at $NGINX_CONF"
-    echo "Looking for other configurations..."
-    ls /etc/nginx/sites-available/
+    echo "ERROR: Custom Nginx configuration source not found at $NGINX_CONF_SRC"
 fi
 
-# 3. Fix folder permissions
-echo "Setting permissions for storage and bootstrap/cache..."
-mkdir -p /home/site/wwwroot/storage
+# 3. Create all required Laravel directories
+echo "Creating required directories..."
+mkdir -p /home/site/wwwroot/storage/framework/cache
+mkdir -p /home/site/wwwroot/storage/framework/sessions
+mkdir -p /home/site/wwwroot/storage/framework/views
+mkdir -p /home/site/wwwroot/storage/logs
 mkdir -p /home/site/wwwroot/bootstrap/cache
-chmod -R 775 /home/site/wwwroot/storage
-chmod -R 775 /home/site/wwwroot/bootstrap/cache
-chown -R www-data:www-data /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache || echo "Chown skipped (normal on some tiers)"
 
-# 4. Run Laravel tasks
-echo "Running Laravel artisan commands..."
+# 4. Fix folder permissions
+echo "Setting permissions..."
+chmod -R 777 /home/site/wwwroot/storage
+chmod -R 777 /home/site/wwwroot/bootstrap/cache
+chown -R www-data:www-data /home/site/wwwroot/storage /home/site/wwwroot/bootstrap/cache || echo "Chown skipped"
+
+# 5. Run Laravel tasks
+echo "Running Laravel tasks..."
 php /home/site/wwwroot/artisan migrate --force
 php /home/site/wwwroot/artisan config:cache
 php /home/site/wwwroot/artisan route:cache
