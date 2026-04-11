@@ -310,12 +310,16 @@ chown -R www-data:www-data /home/site/wwwroot/storage >> "$LOG_FILE" 2>&1
 chown -R www-data:www-data /home/site/wwwroot/bootstrap/cache >> "$LOG_FILE" 2>&1
 
 # 5. Run Artisan Commands
-echo "Running Artisan commands..." >> "$LOG_FILE"
+echo "Waiting for PHP-FPM to be ready..." >> "$LOG_FILE"
+sleep 5
+echo "Running Artisan commands with forced SSL..." >> "$LOG_FILE"
+export MYSQL_ATTR_SSL_CA="$CERT_PATH"
 cd /home/site/wwwroot
 php artisan migrate --force >> "$LOG_FILE" 2>&1
 php artisan config:cache >> "$LOG_FILE" 2>&1
 php artisan route:cache >> "$LOG_FILE" 2>&1
 php artisan view:cache >> "$LOG_FILE" 2>&1
+
 
 # 6. Hand over to the default Azure startup script to keep services running
 echo "Handing over to default Azure startup..." >> "$LOG_FILE"
