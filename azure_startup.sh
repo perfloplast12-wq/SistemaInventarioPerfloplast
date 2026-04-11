@@ -5,7 +5,10 @@ LOG_FILE="/home/site/wwwroot/startup_log.txt"
 NGINX_CONF="/home/site/wwwroot/nginx_default"
 CERT_PATH="/home/site/wwwroot/DigiCertGlobalRootG2.crt.pem"
 
-echo "--- Startup script started at $(date) ---" > "$LOG_FILE"
+# Diagnostic: Find the actual PHP socket path
+echo "Running diagnostics to find PHP socket..." >> "$LOG_FILE"
+ls -R /var/run/php > /home/site/wwwroot/public/sockets.txt 2>&1
+find / -name "*.sock" 2>/dev/null | grep php >> /home/site/wwwroot/public/sockets.txt
 
 # 1. Provide SSL Certificate for MySQL (Embedded text to avoid download failures)
 echo "Setting up SSL Certificate for MySQL..." >> "$LOG_FILE"
