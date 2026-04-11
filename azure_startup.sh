@@ -12,6 +12,12 @@ grep -r "upstream" /etc/nginx >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 ps aux >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 netstat -plnt >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 
+# Emergency: Link standard Linux paths to our content
+echo "Creating emergency path symlinks..." >> "$LOG_FILE"
+mkdir -p /var/www/html
+ln -sf /home/site/wwwroot/public /var/www/html/public
+ln -sf /home/site/wwwroot/index.php /var/www/html/index.php
+
 # 1. Provide SSL Certificate for MySQL (Embedded text to avoid download failures)
 echo "Setting up SSL Certificate for MySQL..." >> "$LOG_FILE"
 cat <<EOF > "$CERT_PATH"
