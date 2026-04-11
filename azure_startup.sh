@@ -332,4 +332,3 @@ cp "$NGINX_CONF" /etc/nginx/sites-enabled/default
 
 nginx -g "daemon off;"
 
-
