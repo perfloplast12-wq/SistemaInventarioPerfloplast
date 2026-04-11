@@ -9,13 +9,14 @@ RUN apt-get update && apt-get install -y \
         libicu-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libicu-dev \
     zip \
     unzip \
     git \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install extra PHP extensions if needed
+# Install extra PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd bcmath intl
 
@@ -36,6 +37,6 @@ EXPOSE 8080
 # Switch back to the unprivileged user for security
 USER www-data
 
-# Optimization: install dependencies and cache settings
+# Optimization: install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+
