@@ -317,4 +317,13 @@ php artisan config:cache >> "$LOG_FILE" 2>&1
 php artisan route:cache >> "$LOG_FILE" 2>&1
 php artisan view:cache >> "$LOG_FILE" 2>&1
 
-echo "--- Startup script finished at $(date) ---" >> "$LOG_FILE"
+# 6. Hand over to the default Azure startup script to keep services running
+echo "Handing over to default Azure startup..." >> "$LOG_FILE"
+if [ -f "/opt/startup/startup.sh" ]; then
+    /opt/startup/startup.sh
+else
+    # Fallback if the path is different
+    service php8.2-fpm start
+    nginx -g "daemon off;"
+fi
+
