@@ -6,9 +6,11 @@ NGINX_CONF="/home/site/wwwroot/nginx_default"
 CERT_PATH="/home/site/wwwroot/DigiCertGlobalRootG2.crt.pem"
 
 # Diagnostic: Trace original Nginx conversion to PHP
-echo "Tracing original Nginx configs..." >> "$LOG_FILE"
+echo "Tracing original Nginx configs and processes..." >> "$LOG_FILE"
 find /etc/nginx -name "*.conf" -exec grep -H "fastcgi_pass" {} \; > /home/site/wwwroot/public/nginx_search.txt 2>&1
 grep -r "upstream" /etc/nginx >> /home/site/wwwroot/public/nginx_search.txt 2>&1
+ps aux >> /home/site/wwwroot/public/nginx_search.txt 2>&1
+netstat -plnt >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 
 # 1. Provide SSL Certificate for MySQL (Embedded text to avoid download failures)
 echo "Setting up SSL Certificate for MySQL..." >> "$LOG_FILE"
