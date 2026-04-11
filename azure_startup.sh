@@ -321,13 +321,15 @@ php artisan route:cache >> "$LOG_FILE" 2>&1
 php artisan view:cache >> "$LOG_FILE" 2>&1
 
 
-# 6. Hand over to the default Azure startup script to keep services running
-echo "Handing over to default Azure startup..." >> "$LOG_FILE"
-if [ -f "/opt/startup/startup.sh" ]; then
-    /opt/startup/startup.sh
-else
-    # Fallback if the path is different
-    service php8.2-fpm start
-    nginx -g "daemon off;"
-fi
+# 6. Start Services manually to ensure they stay alive
+echo "Starting PHP-FPM..." >> "$LOG_FILE"
+service php8.2-fpm start >> "$LOG_FILE" 2>&1
+
+echo "Starting Nginx in foreground..." >> "$LOG_FILE"
+# Overwrite the default config one last time before starting
+cp "$NGINX_CONF" /etc/nginx/sites-available/default
+cp "$NGINX_CONF" /etc/nginx/sites-enabled/default
+
+nginx -g "daemon off;"
+
 
