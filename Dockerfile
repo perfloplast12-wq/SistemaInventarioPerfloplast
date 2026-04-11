@@ -6,6 +6,7 @@ USER root
 # Install system dependencies and PHP extensions for Laravel
 RUN apt-get update && apt-get install -y \
     libpng-dev \
+        libicu-dev \
     libjpeg-dev \
     libfreetype6-dev \
     zip \
@@ -16,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install extra PHP extensions if needed
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd bcmath
+    && docker-php-ext-install gd bcmath intl
 
 # Set up SSL Certificate for MySQL (DigiCert required by Azure)
 COPY DigiCertGlobalRootG2.crt.pem /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem
