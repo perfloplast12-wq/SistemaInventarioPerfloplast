@@ -12,11 +12,10 @@ grep -r "upstream" /etc/nginx >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 ps aux >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 netstat -plnt >> /home/site/wwwroot/public/nginx_search.txt 2>&1
 
-# Emergency: Link standard Linux paths to our content
-echo "Creating emergency path symlinks..." >> "$LOG_FILE"
-mkdir -p /var/www/html
-ln -sf /home/site/wwwroot/public /var/www/html/public
-ln -sf /home/site/wwwroot/index.php /var/www/html/index.php
+## Emergency: Link standard Linux paths to our content (Using container path)
+echo "Ensuring /var/www/html is prioritized..." >> "$LOG_FILE"
+# Ensure the cert is available where base_path() expects it
+cp "$CERT_PATH" /var/www/html/DigiCertGlobalRootG2.crt.pem >> "$LOG_FILE" 2>&1
 
 # 1. Provide SSL Certificate for MySQL (Ensuring it exists in persistent storage)
 echo "Setting up SSL Certificate for MySQL in $CERT_PATH..." >> "$LOG_FILE"
@@ -69,36 +68,35 @@ fi
 echo "Reloading Nginx..." >> "$LOG_FILE"
 nginx -s reload >> "$LOG_FILE" 2>&1
 
-# 3. Create health check file in public directory
-echo "Creating test.html health check..." >> "$LOG_FILE"
-cat <<EOF > /home/site/wwwroot/public/test.html
+# 3. Create health check file in public directory (Now in /var/www/html/public)
+echo "Creating health check files..." >> "$LOG_FILE"
+cat <<EOF > /var/www/html/public/test.html
 <!DOCTYPE html>
 <html>
 <body>
-    <h1>HOLA - Nginx and File System are working!</h1>
-    <p>Current Time: $(date)</p>
+    <h1>HOLA - Running from Container File System!</h1>
+    <p>Last Update: $(date)</p>
 </body>
 </html>
 EOF
 
 # 4. Ensure Laravel Directories and Permissions
-echo "Setting up Laravel directories..." >> "$LOG_FILE"
-mkdir -p /home/site/wwwroot/storage/framework/{cache,sessions,views} >> "$LOG_FILE" 2>&1
-mkdir -p /home/site/wwwroot/storage/logs >> "$LOG_FILE" 2>&1
-mkdir -p /home/site/wwwroot/bootstrap/cache >> "$LOG_FILE" 2>&1
+echo "Setting up Laravel directories in /var/www/html..." >> "$LOG_FILE"
+mkdir -p /var/www/html/storage/framework/{cache,sessions,views} >> "$LOG_FILE" 2>&1
+mkdir -p /var/www/html/storage/logs >> "$LOG_FILE" 2>&1
+mkdir -p /var/www/html/bootstrap/cache >> "$LOG_FILE" 2>&1
 
 echo "Setting permissions..." >> "$LOG_FILE"
-chmod -R 777 /home/site/wwwroot/storage >> "$LOG_FILE" 2>&1
-chmod -R 777 /home/site/wwwroot/bootstrap/cache >> "$LOG_FILE" 2>&1
-chown -R www-data:www-data /home/site/wwwroot/storage >> "$LOG_FILE" 2>&1
-chown -R www-data:www-data /home/site/wwwroot/bootstrap/cache >> "$LOG_FILE" 2>&1
+chmod -R 777 /var/www/html/storage >> "$LOG_FILE" 2>&1
+chmod -R 777 /var/www/html/bootstrap/cache >> "$LOG_FILE" 2>&1
+chown -R www-data:www-data /var/www/html/storage >> "$LOG_FILE" 2>&1
+chown -R www-data:www-data /var/www/html/bootstrap/cache >> "$LOG_FILE" 2>&1
 
 # 5. Run Artisan Commands
 echo "Waiting for PHP-FPM to be ready..." >> "$LOG_FILE"
 sleep 5
-echo "Running Artisan commands with forced SSL..." >> "$LOG_FILE"
-export MYSQL_ATTR_SSL_CA="$CERT_PATH"
-cd /home/site/wwwroot
+echo "Running Artisan commands..." >> "$LOG_FILE"
+cd /var/www/html
 php artisan migrate --force >> "$LOG_FILE" 2>&1
 php artisan config:cache >> "$LOG_FILE" 2>&1
 php artisan route:cache >> "$LOG_FILE" 2>&1
