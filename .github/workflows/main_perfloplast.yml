@@ -45,6 +45,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'perfloplast' # New App Service name
+          app-name: 'Perfloplast' # New App Service name
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           images: 'ghcr.io/${{ github.repository_owner }}/perfloplast:latest'
