@@ -6,10 +6,9 @@ USER root
 # Install system dependencies and PHP extensions for Laravel
 RUN apt-get update && apt-get install -y \
     libpng-dev \
-        libicu-dev \
+    libicu-dev \
     libjpeg-dev \
     libfreetype6-dev \
-    libicu-dev \
     zip \
     unzip \
     git \
@@ -20,23 +19,29 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd bcmath intl
 
-# Set up SSL Certificate for MySQL (DigiCert required by Azure)
+# 1. Install SSL Certificate into System CA Store
 COPY DigiCertGlobalRootG2.crt.pem /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem
 RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && update-ca-certificates
 
-# Copy application files with correct ownership
+# 2. Copy Nginx Configuration into the image
+COPY nginx_default /etc/nginx/sites-available/default
+COPY nginx_default /etc/nginx/sites-enabled/default
+
+# 3. Copy application files
 COPY --chown=www-data:www-data . /var/www/html
 
-# Set Web Root to /public (Essential for Laravel)
+# Ensure the SSL certificate is also available in the application root for base_path()
+RUN cp /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem /var/www/html/DigiCertGlobalRootG2.crt.pem && \
+    chown www-data:www-data /var/www/html/DigiCertGlobalRootG2.crt.pem
+
+# Set Web Root environment variable (used by serversideup image)
 ENV WEB_ROOT=/var/www/html/public
 ENV PHP_OPCACHE_ENABLE=1
 
-# Expose port (Azure App Service often uses 8080 for Docker)
+# Expose port (Azure uses 8080)
 EXPOSE 8080
 
-# Switch back to the unprivileged user for security
-USER www-data
-
 # Optimization: install dependencies
+USER www-data
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
