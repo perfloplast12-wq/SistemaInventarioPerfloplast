@@ -64,7 +64,7 @@ if (isset($_GET['migrate'])) {
         echo "ERROR running migration: " . $e->getMessage() . "\n";
     }
 } else {
-    echo "[ CLICK HERE TO RUN MIGRATIONS: https://perfloplast.azurewebsites.net/test-db.php?migrate=1 ]\n";
+    echo "[ CLICK HERE TO RUN MIGRATIONS: https://perfloplast.azurewebsites.net/db-migrate.php?migrate=1 ]\n";
     
     echo "\n--- Current Tables in DB ---\n";
     try {
