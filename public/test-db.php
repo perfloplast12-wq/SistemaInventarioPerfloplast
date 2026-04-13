@@ -49,9 +49,12 @@ test_conn("C: SSL Enabled, NO Verify", [
 
 echo "--- Step 4: Database Migrations ---\n";
 if (isset($_GET['migrate'])) {
-    echo "Running 'php artisan migrate --force'...\n";
+    set_time_limit(0); // No timeout
+    echo "Running 'php artisan migrate --force' (this may take 1-2 mins)...\n";
+    echo "Please wait...\n";
+    flush(); 
+    
     try {
-        // We use the Artisan facade by including the bootstrap
         $app = require_once __DIR__.'/../bootstrap/app.php';
         $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
         $status = $kernel->call('migrate', ['--force' => true]);
@@ -62,6 +65,21 @@ if (isset($_GET['migrate'])) {
     }
 } else {
     echo "[ CLICK HERE TO RUN MIGRATIONS: https://perfloplast.azurewebsites.net/test-db.php?migrate=1 ]\n";
+    
+    echo "\n--- Current Tables in DB ---\n";
+    try {
+        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $stmt = $pdo->query("SHOW TABLES");
+        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        if (empty($tables)) {
+            echo "Database is EMPTY. Please click the migration link above.\n";
+        } else {
+            echo "Found " . count($tables) . " tables:\n";
+            foreach($tables as $t) echo " - $t\n";
+        }
+    } catch (\Exception $e) {
+        echo "Error listing tables: " . $e->getMessage() . "\n";
+    }
 }
 
 echo "\n--- Troubleshooting Summary ---\n";
