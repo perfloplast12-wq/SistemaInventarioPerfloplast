@@ -3,8 +3,8 @@ header('Content-Type: text/plain');
 
 $host = 'perflo-db-farma.mysql.database.azure.com';
 $db   = 'perflo_plast_db';
-$user = 'perfloplast';
-$pass = 'perfloplast123';
+$user = getenv('DB_USERNAME') ?: 'admin_perflo';
+$pass = getenv('DB_PASSWORD') ?: 'Perfloplast123.';
 $port = 3306;
 $ca_path = '/var/www/html/DigiCertGlobalRootG2.crt.pem';
 
