@@ -6,50 +6,48 @@ $db   = 'perflo_plast_db';
 $user = 'perfloplast';
 $pass = 'perfloplast123';
 $port = 3306;
-$charset = 'utf8mb4';
-
-// Use the absolute path confirmed by diagnose.php
 $ca_path = '/var/www/html/DigiCertGlobalRootG2.crt.pem';
 
-echo "--- MySQL SSL Connection Diagnostic ---\n";
-echo "Testing connection to $host...\n";
-echo "Using Cert Path: $ca_path\n";
-echo "Cert File Exists: " . (file_exists($ca_path) ? "YES" : "NO") . "\n";
-echo "Cert File Readable: " . (is_readable($ca_path) ? "YES" : "NO") . "\n";
+echo "--- MySQL SSL Deep Diagnostic (v2.1) ---\n";
+echo "Host: $host\n";
+echo "Cert File: $ca_path (" . (file_exists($ca_path) ? "EXISTS" : "MISSING") . ")\n\n";
 
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false,
-    PDO::MYSQL_ATTR_SSL_CA       => $ca_path,
-    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
-];
-
-$dsn = "mysql:host=$host;dbname=$db;port=$port;charset=$charset";
-
-try {
-     echo "Attempting PDO connection...\n";
-     $pdo = new PDO($dsn, $user, $pass, $options);
-     echo "SUCCESS: Connected to MySQL using SSL!\n";
-     
-     $stmt = $pdo->query("SELECT VERSION() as version");
-     $row = $stmt->fetch();
-     echo "MySQL Version: " . $row['version'] . "\n";
-     
-     $stmt = $pdo->query("SHOW STATUS LIKE 'Ssl_cipher'");
-     $row = $stmt->fetch();
-     echo "SSL Cipher in use: " . ($row['Value'] ?? 'None') . "\n";
-
-} catch (\PDOException $e) {
-     echo "ERROR: Could not connect to database.\n";
-     echo "Exception Message: " . $e->getMessage() . "\n";
-     echo "Error Code: " . $e->getCode() . "\n";
-     
-     echo "\n--- Troubleshooting Tips ---\n";
-     if (strpos($e->getMessage(), 'handshake') !== false) {
-         echo "- SSL Handshake failed. The certificate might not match the server's requirement.\n";
-     }
-     if (strpos($e->getMessage(), '2002') !== false) {
-         echo "- Network or SSL initialization error. Check if 'Public Access' is allowed in Azure MySQL Network settings.\n";
-     }
+function test_conn($name, $options, $dsn, $user, $pass) {
+    echo "TEST [$name]: ";
+    try {
+        $pdo = new PDO($dsn, $user, $pass, $options);
+        echo "SUCCESS!\n";
+        $stmt = $pdo->query("SHOW STATUS LIKE 'Ssl_cipher'");
+        $row = $stmt->fetch();
+        echo "   -> Cipher: " . ($row['Value'] ?? 'None') . "\n\n";
+    } catch (\Exception $e) {
+        echo "FAILED\n";
+        echo "   -> Error: " . $e->getMessage() . "\n\n";
+    }
 }
+
+$dsn = "mysql:host=$host;dbname=$db;port=$port;charset=utf8mb4";
+
+// Test 1: Explicit CA + Verify (Standard)
+test_conn("A: Explicit CA + Verify", [
+    PDO::MYSQL_ATTR_SSL_CA => $ca_path,
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+], $dsn, $user, $pass);
+
+// Test 2: No CA + Verify (System Store)
+test_conn("B: System CA + Verify", [
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+], $dsn, $user, $pass);
+
+// Test 3: No Verify (Insecure)
+test_conn("C: SSL Enabled, NO Verify", [
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+], $dsn, $user, $pass);
+
+echo "--- Troubleshooting Summary ---\n";
+echo "1. If ALL fail: Check Azure Database Firewall ('Allow public access' must be ON).\n";
+echo "2. If only C works: The certificate you are using does not match the server's certificate.\n";
+echo "3. If B works: Good news! Azure already has the cert in the system store.\n";
