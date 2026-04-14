@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Filament\Resources\InventoryMovementResource\Pages;
+
+use App\Filament\Resources\InventoryMovementResource;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+
+class ListInventoryMovements extends ListRecords
+{
+    protected static string $resource = InventoryMovementResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('volver')
+                ->label('Volver a Inventario')
+                ->icon('heroicon-o-arrow-left')
+                ->url(route('filament.admin.pages.inventario'))
+                ->color('gray'),
+
+            Actions\CreateAction::make()->label('Nuevo Movimiento'),
+        ];
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $type = request()->query('type');
+
+        if ($type) {
+            // ✅ aplica el filtro automáticamente cuando entras desde los botones
+            $this->tableFilters['type'] = ['value' => $type];
+        }
+    }
+}
