@@ -83,6 +83,28 @@ if (isset($_GET['migrate'])) {
 } else {
     echo "[ CLICK HERE TO RUN MIGRATIONS: https://perfloplast.azurewebsites.net/db-migrate.php?migrate=1 ]\n";
     
+    echo "\n--- File System Audit ---\n";
+    echo "Current Dir: " . __DIR__ . "\n";
+    $base = realpath(__DIR__ . '/..');
+    echo "Base Path: $base\n";
+    
+    $checks = [
+        'vendor' => $base . '/vendor',
+        'bootstrap/cache' => $base . '/bootstrap/cache',
+        'storage' => $base . '/storage',
+        'vendor/autoload.php' => $base . '/vendor/autoload.php'
+    ];
+    
+    foreach ($checks as $name => $path) {
+        $exists = file_exists($path) ? "EXISTS" : "MISSING";
+        $perms = $exists === "EXISTS" && is_readable($path) ? "READABLE" : "NOT READABLE";
+        echo " - $name: $exists ($perms) [$path]\n";
+        if ($exists === "EXISTS" && is_dir($path)) {
+            $files = scandir($path);
+            echo "   (Items: " . count($files) . ")\n";
+        }
+    }
+
     echo "\n--- Current Tables in DB ---\n";
     try {
         $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
