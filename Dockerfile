@@ -27,21 +27,15 @@ RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && u
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 
-# 3. Copy application files
+# 3. Copy application files and set permissions early
 COPY --chown=www-data:www-data . /var/www/html
 
-# Ensure the SSL certificate is also available in the application root for base_path()
-RUN cp /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem /var/www/html/DigiCertGlobalRootG2.crt.pem && \
-    chown www-data:www-data /var/www/html/DigiCertGlobalRootG2.crt.pem
+# 4. Install dependencies as root to ensure all tools are available, then fix permissions
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --no-progress
 
-# Set Web Root environment variable (used by serversideup image)
-ENV WEB_ROOT=/var/www/html/public
-ENV PHP_OPCACHE_ENABLE=1
+# 5. Fix permissions for storage and cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port (Azure uses 8080)
-EXPOSE 8080
-
-# Optimization: install dependencies
+# 6. Final cleanup and environment
 USER www-data
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
