@@ -49,19 +49,36 @@ test_conn("C: SSL Enabled, NO Verify", [
 
 echo "--- Step 4: Database Migrations ---\n";
 if (isset($_GET['migrate'])) {
-    set_time_limit(0); // No timeout
-    echo "Running 'php artisan migrate --force' (this may take 1-2 mins)...\n";
-    echo "Please wait...\n";
-    flush(); 
+    set_time_limit(0);
+    ini_set('output_buffering', 'off');
+    ini_set('zlib.output_compression', false);
+    while (ob_get_level()) ob_end_flush();
+    ob_implicit_flush(true);
+
+    echo "--- ULTRA-VERBOSE MIGRATION RUNNER ---\n";
+    echo "Running migrations one by one...\n\n";
     
     try {
         $app = require_once __DIR__.'/../bootstrap/app.php';
         $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-        $status = $kernel->call('migrate', ['--force' => true]);
-        echo "RESULT: Success!\n";
-        echo "Artisan Output:\n" . $kernel->output() . "\n";
+        
+        // We run a loop to migrate step by step
+        for ($i = 1; $i <= 100; $i++) {
+            $status = $kernel->call('migrate', ['--force' => true, '--step' => 1]);
+            $output = trim($kernel->output());
+            
+            if (strpos($output, 'Nothing to migrate') !== false) {
+                echo "\nFINISH: All migrations completed!\n";
+                break;
+            }
+            
+            echo "Step $i: " . $output . "\n";
+            echo str_pad("", 4096, " "); // Force browser to render
+            usleep(100000); // 0.1s pause for visibility
+        }
+        
     } catch (\Exception $e) {
-        echo "ERROR running migration: " . $e->getMessage() . "\n";
+        echo "\nFATAL ERROR: " . $e->getMessage() . "\n";
     }
 } else {
     echo "[ CLICK HERE TO RUN MIGRATIONS: https://perfloplast.azurewebsites.net/db-migrate.php?migrate=1 ]\n";
