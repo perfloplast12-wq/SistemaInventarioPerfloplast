@@ -31,12 +31,15 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
     && npm install \
     && npm run build
 
-# 4. Configure Nginx and permissions
+# 4. Run database migrations
+RUN php artisan migrate --force --no-interaction
+
+# 5. Configure Nginx and permissions
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 5. Final setup
+# 6. Final setup
 USER www-data
 ENV WEB_ROOT=/var/www/html/public
 EXPOSE 8080
