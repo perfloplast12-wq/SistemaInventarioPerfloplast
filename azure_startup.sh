@@ -15,7 +15,9 @@ cd /var/www/html
 echo "Running Artisan commands from $(pwd)..." >> "$LOG_FILE"
 
 php artisan migrate --force >> "$LOG_FILE" 2>&1
+echo "Running db:seed..." >> "$LOG_FILE"
 php artisan db:seed --force >> "$LOG_FILE" 2>&1
+if [ $? -eq 0 ]; then echo "Seeding successful." >> "$LOG_FILE"; else echo "Seeding FAILED." >> "$LOG_FILE"; fi
 php artisan storage:link >> "$LOG_FILE" 2>&1
 php artisan filament:assets >> "$LOG_FILE" 2>&1
 php artisan config:cache >> "$LOG_FILE" 2>&1
