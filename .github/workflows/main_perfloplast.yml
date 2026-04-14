@@ -43,6 +43,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/perfloplast:v8
             ghcr.io/${{ github.repository_owner }}/perfloplast:v9
             ghcr.io/${{ github.repository_owner }}/perfloplast:v10
+            ghcr.io/${{ github.repository_owner }}/perfloplast:v11
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

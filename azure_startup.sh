@@ -15,6 +15,7 @@ cd /var/www/html
 echo "Running Artisan commands from $(pwd)..." >> "$LOG_FILE"
 
 php artisan migrate --force >> "$LOG_FILE" 2>&1
+php artisan db:seed --force >> "$LOG_FILE" 2>&1
 php artisan storage:link >> "$LOG_FILE" 2>&1
 php artisan filament:assets >> "$LOG_FILE" 2>&1
 php artisan config:cache >> "$LOG_FILE" 2>&1

@@ -1,4 +1,4 @@
-﻿const preset = require('../../../../vendor/filament/support/tailwind.config.preset')
+const preset = require('../../../../vendor/filament/support/tailwind.config.preset')
 
 module.exports = {
     presets: [preset],
@@ -6,5 +6,9 @@ module.exports = {
         './app/Filament/**/*.php',
         './resources/views/filament/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
+    ],
+    plugins: [
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/typography'),
     ],
 }
