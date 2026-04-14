@@ -45,6 +45,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/perfloplast:v10
             ghcr.io/${{ github.repository_owner }}/perfloplast:v11
             ghcr.io/${{ github.repository_owner }}/perfloplast:v12
+            ghcr.io/${{ github.repository_owner }}/perfloplast:v13
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

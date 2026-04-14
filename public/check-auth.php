@@ -5,21 +5,49 @@ $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $kernel->handle(Illuminate\Http\Request::capture());
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
-echo "--- Auth Diagnostic ---<br>";
-echo "Environment: " . app()->environment() . "<br>";
-echo "SUPER_ADMIN_PASSWORD set: " . (env('SUPER_ADMIN_PASSWORD') ? 'YES' : 'NO') . "<br>";
-echo "User count: " . User::count() . "<br>";
+echo "--- Auth Emergency Fix ---<br>";
 
-$admin = User::where('email', 'admin@perfloplast.com')->first();
-if ($admin) {
-    echo "Admin User Found: YES<br>";
-    echo "Admin Active: " . ($admin->is_active ? 'YES' : 'NO') . "<br>";
+$email = 'admin@perfloplast.com';
+$password = env('SUPER_ADMIN_PASSWORD', 'perfloplast123');
+
+echo "Checking User...<br>";
+$admin = User::where('email', $email)->first();
+
+if (!$admin) {
+    echo "User NOT found. Creating...<br>";
+    try {
+        $admin = User::create([
+            'name' => 'Super Administrador',
+            'email' => $email,
+            'password' => Hash::make($password),
+            'email_verified_at' => now(),
+            'is_active' => true,
+        ]);
+        echo "User Created Successfully!<br>";
+    } catch (\Exception $e) {
+        echo "Error Creating User: " . $e->getMessage() . "<br>";
+    }
 } else {
-    echo "Admin User Found: NO<br>";
+    echo "User already exists. Ensuring it is active...<br>";
+    $admin->is_active = true;
+    $admin->save();
 }
 
-// Check roles if possible
-if ($admin && method_exists($admin, 'getRoleNames')) {
-    echo "Roles: " . $admin->getRoleNames()->implode(', ') . "<br>";
+if ($admin) {
+    echo "Ensuring Roles/Permissions...<br>";
+    try {
+        // Force create roles if they don't exist
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $admin->assignRole($role);
+        echo "Role 'super_admin' assigned!<br>";
+    } catch (\Exception $e) {
+        echo "Error assigning role: " . $e->getMessage() . "<br>";
+    }
 }
+
+echo "<br>Final User Count: " . User::count() . "<br>";
+echo "Now try logging in at /admin/login<br>";
