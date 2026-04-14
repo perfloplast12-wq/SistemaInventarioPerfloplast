@@ -1,3 +1,12 @@
+# --- Stage 1: Build Assets ---
+FROM node:20-slim AS assets-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# --- Stage 2: Final Production Image ---
 FROM serversideup/php:8.2-fpm-nginx
 
 # Switch to root to install system dependencies
@@ -30,12 +39,17 @@ COPY nginx_default /etc/nginx/sites-enabled/default
 # 3. Copy application files and set permissions early
 COPY --chown=www-data:www-data . /var/www/html
 
-# 4. Install dependencies as root to ensure all tools are available, then fix permissions
+# 4. Copy compiled assets from Stage 1
+COPY --from=assets-builder --chown=www-data:www-data /app/public/build /var/www/html/public/build
+
+# 5. Install PHP dependencies as root to ensure all tools are available, then fix permissions
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --no-progress
 
-# 5. Fix permissions for storage and cache
+# 6. Fix permissions for storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 6. Final cleanup and environment
+# 7. Final cleanup and environment
 USER www-data
 
+# Expose port (Azure uses 8080)
+EXPOSE 8080
