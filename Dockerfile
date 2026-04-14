@@ -1,12 +1,22 @@
-# --- Stage 1: Build Assets ---
+# --- Stage 1: Build PHP Dependencies ---
+FROM composer:latest AS php-builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+# We need the whole app for artisan/autoloader hooks if any, but --no-scripts helps
+COPY . .
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# --- Stage 2: Build Visual Assets ---
 FROM node:20-slim AS assets-builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# CRITICAL: Copy vendor from Stage 1 because Filament theme building needs it!
+COPY --from=php-builder /app/vendor /app/vendor
 RUN npm run build
 
-# --- Stage 2: Final Production Image ---
+# --- Stage 3: Final Production Image ---
 FROM serversideup/php:8.2-fpm-nginx
 
 # Switch to root to install system dependencies
@@ -36,14 +46,14 @@ RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && u
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 
-# 3. Copy application files and set permissions early
+# 3. Copy application files
 COPY --chown=www-data:www-data . /var/www/html
 
-# 4. Copy compiled assets from Stage 1
-COPY --from=assets-builder --chown=www-data:www-data /app/public/build /var/www/html/public/build
+# 4. Copy vendor from Stage 1
+COPY --from=php-builder --chown=www-data:www-data /app/vendor /var/www/html/vendor
 
-# 5. Install PHP dependencies as root to ensure all tools are available, then fix permissions
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --no-progress
+# 5. Copy compiled assets from Stage 2
+COPY --from=assets-builder --chown=www-data:www-data /app/public/build /var/www/html/public/build
 
 # 6. Fix permissions for storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
