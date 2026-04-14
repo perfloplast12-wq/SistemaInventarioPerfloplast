@@ -2,9 +2,9 @@
 FROM composer:latest AS php-builder
 WORKDIR /app
 COPY composer.json composer.lock ./
-# We need the whole app for artisan/autoloader hooks if any, but --no-scripts helps
+# We need the whole app for artisan/autoloader hooks if any
 COPY . .
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs
 
 # --- Stage 2: Build Visual Assets ---
 FROM node:20-slim AS assets-builder
