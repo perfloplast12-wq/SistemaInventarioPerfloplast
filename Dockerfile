@@ -22,6 +22,9 @@ RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && u
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 
+# 3. Set working directory to backend
+WORKDIR /var/www/html/backend
+
 # 3. Install ALL dependencies in a single environment
 # This ensures Vite can see the vendor folder without path issues
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs \
