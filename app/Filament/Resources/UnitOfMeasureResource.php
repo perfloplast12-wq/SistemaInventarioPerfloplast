@@ -58,7 +58,10 @@ class UnitOfMeasureResource extends Resource
                         ->label('Nombre')
                         ->required()
                         ->maxLength(100)
-                        ->unique(ignoreRecord: true),
+                        ->unique(ignoreRecord: true)
+                        ->validationMessages([
+                            'unique' => 'Este nombre ya está registrado. Usa uno diferente.',
+                        ]),
 
                     Forms\Components\Toggle::make('is_active')
                         ->label('Activo')
