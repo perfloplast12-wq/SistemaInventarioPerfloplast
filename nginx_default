@@ -1,7 +1,7 @@
 server {
     listen 8080;
     listen [::]:8080;
-    root /var/www/html/backend/public;
+    root /var/www/html/public;
     index index.php index.html index.htm;
     server_name  _;
     port_in_redirect off;

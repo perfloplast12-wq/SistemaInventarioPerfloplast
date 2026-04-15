@@ -18,28 +18,21 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 COPY DigiCertGlobalRootG2.crt.pem /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem
 RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && update-ca-certificates
 
-# 2. Copy application files
+# 2. Copy application files to /var/www/html (project root IS the Laravel app)
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 
-# 3. Set working directory to backend
-WORKDIR /var/www/html/backend
-
-# 3. Install ALL dependencies in a single environment
-# This ensures Vite can see the vendor folder without path issues
+# 3. Install dependencies and build assets from root
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs \
     && npm install \
     && npm run build
 
-# 4. Run database migrations
-RUN php artisan migrate --force --no-interaction
-
-# 5. Configure Nginx and permissions
+# 4. Configure Nginx and permissions
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 6. Final setup
+# 5. Final setup
 USER www-data
 ENV WEB_ROOT=/var/www/html/public
 EXPOSE 8080
