@@ -11,10 +11,11 @@ mkdir -p /home/site/wwwroot/storage/logs >> "$LOG_FILE" 2>&1
 chmod -R 777 /home/site/wwwroot/storage >> "$LOG_FILE" 2>&1
 
 # 2. Run Artisan commands from the image code path
-cd /var/www/html
+cd /var/www/html/backend
 echo "Running Artisan commands from $(pwd)..." >> "$LOG_FILE"
 
 php artisan migrate --force >> "$LOG_FILE" 2>&1
+composer dump-autoload --optimize >> "$LOG_FILE" 2>&1
 echo "Running db:seed..." >> "$LOG_FILE"
 php artisan db:seed --force >> "$LOG_FILE" 2>&1
 if [ $? -eq 0 ]; then echo "Seeding successful." >> "$LOG_FILE"; else echo "Seeding FAILED." >> "$LOG_FILE"; fi
