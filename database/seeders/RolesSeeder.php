@@ -25,6 +25,7 @@ class RolesSeeder extends Seeder
         $production = Role::firstOrCreate(['name' => 'production',  'guard_name' => 'web']);
         $viewer     = Role::firstOrCreate(['name' => 'viewer',      'guard_name' => 'web']);
         $conductor  = Role::firstOrCreate(['name' => 'conductor',   'guard_name' => 'web']);
+        $mantenimiento = Role::firstOrCreate(['name' => 'mantenimiento', 'guard_name' => 'web']);
 
         // ── 2. Super Admin: TODOS los permisos ─────────────
         $superAdmin->syncPermissions(Permission::all());
