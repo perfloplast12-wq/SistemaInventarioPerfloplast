@@ -58,7 +58,7 @@ class UnitOfMeasureResource extends Resource
                         ->label('Nombre')
                         ->required()
                         ->maxLength(100)
-                        ->unique(ignoreRecord: true)
+                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
                         ->validationMessages([
                             'unique' => 'Este nombre ya está registrado. Usa uno diferente.',
                         ]),
@@ -78,13 +78,20 @@ class UnitOfMeasureResource extends Resource
                 Tables\Columns\ToggleColumn::make('is_active')->label('Activo')->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y H:i:s')->sortable(),
             ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }
