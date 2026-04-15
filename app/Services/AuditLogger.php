@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AuditLogger
 {
@@ -16,25 +17,34 @@ class AuditLogger
         ?array $new = null,
         ?string $description = null
     ): void {
-        $request = app(Request::class);
+        try {
+            $request = app(Request::class);
 
-        $changes = self::diff($old, $new);
+            $changes = self::diff($old, $new);
 
-        AuditLog::create([
-            'user_id'        => auth()->id(),
-            'event'          => $event,
-            'module'         => $module,
-            'auditable_type' => $model ? get_class($model) : null,
-            'auditable_id'   => $model?->getKey(),
-            'old_values'     => $old,
-            'new_values'     => $new,
-            'changes'        => $changes,
-            'ip_address'     => $request?->ip(),
-            'user_agent'     => substr((string) $request?->userAgent(), 0, 4000),
-            'url'            => $request?->fullUrl(),
-            'method'         => $request?->method(),
-            'description'    => $description,
-        ]);
+            AuditLog::create([
+                'user_id'        => auth()->id(),
+                'event'          => $event,
+                'module'         => $module,
+                'auditable_type' => $model ? get_class($model) : null,
+                'auditable_id'   => $model?->getKey(),
+                'old_values'     => $old,
+                'new_values'     => $new,
+                'changes'        => $changes,
+                'ip_address'     => $request?->ip(),
+                'user_agent'     => substr((string) $request?->userAgent(), 0, 4000),
+                'url'            => $request?->fullUrl(),
+                'method'         => $request?->method(),
+                'description'    => $description,
+            ]);
+        } catch (\Throwable $e) {
+            // Never let audit logging crash the application
+            Log::error('AuditLogger failed: ' . $e->getMessage(), [
+                'event' => $event,
+                'module' => $module,
+                'exception' => $e::class,
+            ]);
+        }
     }
 
     /**

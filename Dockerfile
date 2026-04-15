@@ -22,17 +22,26 @@ RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && u
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 
-# 3. Install dependencies and build assets from root
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs \
+# 3. Install dependencies and build assets
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs \
     && npm install \
     && npm run build
 
-# 4. Configure Nginx and permissions
+# 4. Force-regenerate the autoloader classmap to ensure all models are found
+RUN composer dump-autoload --optimize --no-interaction
+
+# 5. Debug: verify AuditLog is in the classmap (will show in build log)
+RUN echo "=== Checking AuditLog in classmap ===" \
+    && grep -i "AuditLog" vendor/composer/autoload_classmap.php || echo "WARNING: AuditLog NOT in classmap!" \
+    && echo "=== Listing app/Models/ ===" \
+    && ls -la app/Models/
+
+# 6. Configure Nginx and permissions
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 5. Final setup
+# 7. Final setup
 USER www-data
 ENV WEB_ROOT=/var/www/html/public
 EXPOSE 8080
