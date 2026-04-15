@@ -2,13 +2,21 @@
 
 namespace App\Filament\Resources\FinishedProductResource\Pages;
 
+use App\Filament\Concerns\HandlesSoftDeletedDuplicates;
 use App\Filament\Resources\FinishedProductResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateFinishedProduct extends CreateRecord
 {
+    use HandlesSoftDeletedDuplicates;
+
     protected static string $resource = FinishedProductResource::class;
+
+    protected function getUniqueFieldsForRestore(): array
+    {
+        return ['sku'];
+    }
 
     protected function getHeaderActions(): array
     {

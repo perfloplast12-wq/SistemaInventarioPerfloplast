@@ -2,13 +2,21 @@
 
 namespace App\Filament\Resources\RawMaterialProductResource\Pages;
 
+use App\Filament\Concerns\HandlesSoftDeletedDuplicates;
 use App\Filament\Resources\RawMaterialProductResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateRawMaterialProduct extends CreateRecord
 {
+    use HandlesSoftDeletedDuplicates;
+
     protected static string $resource = RawMaterialProductResource::class;
+
+    protected function getUniqueFieldsForRestore(): array
+    {
+        return ['sku'];
+    }
 
 
     protected function getHeaderActions(): array
