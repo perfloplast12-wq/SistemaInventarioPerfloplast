@@ -13,10 +13,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('unit_of_measures', function (Blueprint $table) {
-            $table->dropUnique('unit_of_measures_name_unique');
-            $table->index('name');
-        });
+        // Check if the unique index still exists before trying to drop it
+        $indexes = \DB::select("SHOW INDEX FROM unit_of_measures WHERE Key_name = 'unit_of_measures_name_unique'");
+        
+        if (!empty($indexes)) {
+            Schema::table('unit_of_measures', function (Blueprint $table) {
+                $table->dropUnique('unit_of_measures_name_unique');
+            });
+        }
+
+        // Add normal index if it doesn't exist
+        $normalIndex = \DB::select("SHOW INDEX FROM unit_of_measures WHERE Key_name = 'unit_of_measures_name_index'");
+        if (empty($normalIndex)) {
+            Schema::table('unit_of_measures', function (Blueprint $table) {
+                $table->index('name');
+            });
+        }
     }
 
     public function down(): void
