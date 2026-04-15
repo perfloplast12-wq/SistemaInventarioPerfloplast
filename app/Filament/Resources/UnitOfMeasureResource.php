@@ -57,7 +57,8 @@ class UnitOfMeasureResource extends Resource
                     Forms\Components\TextInput::make('name')
                         ->label('Nombre')
                         ->required()
-                        ->maxLength(100),
+                        ->maxLength(100)
+                        ->unique(ignoreRecord: true),
 
                     Forms\Components\Toggle::make('is_active')
                         ->label('Activo')
