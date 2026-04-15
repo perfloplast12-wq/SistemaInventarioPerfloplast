@@ -34,21 +34,8 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/perfloplast:latest
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v2
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v3
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v4
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v5
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v6
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v7
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v8
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v9
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v10
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v11
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v12
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v13
-            ghcr.io/${{ github.repository_owner }}/perfloplast:v14
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ghcr.io/${{ github.repository_owner }}/perfloplast:${{ github.sha }}
+          no-cache: true
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,6 +45,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Perfloplast' # New App Service name
+          app-name: 'Perfloplast'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           images: 'ghcr.io/${{ github.repository_owner }}/perfloplast:latest'

@@ -22,26 +22,27 @@ RUN chmod 644 /usr/local/share/ca-certificates/DigiCertGlobalRootG2.crt.pem && u
 WORKDIR /var/www/html
 COPY --chown=www-data:www-data . .
 
-# 3. Install dependencies and build assets
-RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs \
-    && npm install \
-    && npm run build
+# 3. Install PHP dependencies (--no-scripts to avoid artisan during build)
+RUN composer install --no-dev --no-interaction --no-scripts --ignore-platform-reqs
 
-# 4. Force-regenerate the autoloader classmap to ensure all models are found
-RUN composer dump-autoload --optimize --no-interaction
+# 4. Force-regenerate the optimized autoloader classmap
+RUN composer dump-autoload --optimize --no-interaction --no-scripts
 
-# 5. Debug: verify AuditLog is in the classmap (will show in build log)
-RUN echo "=== Checking AuditLog in classmap ===" \
-    && grep -i "AuditLog" vendor/composer/autoload_classmap.php || echo "WARNING: AuditLog NOT in classmap!" \
-    && echo "=== Listing app/Models/ ===" \
-    && ls -la app/Models/
+# 5. Install frontend deps and build
+RUN npm install && npm run build
 
-# 6. Configure Nginx and permissions
+# 6. Debug: verify AuditLog is in the classmap (visible in build log)
+RUN echo "=== Verifying AuditLog ===" \
+    && echo "File on disk:" && ls -la app/Models/Audit* \
+    && echo "In classmap:" && grep -i "AuditLog" vendor/composer/autoload_classmap.php \
+    && echo "=== AuditLog OK ==="
+
+# 7. Configure Nginx and permissions
 COPY nginx_default /etc/nginx/sites-available/default
 COPY nginx_default /etc/nginx/sites-enabled/default
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 7. Final setup
+# 8. Final setup
 USER www-data
 ENV WEB_ROOT=/var/www/html/public
 EXPOSE 8080
