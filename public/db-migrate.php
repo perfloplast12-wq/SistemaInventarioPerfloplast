@@ -8,7 +8,7 @@ $pass = getenv('DB_PASSWORD') ?: 'Perfloplast123.';
 $port = 3306;
 $ca_path = '/var/www/html/DigiCertGlobalRootG2.crt.pem';
 
-echo "--- MySQL SSL Deep Diagnostic (v2.1) ---\n";
+echo "--- MySQL SSL Deep Diagnostic (v2.2 - RBAC Update 17-04-26) ---\n";
 echo "Host: $host\n";
 echo "Cert File: $ca_path (" . (file_exists($ca_path) ? "EXISTS" : "MISSING") . ")\n\n";
 
@@ -76,6 +76,16 @@ if (isset($_GET['migrate'])) {
             echo str_pad("", 4096, " "); // Force browser to render
             usleep(100000); // 0.1s pause for visibility
         }
+
+        echo "\n--- Running Seeders ---\n";
+        echo "Running PermissionsSeeder...\n";
+        $kernel->call('db:seed', ['--class' => 'PermissionsSeeder', '--force' => true]);
+        echo $kernel->output() . "\n";
+
+        echo "Running RolesSeeder...\n";
+        $kernel->call('db:seed', ['--class' => 'RolesSeeder', '--force' => true]);
+        echo $kernel->output() . "\n";
+        
         
     } catch (\Exception $e) {
         echo "\nFATAL ERROR: " . $e->getMessage() . "\n";

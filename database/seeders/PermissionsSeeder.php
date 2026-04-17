@@ -109,6 +109,7 @@ class PermissionsSeeder extends Seeder
             'dispatches.complete',
             'dispatches.deliver',
             'reports.all',
+            'dashboard.view',
         ];
 
         foreach ($permissions as $perm) {

@@ -34,8 +34,8 @@ class RolesSeeder extends Seeder
         $admin->syncPermissions(Permission::where('name', '!=', 'users.delete')->get());
 
         // ── 4. Bodeguero (Warehouse) ───────────────────────
-        // Gestión de stock, camiones y catálogos base.
         $warehouse->syncPermissions([
+            'dashboard.view',
             'catalogs.view',
             'warehouses.view', 'warehouses.create', 'warehouses.edit',
             'trucks.view', 'trucks.create', 'trucks.edit',
@@ -49,8 +49,8 @@ class RolesSeeder extends Seeder
         ]);
 
         // ── 5. Vendedor (Sales) ────────────────────────────
-        // Ventas y Pedidos.
         $sales->syncPermissions([
+            'dashboard.view',
             'catalogs.view',
             'products.view',
             'inventory.view',
@@ -61,8 +61,8 @@ class RolesSeeder extends Seeder
         ]);
 
         // ── 6. Producción (Production) ─────────────────────
-        // Órdenes de producción y materias primas.
         $production->syncPermissions([
+            'dashboard.view',
             'catalogs.view',
             'products.view', 'products.create', 'products.edit',
             'inventory.view',
@@ -71,8 +71,8 @@ class RolesSeeder extends Seeder
         ]);
 
         // ── 7. Contabilidad (Accounting) ────────────────────
-        // Auditoría y consulta financiera.
         $accounting->syncPermissions([
+            'dashboard.view',
             'catalogs.view',
             'products.view',
             'inventory.view',
@@ -85,9 +85,8 @@ class RolesSeeder extends Seeder
         ]);
 
         // ── 8. Conductor (Piloto) ──────────────────────────
-        // Solo ver lo que necesita entregar.
+        // Solo ver lo que necesita entregar. SIN Dashboard ni Reportes.
         $conductor->syncPermissions([
-            'catalogs.view',
             'orders.view',
             'dispatches.view',
             'dispatches.deliver',
@@ -95,6 +94,7 @@ class RolesSeeder extends Seeder
 
         // ── 9. Viewer (solo lectura total) ──────────────────
         $viewer->syncPermissions([
+            'dashboard.view',
             'catalogs.view',
             'warehouses.view',
             'trucks.view',
@@ -107,6 +107,16 @@ class RolesSeeder extends Seeder
             'orders.view',
             'dispatches.view',
             'invoices.view',
+        ]);
+
+        // ── 10. Mantenimiento ──────────────────────────────
+        $mantenimiento->syncPermissions([
+            'catalogs.view',
+            'warehouses.view',
+            'trucks.view',
+            'uom.view',
+            'shifts.view',
+            'colors.view',
         ]);
     }
 }

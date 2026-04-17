@@ -24,6 +24,11 @@ class Dashboard extends Page
     protected static ?string $navigationLabel = 'Escritorio';
     protected static ?int $navigationSort = -2;
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('dashboard.view') ?? false;
+    }
+
     public function getHeading(): string | \Illuminate\Contracts\Support\Htmlable
     {
         return '';

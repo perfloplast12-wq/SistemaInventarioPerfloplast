@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
@@ -239,6 +240,21 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()?->hasRole('conductor')) {
+            $query->where(function (Builder $q) {
+                $q->whereHas('dispatch', function (Builder $dq) {
+                    $dq->where('driver_id', auth()->id());
+                })->orWhereNull('dispatch_id');
+            });
+        }
+
+        return $query;
     }
 
     public static function getPages(): array

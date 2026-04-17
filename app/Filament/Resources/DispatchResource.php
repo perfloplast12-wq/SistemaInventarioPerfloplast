@@ -448,6 +448,17 @@ class DispatchResource extends Resource
         return [];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()?->hasRole('conductor')) {
+            $query->where('driver_id', auth()->id());
+        }
+
+        return $query;
+    }
+
     public static function getPages(): array
     {
         return [

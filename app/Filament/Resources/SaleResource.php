@@ -600,7 +600,7 @@ class SaleResource extends Resource
         $query = parent::getEloquentQuery()
             ->with(['payments', 'creator']);
 
-        if (!auth()->user()?->hasRole(['super_admin', 'admin'])) {
+        if (!auth()->user()?->hasRole(['super_admin', 'admin', 'accounting', 'viewer'])) {
             $query->where('created_by', auth()->id());
         }
 

@@ -34,7 +34,7 @@ class ProductionResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('production.view') ?? false;
+        return auth()->user()?->can('production.create') ?? false;
     }
 
     public static function form(Form $form): Form

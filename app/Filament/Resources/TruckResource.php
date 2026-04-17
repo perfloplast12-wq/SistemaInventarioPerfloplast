@@ -140,7 +140,13 @@ class TruckResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery();
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()?->hasRole('conductor')) {
+            $query->where('driver_id', auth()->id());
+        }
+
+        return $query;
     }
 
     public static function getPages(): array
