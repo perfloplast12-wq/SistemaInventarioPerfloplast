@@ -58,21 +58,23 @@ WORKDIR /var/www/html
 # Copy all files first
 COPY . /var/www/html
 
-# Copy vendor from composer stages and build from node stage
+# Copy vendor from composer stage and built assets from node stage
 COPY --from=composer-builder /app/vendor /var/www/html/vendor
 COPY --from=node-builder /app/public/build /var/www/html/public/build
 
-# Build Optimization
-RUN php artisan filament:optimize && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Copy and prepare entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Ensure storage directories exist and set permissions
+RUN mkdir -p /var/www/html/storage/framework/{cache,sessions,views} \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Port configuration
 EXPOSE 8080
 RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
-CMD ["apache2-foreground"]
+CMD ["/entrypoint.sh"]
