@@ -1,4 +1,4 @@
-const preset = require('../../../../vendor/filament/support/tailwind.config.preset')
+const preset = require('./filament-preset.cjs')
 
 module.exports = {
     presets: [preset],
