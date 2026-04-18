@@ -31,10 +31,6 @@ class Color extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        if ($this->variant && $this->variant !== 'Opcional') {
-            return "{$this->name} - {$this->variant} ({$this->code})";
-        }
-
         return "{$this->name} ({$this->code})";
     }
 
@@ -43,7 +39,7 @@ class Color extends Model
      */
     public function getDescriptiveLabelAttribute(): string
     {
-        $label = ($this->variant && $this->variant !== 'Opcional') ? $this->variant : 'Estándar';
+        $label = $this->name;
         if ($this->code) {
             $label .= " — {$this->code}";
         }

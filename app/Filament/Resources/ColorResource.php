@@ -40,13 +40,7 @@ class ColorResource extends Resource
                     ->label('Nombre del Color')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('variant')
-                    ->label('Variante')
-                    ->options([
-                        'Claro' => 'Claro',
-                        'Oscuro' => 'Oscuro',
-                    ])
-                    ->placeholder('Opcional'),
+
                 Forms\Components\TextInput::make('code')
                     ->label('Código')
                     ->required()
@@ -75,9 +69,7 @@ class ColorResource extends Resource
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('variant')
-                    ->label('Variante')
-                    ->sortable(),
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean()
