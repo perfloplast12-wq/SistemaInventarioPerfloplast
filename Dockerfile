@@ -1,18 +1,21 @@
-# --- Stage 1: Build Assets ---
+# --- Stage 1: Install Composer Dependencies ---
+FROM composer:2 AS composer-builder
+WORKDIR /app
+COPY composer.* ./
+# Install without scripts first to be faster and avoid errors
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+COPY . .
+RUN composer dump-autoload --optimize
+
+# --- Stage 2: Build Assets (requires vendor from Stage 1) ---
 FROM node:22-alpine AS node-builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+# Copy the codebase and the vendor folder from the previous stage
 COPY . .
+COPY --from=composer-builder /app/vendor ./vendor
 RUN npm run build
-
-# --- Stage 2: Install Composer Dependencies ---
-FROM composer:2 AS composer-builder
-WORKDIR /app
-COPY composer.* ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
-COPY . .
-RUN composer dump-autoload --optimize
 
 # --- Stage 3: Production Runtime ---
 FROM php:8.2-apache
@@ -49,10 +52,15 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Copy vendor and assets
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy all files first
+COPY . /var/www/html
+
+# Copy vendor from composer stages and build from node stage
 COPY --from=composer-builder /app/vendor /var/www/html/vendor
 COPY --from=node-builder /app/public/build /var/www/html/public/build
-COPY . /var/www/html
 
 # Build Optimization
 RUN php artisan filament:optimize && \
