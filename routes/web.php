@@ -13,6 +13,8 @@ Route::get('/admin/sales/{sale}/pdf', [\App\Http\Controllers\SalePdfController::
     ->name('sales.invoice.pdf')
     ->middleware(['auth']);
 
+Route::get('/debug-form', [\App\Http\Controllers\DebugController::class, 'debugForm']);
+
 Route::get('/admin/injection-reports/{report}/pdf', [\App\Http\Controllers\InjectionReportPdfController::class, 'download'])
     ->name('injection-reports.pdf')
     ->middleware(['auth']);

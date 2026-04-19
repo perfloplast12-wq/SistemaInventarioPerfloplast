@@ -38,8 +38,10 @@ class InjectionReportResource extends Resource
                         Forms\Components\TextInput::make('position')
                             ->label('Puesto')
                             ->default(function () {
-                                $roles = auth()->user()?->roles->pluck('name')->toArray() ?? [];
-                                return empty($roles) ? '' : ucfirst(str_replace('_', ' ', $roles[0]));
+                                $user = auth()->user();
+                                if (!$user || !method_exists($user, 'getRoleNames')) return '';
+                                $role = $user->getRoleNames()->first();
+                                return $role ? ucfirst(str_replace('_', ' ', $role)) : '';
                             })
                             ->required()
                             ->maxLength(255),
