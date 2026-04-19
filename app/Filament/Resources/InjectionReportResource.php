@@ -3,81 +3,116 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\InjectionReportResource\Pages;
-use App\Filament\Resources\InjectionReportResource\RelationManagers;
 use App\Models\InjectionReport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InjectionReportResource extends Resource
 {
     protected static ?string $model = InjectionReport::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-    
-    protected static ?string $navigationLabel = 'Reportes de Inyección';
-    
-    protected static ?string $modelLabel = 'Reporte de Inyección';
-    
-    protected static ?string $pluralModelLabel = 'Reportes de Inyección';
-
+    protected static ?string $navigationLabel = 'Reportes de Actividad';
+    protected static ?string $modelLabel = 'Reporte de Actividad';
+    protected static ?string $pluralModelLabel = 'Reportes de Actividad';
     protected static ?string $navigationGroup = 'Mantenimiento';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Detalles del Reporte')
+                Forms\Components\Section::make('Información del Empleado')
                     ->schema([
-                        Forms\Components\DatePicker::make('fecha')
-                            ->required()
-                            ->default(now()),
-                        Forms\Components\TextInput::make('turno_horario')
-                            ->label('Turno / Horario')
-                            ->placeholder('Ej: TURNO -- 2 -- 12:00 PM A 12:00 AM')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('nombre_empleado')
-                            ->label('Nombre del Empleado')
+                        Forms\Components\Hidden::make('user_id')
+                            ->default(fn () => auth()->id()),
+                            
+                        Forms\Components\TextInput::make('employee_name')
+                            ->label('Nombre')
+                            ->default(fn () => auth()->user()?->name)
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('maquina')
-                            ->label('Máquina')
+                            
+                        Forms\Components\TextInput::make('position')
+                            ->label('Puesto')
+                            ->default(function () {
+                                $roles = auth()->user()?->roles->pluck('name')->toArray() ?? [];
+                                return empty($roles) ? '' : ucfirst(str_replace('_', ' ', $roles[0]));
+                            })
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('producto')
+                            
+                        Forms\Components\TextInput::make('department')
+                            ->label('Área-departamento')
+                            ->default('Inyección, paletizado')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\Textarea::make('producto_por_color')
-                            ->label('Producto por Color')
-                            ->placeholder('Ej: 350 naranja, 250 azul, 150 verde')
-                            ->columnSpanFull(),
-                    ])->columns(3),
+                            
+                        Forms\Components\TextInput::make('week_range')
+                            ->label('Semana')
+                            ->placeholder('Ej: lunes - sábado')
+                            ->required()
+                            ->maxLength(255),
+                    ])->columns(2),
                 
-                Forms\Components\Section::make('Cantidades')
+                Forms\Components\Section::make('Registro de Actividades')
                     ->schema([
-                        Forms\Components\TextInput::make('total')
-                            ->required()
-                            ->numeric()
-                            ->default(0),
-                        Forms\Components\TextInput::make('rechazo')
-                            ->required()
-                            ->numeric()
-                            ->default(0),
-                        Forms\Components\TextInput::make('sacos_usados')
-                            ->label('Sacos Usados')
-                            ->required()
-                            ->numeric()
-                            ->default(0),
-                    ])->columns(3),
+                        Forms\Components\Repeater::make('items')
+                            ->relationship()
+                            ->label('')
+                            ->schema([
+                                Forms\Components\DatePicker::make('date')
+                                    ->label('Fecha')
+                                    ->required()
+                                    ->columnSpan(2),
+                                    
+                                Forms\Components\Select::make('day')
+                                    ->label('Día')
+                                    ->options([
+                                        'Lunes' => 'Lunes',
+                                        'Martes' => 'Martes',
+                                        'Miércoles' => 'Miércoles',
+                                        'Jueves' => 'Jueves',
+                                        'Viernes' => 'Viernes',
+                                        'Sábado' => 'Sábado',
+                                        'Domingo' => 'Domingo',
+                                    ])
+                                    ->required()
+                                    ->columnSpan(2),
+                                    
+                                Forms\Components\TextInput::make('activity')
+                                    ->label('Actividad')
+                                    ->required()
+                                    ->columnSpan(3),
+                                    
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Descripción')
+                                    ->rows(2)
+                                    ->columnSpan(3),
+                                    
+                                Forms\Components\Textarea::make('result')
+                                    ->label('Resultado')
+                                    ->rows(2)
+                                    ->columnSpan(2),
+                            ])
+                            ->columns(12)
+                            ->defaultItems(1)
+                            ->addActionLabel('Agregar Día/Actividad')
+                            ->reorderable(false),
+                    ]),
 
-                Forms\Components\Section::make('Opcional')
+                Forms\Components\Section::make('Cierre de Semana')
                     ->schema([
-                        Forms\Components\Textarea::make('observaciones')
+                        Forms\Components\Textarea::make('proposals')
+                            ->label('Propuestas o mejoras')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                            
+                        Forms\Components\Textarea::make('next_week_plan')
+                            ->label('Plan de trabajo para la próxima semana')
+                            ->rows(3)
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -87,46 +122,40 @@ class InjectionReportResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('fecha')
-                    ->date()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                Tables\Columns\TextColumn::make('turno_horario')
-                    ->label('Turno / Horario')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('nombre_empleado')
+                Tables\Columns\TextColumn::make('employee_name')
                     ->label('Empleado')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('maquina')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('producto')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('producto_por_color')
-                    ->label('Colores')
-                    ->wrap()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('total')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('rechazo')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('sacos_usados')
-                    ->label('Sacos Usados')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('observaciones')
-                    ->wrap()
+                Tables\Columns\TextColumn::make('position')
+                    ->label('Puesto')
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('department')
+                    ->label('Departamento')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('week_range')
+                    ->label('Semana')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('items_count')
+                    ->label('Días Registrados')
+                    ->counts('items')
+                    ->badge(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Fecha de Creación')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('danger')
+                    ->url(fn (InjectionReport $record) => url('/admin/injection-reports/' . $record->id . '/pdf'))
+                    ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -138,14 +167,12 @@ class InjectionReportResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole(['admin', 'super_admin', 'mantenimiento']) ?? false;
+        return auth()->user()?->hasRole(['admin', 'super_admin', 'mantenimiento', 'warehouse', 'viewer']) ?? false;
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

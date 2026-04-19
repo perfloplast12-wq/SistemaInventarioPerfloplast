@@ -13,6 +13,10 @@ Route::get('/admin/sales/{sale}/pdf', [\App\Http\Controllers\SalePdfController::
     ->name('sales.invoice.pdf')
     ->middleware(['auth']);
 
+Route::get('/admin/injection-reports/{report}/pdf', [\App\Http\Controllers\InjectionReportPdfController::class, 'download'])
+    ->name('injection-reports.pdf')
+    ->middleware(['auth']);
+
 Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::class, 'store'])
     ->name('api.tracking');
 
