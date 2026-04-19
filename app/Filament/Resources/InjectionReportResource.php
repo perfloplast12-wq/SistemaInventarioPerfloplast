@@ -15,9 +15,13 @@ class InjectionReportResource extends Resource
     protected static ?string $model = InjectionReport::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'Reportes de Actividad';
+
     protected static ?string $modelLabel = 'Reporte de Actividad';
+
     protected static ?string $pluralModelLabel = 'Reportes de Actividad';
+
     protected static ?string $navigationGroup = 'Mantenimiento';
 
     public static function form(Form $form): Form
@@ -28,48 +32,51 @@ class InjectionReportResource extends Resource
                     ->schema([
                         Forms\Components\Hidden::make('user_id')
                             ->default(fn () => auth()->id()),
-                            
+
                         Forms\Components\TextInput::make('employee_name')
                             ->label('Nombre')
                             ->default(fn () => auth()->user()?->name)
                             ->required()
                             ->maxLength(255),
-                            
+
                         Forms\Components\TextInput::make('position')
                             ->label('Puesto')
                             ->default(function () {
                                 $user = auth()->user();
-                                if (!$user || !method_exists($user, 'getRoleNames')) return '';
+                                if (! $user || ! method_exists($user, 'getRoleNames')) {
+                                    return '';
+                                }
                                 $role = $user->getRoleNames()->first();
+
                                 return $role ? ucfirst(str_replace('_', ' ', $role)) : '';
                             })
                             ->required()
                             ->maxLength(255),
-                            
+
                         Forms\Components\TextInput::make('department')
                             ->label('Área-departamento')
                             ->default('Inyección, paletizado')
                             ->required()
                             ->maxLength(255),
-                            
+
                         Forms\Components\TextInput::make('week_range')
                             ->label('Semana')
                             ->placeholder('Ej: lunes - sábado')
                             ->required()
                             ->maxLength(255),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Registro de Actividades')
                     ->schema([
                         Forms\Components\Repeater::make('items')
-                            ->relationship()
+                            ->relationship('items')
                             ->label('')
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
                                     ->required()
                                     ->columnSpan(2),
-                                    
+
                                 Forms\Components\Select::make('day')
                                     ->label('Día')
                                     ->options([
@@ -83,17 +90,17 @@ class InjectionReportResource extends Resource
                                     ])
                                     ->required()
                                     ->columnSpan(2),
-                                    
+
                                 Forms\Components\TextInput::make('activity')
                                     ->label('Actividad')
                                     ->required()
                                     ->columnSpan(3),
-                                    
+
                                 Forms\Components\Textarea::make('description')
                                     ->label('Descripción')
                                     ->rows(2)
                                     ->columnSpan(3),
-                                    
+
                                 Forms\Components\Textarea::make('result')
                                     ->label('Resultado')
                                     ->rows(2)
@@ -111,7 +118,7 @@ class InjectionReportResource extends Resource
                             ->label('Propuestas o mejoras')
                             ->rows(3)
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Textarea::make('next_week_plan')
                             ->label('Plan de trabajo para la próxima semana')
                             ->rows(3)
@@ -156,7 +163,7 @@ class InjectionReportResource extends Resource
                     ->label('PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('danger')
-                    ->url(fn (InjectionReport $record) => url('/admin/injection-reports/' . $record->id . '/pdf'))
+                    ->url(fn (InjectionReport $record) => url('/admin/injection-reports/'.$record->id.'/pdf'))
                     ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
             ])

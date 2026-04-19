@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,21 +11,18 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-
 // use Hasnayeen\Themes\ThemesPlugin;
 // use Hasnayeen\Themes\Http\Middleware\SetTheme;
-use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
-use App\Models\Setting;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\HtmlString;
-use Filament\View\PanelsRenderHook;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -55,16 +53,16 @@ class AdminPanelProvider extends PanelProvider
                             'bg_color',
                             'sidebar_bg_color',
                             'card_bg_color',
-                            'text_color'
+                            'text_color',
                         ])->pluck('value', 'key')->toArray();
                     });
 
                     $p1 = $settings['primary_color_1'] ?? '#6366f1';
                     $p2 = $settings['primary_color_2'] ?? '#3b82f6';
-                    $sw = ($settings['sidebar_width'] ?? 14) . 'rem';
-                    $br = ($settings['border_radius'] ?? 12) . 'px';
-                    
-                    $isGlass = (bool)($settings['glass_effect'] ?? true);
+                    $sw = ($settings['sidebar_width'] ?? 14).'rem';
+                    $br = ($settings['border_radius'] ?? 12).'px';
+
+                    $isGlass = (bool) ($settings['glass_effect'] ?? true);
                     $btnStyle = $settings['button_layout'] ?? 'pill';
                     $shadowDepth = $settings['shadow_depth'] ?? 'medium';
 
@@ -81,22 +79,23 @@ class AdminPanelProvider extends PanelProvider
                     ];
                     $selectedShadow = $shadows[$shadowDepth] ?? $shadows['medium'];
 
-                    $btnRadius = match($btnStyle) {
+                    $btnRadius = match ($btnStyle) {
                         'square' => '2px',
                         'pill' => '9999px',
                         default => $br,
                     };
 
                     // Use a static version string or a more reliable cache for the file time
-                    $v = '1.0.0'; 
+                    $v = '1.0.0';
                     try {
                         $path = public_path('css/dashboard.css');
                         if (file_exists($path)) {
                             $v = filemtime($path);
                         }
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
 
-                    $logoUrl = asset('images/logo-perfloplast-transparent.png');
+                    $logoUrl = asset('images/logo-perfloplast-premium.png');
 
                     $styles = "
                         <style>
@@ -181,7 +180,7 @@ class AdminPanelProvider extends PanelProvider
                                 overflow: visible !important; /* Esencial para que los dropdowns no se corten */
                             }
 
-                            " . ($isGlass ? "
+                            ".($isGlass ? '
                             .fi-card, .fi-section {
                                 background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
                                 /* Retirado backdrop-filter aquí para evitar bugs de superposición de menú (z-index traps) */
@@ -190,10 +189,10 @@ class AdminPanelProvider extends PanelProvider
                                 background-color: transparent !important;
                                 backdrop-filter: blur(10px) !important;
                             }
-                            " : "
+                            ' : '
                             .fi-sidebar { background-color: var(--sidebar-bg) !important; }
                             .fi-card, .fi-section { background-color: var(--card-bg) !important; }
-                            ") . "
+                            ')."
 
                             .fi-card, .fi-section { box-shadow: var(--premium-shadow) !important; }
 
@@ -319,10 +318,9 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
 
-            
             ->login(\App\Filament\Pages\Auth\Login::class)
 
-            ->brandLogo(asset('images/logo-perfloplast-premium.png') . '?v=' . (file_exists(public_path('images/logo-perfloplast-premium.png')) ? filemtime(public_path('images/logo-perfloplast-premium.png')) : time()))
+            ->brandLogo(asset('images/logo-perfloplast-premium.png').'?v='.(file_exists(public_path('images/logo-perfloplast-premium.png')) ? filemtime(public_path('images/logo-perfloplast-premium.png')) : time()))
             ->brandLogoHeight('5rem')
             ->brandName('PERFLOPLAST')
             ->renderHook(
@@ -333,10 +331,10 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Lime,
                 'success' => Color::Emerald,
-                'info'    => Color::Blue,
+                'info' => Color::Blue,
                 'warning' => Color::Amber,
-                'danger'  => Color::Rose,
-                'gray'    => Color::Slate,
+                'danger' => Color::Rose,
+                'gray' => Color::Slate,
             ])
 
             ->navigationGroups([
@@ -348,14 +346,11 @@ class AdminPanelProvider extends PanelProvider
             ])
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-           ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 // Las páginas se descubren automáticamente en app/Filament/Pages
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-        
-
-        
 
             ->middleware([
                 \App\Http\Middleware\EnsureUserIsActive::class,
