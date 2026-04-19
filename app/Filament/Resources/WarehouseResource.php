@@ -60,15 +60,6 @@ class WarehouseResource extends Resource
                         ->maxLength(30)
                         ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at')),
 
-                    Forms\Components\Select::make('type')
-                        ->label('Tipo')
-                        ->required()
-                        ->options([
-                            'warehouse' => 'Bodega',
-                            'showroom'  => 'Mostrador',
-                            'mobile'    => 'Bodega móvil (camión)',
-                        ]),
-
                     Forms\Components\Textarea::make('notes')
                         ->label('Notas')
                         ->rows(3)
@@ -92,15 +83,7 @@ class WarehouseResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('code')->label('Código')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Tipo')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'warehouse' => 'Bodega',
-                        'showroom' => 'Mostrador',
-                        'mobile' => 'Bodega móvil',
-                        default => $state,
-                    })
-                    ->badge(),
+
                 Tables\Columns\IconColumn::make('is_factory')
                     ->label('Fábrica')
                     ->boolean()
