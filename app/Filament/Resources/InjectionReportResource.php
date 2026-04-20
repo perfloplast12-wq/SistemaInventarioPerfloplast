@@ -48,6 +48,7 @@ class InjectionReportResource extends Resource
                                 }
                                 
                                 try {
+                                    // Robust role extraction for PHP 8.4
                                     $role = $user->getRoleNames()->first();
                                     return $role ? ucfirst(str_replace('_', ' ', (string) $role)) : '';
                                 } catch (\Throwable $e) {
@@ -75,7 +76,7 @@ class InjectionReportResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->relationship('items')
                             ->label('')
-                            ->itemLabel(fn ($state) => $state['activity'] ?? 'Actividad')
+                            ->itemLabel(fn ($state) => (is_array($state) && isset($state['activity'])) ? $state['activity'] : 'Actividad')
                             ->createButtonLabel('Agregar Día/Actividad')
                             ->deletableItems(false)
                             ->schema([
@@ -183,7 +184,21 @@ class InjectionReportResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole(['admin', 'super_admin', 'mantenimiento', 'warehouse', 'viewer']) ?? false;
+        $user = auth()->user();
+        
+        if (! $user) {
+            return false;
+        }
+
+        if (! method_exists($user, 'hasRole')) {
+            return $user->is_active ?? false;
+        }
+
+        try {
+            return $user->hasRole(['admin', 'super_admin', 'mantenimiento', 'warehouse', 'viewer']);
+        } catch (\Throwable $e) {
+            return $user->is_active ?? false;
+        }
     }
 
     public static function getRelations(): array
