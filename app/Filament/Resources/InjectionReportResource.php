@@ -73,6 +73,7 @@ class InjectionReportResource extends Resource
                             ->label('')
                             ->itemLabel(fn (array $state): string => $state['activity'] ?? 'Actividad')
                             ->createButtonLabel('Agregar Día/Actividad')
+                            ->deletableItems(false)
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
