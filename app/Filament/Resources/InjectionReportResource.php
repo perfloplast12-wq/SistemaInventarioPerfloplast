@@ -72,6 +72,7 @@ class InjectionReportResource extends Resource
                             ->relationship('items', fn ($query) => $query->orderBy('date'))
                             ->label('')
                             ->itemLabel(fn (array $state): string => $state['activity'] ?? 'Actividad')
+                            ->createButtonLabel('Agregar Día/Actividad')
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
