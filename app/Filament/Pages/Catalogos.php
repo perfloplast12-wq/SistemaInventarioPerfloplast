@@ -34,6 +34,9 @@ class Catalogos extends Page
 
     public static function canAccess(): bool
     {
+        if (auth()->user()?->hasRole('production')) {
+            return false;
+        }
         return auth()->user()?->can('catalogs.view') ?? false;
     }
 

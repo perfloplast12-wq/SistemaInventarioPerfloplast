@@ -83,6 +83,9 @@ class Inventario extends Page
 
     public static function canAccess(): bool
     {
+        if (auth()->user()?->hasRole('production')) {
+            return false;
+        }
         return auth()->user()?->can('inventory.view') ?? false;
     }
 
