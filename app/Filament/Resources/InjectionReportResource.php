@@ -71,6 +71,7 @@ class InjectionReportResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->relationship('items')
                             ->label('')
+                            ->itemLabel(fn (array $state): string => $state['activity'] ?? 'Actividad')
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
