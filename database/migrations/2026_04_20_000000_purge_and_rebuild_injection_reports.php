@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop the old table completely, including its constraints
+        // 1. PURGE: Drop existing tables if they exist to start from zero
         Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('injection_report_items');
         Schema::dropIfExists('injection_reports');
         Schema::enableForeignKeyConstraints();
 
+        // 2. REBUILD: Create the fresh schema
         Schema::create('injection_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -34,7 +36,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('injection_report_id')->constrained()->cascadeOnDelete();
             $table->date('date')->nullable();
-            $table->string('day')->nullable(); // lunes, martes...
+            $table->string('day')->nullable();
             $table->string('activity')->nullable();
             $table->text('description')->nullable();
             $table->text('result')->nullable();
@@ -42,6 +44,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('injection_report_items');

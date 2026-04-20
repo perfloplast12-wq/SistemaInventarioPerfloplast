@@ -9,6 +9,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InjectionReportResource extends Resource
 {
@@ -48,7 +50,6 @@ class InjectionReportResource extends Resource
                                 }
                                 
                                 try {
-                                    // Robust role extraction for PHP 8.4
                                     $role = $user->getRoleNames()->first();
                                     return $role ? ucfirst(str_replace('_', ' ', (string) $role)) : '';
                                 } catch (\Throwable $e) {
@@ -77,7 +78,8 @@ class InjectionReportResource extends Resource
                             ->relationship('items')
                             ->label('')
                             ->itemLabel(fn ($state) => (is_array($state) && isset($state['activity'])) ? $state['activity'] : 'Actividad')
-                            ->deletableItems(false)
+                            ->addActionLabel('Agregar Día/Actividad')
+                            ->deletableItems(true)
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
@@ -115,7 +117,6 @@ class InjectionReportResource extends Resource
                             ])
                             ->columns(12)
                             ->defaultItems(1)
-                            ->addActionLabel('Agregar Día/Actividad')
                             ->reorderable(false),
                     ]),
 
@@ -163,7 +164,7 @@ class InjectionReportResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('pdf')
@@ -177,6 +178,8 @@ class InjectionReportResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }
@@ -212,5 +215,13 @@ class InjectionReportResource extends Resource
             'create' => Pages\CreateInjectionReport::route('/create'),
             'edit' => Pages\EditInjectionReport::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }
