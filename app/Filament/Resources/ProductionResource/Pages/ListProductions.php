@@ -24,4 +24,9 @@ class ListProductions extends ListRecords
             \App\Filament\Widgets\ProductionByShiftChart::class,
         ];
     }
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 1;
+    }
 }
