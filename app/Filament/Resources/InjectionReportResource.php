@@ -30,110 +30,13 @@ class InjectionReportResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información del Empleado')
-                    ->schema([
-                        Forms\Components\Hidden::make('user_id')
-                            ->default(fn () => auth()->id()),
-
-                        Forms\Components\TextInput::make('employee_name')
-                            ->label('Nombre')
-                            ->default(fn () => auth()->user()?->name ?? '')
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('position')
-                            ->label('Puesto')
-                            ->default(function () {
-                                $user = auth()->user();
-                                if (! $user || ! method_exists($user, 'getRoleNames')) {
-                                    return '';
-                                }
-                                
-                                try {
-                                    $role = $user->getRoleNames()->first();
-                                    return $role ? ucfirst(str_replace('_', ' ', (string) $role)) : '';
-                                } catch (\Throwable $e) {
-                                    return '';
-                                }
-                            })
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('department')
-                            ->label('Área-departamento')
-                            ->default('Inyección, paletizado')
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('week_range')
-                            ->label('Semana')
-                            ->placeholder('Ej: lunes - sábado')
-                            ->required()
-                            ->maxLength(255),
-                    ])->columns(2),
-
-                Forms\Components\Section::make('Registro de Actividades')
-                    ->schema([
-                        Forms\Components\Repeater::make('items')
-                            ->relationship('items')
-                            ->label('')
-                            ->itemLabel(fn ($state) => (is_array($state) && isset($state['activity'])) ? $state['activity'] : 'Actividad')
-                            ->addActionLabel('Agregar Día/Actividad')
-                            ->deletableItems(true)
-                            ->schema([
-                                Forms\Components\DatePicker::make('date')
-                                    ->label('Fecha')
-                                    ->required()
-                                    ->columnSpan(2),
-
-                                Forms\Components\Select::make('day')
-                                    ->label('Día')
-                                    ->options([
-                                        'Lunes' => 'Lunes',
-                                        'Martes' => 'Martes',
-                                        'Miércoles' => 'Miércoles',
-                                        'Jueves' => 'Jueves',
-                                        'Viernes' => 'Viernes',
-                                        'Sábado' => 'Sábado',
-                                        'Domingo' => 'Domingo',
-                                    ])
-                                    ->required()
-                                    ->columnSpan(2),
-
-                                Forms\Components\TextInput::make('activity')
-                                    ->label('Actividad')
-                                    ->required()
-                                    ->columnSpan(3),
-
-                                Forms\Components\Textarea::make('description')
-                                    ->label('Descripción')
-                                    ->rows(2)
-                                    ->columnSpan(3),
-
-                                Forms\Components\Textarea::make('result')
-                                    ->label('Resultado')
-                                    ->rows(2)
-                                    ->columnSpan(2),
-                            ])
-                            ->columns(12)
-                            ->defaultItems(1)
-                            ->reorderable(false),
-                    ]),
-
-                Forms\Components\Section::make('Cierre de Semana')
-                    ->schema([
-                        Forms\Components\Textarea::make('proposals')
-                            ->label('Propuestas o mejoras')
-                            ->rows(3)
-                            ->columnSpanFull(),
-
-                        Forms\Components\Textarea::make('next_week_plan')
-                            ->label('Plan de trabajo para la próxima semana')
-                            ->rows(3)
-                            ->columnSpanFull(),
-                    ]),
+                Forms\Components\TextInput::make('employee_name')
+                    ->label('Nombre del Empleado')
+                    ->required()
+                    ->maxLength(255),
             ]);
     }
+
 
     public static function table(Table $table): Table
     {
