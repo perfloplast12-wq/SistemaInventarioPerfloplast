@@ -77,7 +77,6 @@ class InjectionReportResource extends Resource
                             ->relationship('items')
                             ->label('')
                             ->itemLabel(fn ($state) => (is_array($state) && isset($state['activity'])) ? $state['activity'] : 'Actividad')
-                            ->createButtonLabel('Agregar Día/Actividad')
                             ->deletableItems(false)
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
