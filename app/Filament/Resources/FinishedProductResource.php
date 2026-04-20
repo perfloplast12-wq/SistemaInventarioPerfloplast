@@ -81,6 +81,7 @@ class FinishedProductResource extends Resource
                             ->numeric()
                             ->step(0.01)
                             ->prefix('Q')
+                            ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                             ->required()
                             ->default(0),
 
@@ -137,7 +138,7 @@ class FinishedProductResource extends Resource
 
                 Tables\Columns\TextColumn::make('stock_total')
                     ->label('Stock')
-                    ->formatStateUsing(fn ($state) => number_format((float)$state, 2))
+                    ->formatStateUsing(fn ($state) => number_format((float)$state, 2, '.', ','))
                     ->suffix(fn ($record) => ' ' . $record->unitOfMeasure?->name)
                     ->sortable()
                     ->badge()

@@ -96,7 +96,7 @@ class RawMaterialProductResource extends Resource
 
                         Forms\Components\Placeholder::make('stock_total_display')
                             ->label('Stock Actual (Base)')
-                            ->content(fn ($record) => number_format((float)($record?->stock_total ?? 0), 2) . ' ' . ($record?->unitOfMeasure?->name ?? ''))
+                            ->content(fn ($record) => number_format((float)($record?->stock_total ?? 0), 2, '.', ',') . ' ' . ($record?->unitOfMeasure?->name ?? ''))
                             ->hidden(fn ($operation) => $operation === 'create')
                             ->extraAttributes(['class' => 'font-bold text-primary-600']),
                     ]),
@@ -157,7 +157,7 @@ class RawMaterialProductResource extends Resource
                     ->label('Stock Disponible')
                     ->formatStateUsing(function ($state, Product $record) {
                         $baseUnit = $record->unitOfMeasure?->name ?? 'Sacos';
-                        return number_format((float)$state, 2) . ' ' . $baseUnit;
+                        return number_format((float)$state, 2, '.', ',') . ' ' . $baseUnit;
                     })
                     ->sortable()
                     ->badge()

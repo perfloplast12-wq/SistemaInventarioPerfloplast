@@ -128,6 +128,7 @@ class OrderResource extends Resource
                                     ->default(1)
                                     ->required()
                                     ->reactive()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->afterStateUpdated(fn ($state, $get, Forms\Set $set) => 
                                         $set('subtotal', (float)$state * (float)$get('unit_price'))),
                                 Forms\Components\TextInput::make('unit_price')
@@ -136,6 +137,7 @@ class OrderResource extends Resource
                                     ->required()
                                     ->prefix('Q')
                                     ->reactive()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->afterStateUpdated(fn ($state, $get, Forms\Set $set) => 
                                         $set('subtotal', (float)$state * (float)$get('quantity'))),
                                 Forms\Components\TextInput::make('subtotal')
@@ -143,6 +145,7 @@ class OrderResource extends Resource
                                     ->numeric()
                                     ->disabled()
                                     ->dehydrated()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->prefix('Q'),
                             ])
                             ->columns(4)

@@ -177,6 +177,7 @@ class InventoryMovementResource extends Resource
                         ->numeric()
                         ->step(0.01)
                         ->prefix('Q')
+                        ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                         ->visible(function (Get $get) {
                             if ($get('type') !== 'in') return false;
                             $productId = $get('product_id');
@@ -323,7 +324,7 @@ class InventoryMovementResource extends Resource
 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cant. Base')
-                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), 2))
+                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), 2, '.', ','))
                     ->description(fn(InventoryMovement $record) => 
                         ($record->type === 'adjust' && $record->quantity < 0) ? 'Resta' : ''
                     ),

@@ -238,17 +238,17 @@ class InvoiceResource extends Resource
                             ->schema([
                                 TextEntry::make('quantity')->label('Cantidad'),
                                 TextEntry::make('product_name')->label('Producto'),
-                                TextEntry::make('unit_price')->label('P. Unitario')->money('GTQ'),
-                                TextEntry::make('total')->label('Subtotal')->money('GTQ'),
+                                TextEntry::make('unit_price')->label('P. Unitario')->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
+                                TextEntry::make('total')->label('Subtotal')->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
                             ])
                             ->columns(4)
                     ]),
 
                 Section::make('Resumen Financiero')
                     ->schema([
-                        TextEntry::make('subtotal')->money('GTQ'),
-                        TextEntry::make('discount_amount')->label('Descuento')->money('GTQ'),
-                        TextEntry::make('total')->label('Total Neto')->money('GTQ')->size(TextEntry\TextEntrySize::Large)->color('success'),
+                        TextEntry::make('subtotal')->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
+                        TextEntry::make('discount_amount')->label('Descuento')->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
+                        TextEntry::make('total')->label('Total Neto')->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))->size(TextEntry\TextEntrySize::Large)->color('success'),
                     ])->columns(3),
             ]);
     }

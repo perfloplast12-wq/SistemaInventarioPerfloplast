@@ -215,7 +215,7 @@ class SaleResource extends Resource
 
                                                 Forms\Components\Placeholder::make('subtotal_display')
                                                     ->label('Subtotal')
-                                                    ->content(fn (Get $get) => 'Q ' . number_format((float)($get('subtotal') ?? 0), 2))
+                                                    ->content(fn (Get $get) => 'Q ' . number_format((float)($get('subtotal') ?? 0), 2, '.', ','))
                                                     ->extraAttributes(['class' => 'font-bold text-right pt-2'])
                                                     ->columnSpan(['default' => 4, 'md' => 2]),
 
@@ -236,7 +236,7 @@ class SaleResource extends Resource
                                     ->schema([
                                         Forms\Components\Placeholder::make('subtotal_venta_display')
                                             ->label('Subtotal Bruto')
-                                            ->content(fn (Get $get) => 'Q ' . number_format(self::calculateSubtotalInForm($get), 2)),
+                                            ->content(fn (Get $get) => 'Q ' . number_format(self::calculateSubtotalInForm($get), 2, '.', ',')),
 
                                         Forms\Components\Group::make([
                                             Forms\Components\Select::make('discount_type')
@@ -256,6 +256,7 @@ class SaleResource extends Resource
                                                 ->step(0.01)
                                                 ->default(0)
                                                 ->minValue(0)
+                                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                                 ->visible(fn (Get $get) => $get('discount_type') !== 'none')
                                                 ->live(onBlur: true)
                                                 ->afterStateUpdated(fn (Set $set, Get $get) => self::recalculateTotalsInForm($set, $get)),
@@ -263,7 +264,7 @@ class SaleResource extends Resource
 
                                         Forms\Components\Placeholder::make('total_final_display')
                                             ->label('TOTAL A PAGAR')
-                                            ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2))
+                                            ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2, '.', ','))
                                             ->extraAttributes(['class' => 'text-2xl font-black text-primary-600']),
 
                                         Forms\Components\Group::make([
@@ -281,6 +282,7 @@ class SaleResource extends Resource
                                                 ->numeric()
                                                 ->step(0.01)
                                                 ->prefix('Q')
+                                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                                 ->default(0),
                                         ])->columns(2),
                                     ]),
@@ -446,6 +448,7 @@ class SaleResource extends Resource
                                 ->numeric()
                                 ->required()
                                 ->prefix('Q')
+                                ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                 ->default(fn (Sale $record) => $record->balance),
                             Forms\Components\Select::make('method')
                                 ->label('Método')

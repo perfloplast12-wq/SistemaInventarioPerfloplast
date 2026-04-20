@@ -108,6 +108,7 @@ class OrderReturnResource extends Resource
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cant.')
                     ->badge()
+                    ->formatStateUsing(fn ($state) => number_format((float)$state, 2, '.', ','))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reason')
                     ->label('Motivo')

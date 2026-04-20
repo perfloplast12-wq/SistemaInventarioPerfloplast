@@ -144,6 +144,7 @@ class ProductionResource extends Resource
                                     ->step(0.01)
                                     ->required()
                                     ->minValue(0.01)
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->live(onBlur: true),
                             ]),
 
@@ -176,6 +177,7 @@ class ProductionResource extends Resource
                                     ->numeric()
                                     ->step(0.01)
                                     ->required()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->minValue(0.01),
                             ])
                             ->columns(2)

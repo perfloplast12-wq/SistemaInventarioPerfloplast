@@ -142,7 +142,7 @@ class DispatchResource extends Resource
                                 $set('items', $currentItems);
                                 
                                 // Forzar el recalculo de los placeholders de totales
-                                $set('total_value_display', 'Q ' . number_format(collect($currentItems)->sum('subtotal'), 2));
+                                $set('total_value_display', 'Q ' . number_format(collect($currentItems)->sum('subtotal'), 2, '.', ','));
                             }),
                     ]),
 
@@ -151,11 +151,11 @@ class DispatchResource extends Resource
                     ->schema([
                         Forms\Components\Placeholder::make('total_value_display')
                             ->label('Valor Total (Q)')
-                            ->content(fn (Forms\Get $get) => 'Q ' . number_format(round(collect($get('items'))->sum('subtotal'), 2), 2))
+                            ->content(fn (Forms\Get $get) => 'Q ' . number_format(round(collect($get('items'))->sum('subtotal'), 2), 2, '.', ','))
                             ->extraAttributes(['class' => 'text-xl font-bold text-primary-600']),
                         Forms\Components\Placeholder::make('total_products_display')
                             ->label('Unidades Totales')
-                            ->content(fn (Forms\Get $get) => round(collect($get('items'))->sum('quantity'), 2)),
+                            ->content(fn (Forms\Get $get) => number_format((float)collect($get('items'))->sum('quantity'), 2, '.', ',')),
                         Forms\Components\Placeholder::make('product_types_display')
                             ->label('Tipos de Producto')
                             ->content(fn (Forms\Get $get) => collect($get('items'))->unique('product_id')->count()),
@@ -204,6 +204,7 @@ class DispatchResource extends Resource
                                     ->numeric()
                                     ->readOnly()
                                     ->dehydrated()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->prefix('Q'),
                             ])
                             ->columns(4)
