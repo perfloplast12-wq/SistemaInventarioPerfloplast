@@ -21,6 +21,12 @@ class ListProductions extends ListRecords
     {
         return [
             \App\Filament\Widgets\ProductionStatsOverview::class,
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
             \App\Filament\Widgets\ProductionByShiftChart::class,
         ];
     }
