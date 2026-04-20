@@ -18,14 +18,15 @@ class LogisticsRankingWidget extends Widget
 
     public function getOperatorsData(): array
     {
-        $filters = $this->filters;
+        $filters = $this->filters ?? [];
         $start = Carbon::parse($filters['startDate'] ?? now()->startOfMonth())->startOfDay();
         $end = Carbon::parse($filters['endDate'] ?? now())->endOfDay();
 
-        // Obtener pilotos (driver_id) y su conteo de despachos
+        // Obtener pilotos (driver_id) y su conteo de despachos (solo finalizados, según título)
         $data = Dispatch::query()
             ->whereBetween('dispatch_date', [$start, $end])
-            ->select('driver_id', DB::raw('COUNT(*) as total_dispatches'))
+            ->whereIn('status', ['completed', 'delivered'])
+            ->select('driver_id', DB::raw('COUNT(id) as total_dispatches'))
             ->groupBy('driver_id')
             ->orderByDesc('total_dispatches')
             ->with('driver')

@@ -71,7 +71,7 @@ class InjectionReportResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->relationship('items', fn ($query) => $query->orderBy('date'))
                             ->label('')
-                            ->itemLabel(fn (array $state): string => $state['activity'] ?? 'Actividad')
+                            ->itemLabel(fn ($state): string => ($state['activity'] ?? null) ?: 'Actividad')
                             ->createButtonLabel('Agregar Día/Actividad')
                             ->deletableItems(false)
                             ->schema([
