@@ -53,7 +53,7 @@ class InvoiceResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->money('GTQ'),
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([

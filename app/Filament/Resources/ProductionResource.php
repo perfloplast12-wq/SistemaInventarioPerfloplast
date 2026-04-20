@@ -238,7 +238,7 @@ class ProductionResource extends Resource
                 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad')
-                    ->numeric(decimalPlaces: 2)
+                    ->formatStateUsing(fn ($state) => number_format((float)$state, 2, '.', ','))
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('status')

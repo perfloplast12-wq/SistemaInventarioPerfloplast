@@ -247,7 +247,7 @@ class DispatchResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('total_value')
                     ->label('Valor Carga')
-                    ->money('GTQ')
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')

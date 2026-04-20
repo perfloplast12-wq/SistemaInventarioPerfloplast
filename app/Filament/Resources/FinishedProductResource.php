@@ -151,7 +151,7 @@ class FinishedProductResource extends Resource
 
                 Tables\Columns\TextColumn::make('sale_price')
                     ->label('Precio')
-                    ->money('GTQ')
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->sortable(),
 
                 Tables\Columns\ToggleColumn::make('is_active')

@@ -324,19 +324,19 @@ class SaleResource extends Resource
 
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->money('GTQ')
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->sortable()
                     ->alignment('right'),
 
                 Tables\Columns\TextColumn::make('total_paid')
                     ->label('Pagado')
-                    ->money('GTQ')
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->color('success')
                     ->alignment('right'),
 
                 Tables\Columns\TextColumn::make('balance')
                     ->label('Saldo')
-                    ->money('GTQ')
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->color(fn ($record) => $record->balance > 0.01 ? 'danger' : 'success')
                     ->alignment('right'),
 

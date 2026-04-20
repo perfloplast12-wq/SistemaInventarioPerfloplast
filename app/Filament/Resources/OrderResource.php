@@ -214,8 +214,8 @@ class OrderResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->money('GTQ')
-                    ->state(fn ($record) => $record->total),
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
