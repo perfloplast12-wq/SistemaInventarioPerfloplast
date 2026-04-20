@@ -58,6 +58,34 @@ class InjectionReportResource extends Resource
                             ->required()
                             ->maxLength(255),
                     ])->columns(2),
+
+                Forms\Components\Section::make('Registro de Actividades')
+                    ->schema([
+                        Forms\Components\Repeater::make('items')
+                            ->relationship('items')
+                            ->label('')
+                            ->addActionLabel('Agregar Actividad')
+                            ->schema([
+                                Forms\Components\DatePicker::make('date')
+                                    ->label('Fecha')
+                                    ->required(),
+                                Forms\Components\TextInput::make('activity')
+                                    ->label('Actividad')
+                                    ->required(),
+                            ])
+                            ->columns(2)
+                            ->defaultItems(1),
+                    ]),
+
+                Forms\Components\Section::make('Cierre de Semana')
+                    ->schema([
+                        Forms\Components\Textarea::make('proposals')
+                            ->label('Propuestas o mejoras')
+                            ->rows(3),
+                        Forms\Components\Textarea::make('next_week_plan')
+                            ->label('Plan de trabajo para la próxima semana')
+                            ->rows(3),
+                    ]),
             ]);
     }
 
