@@ -16,4 +16,12 @@ class ListProductions extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\ProductionStatsOverview::class,
+            \App\Filament\Widgets\ProductionByShiftChart::class,
+        ];
+    }
 }

@@ -61,13 +61,12 @@ class RolesSeeder extends Seeder
         ]);
 
         // ── 6. Producción (Production) ─────────────────────
+        // Solo ve el módulo de producciones.
+        // Se mantiene products.view y colors.view para que funcionen los dropdowns de búsqueda.
         $production->syncPermissions([
-            'dashboard.view',
-            'catalogs.view',
-            'products.view', 'products.create', 'products.edit',
-            'inventory.view',
             'production.view', 'production.create', 'production.edit', 'production.confirm',
-            'colors.view', 'colors.create', 'colors.edit',
+            'products.view',
+            'colors.view',
         ]);
 
         // ── 7. Contabilidad (Accounting) ────────────────────
