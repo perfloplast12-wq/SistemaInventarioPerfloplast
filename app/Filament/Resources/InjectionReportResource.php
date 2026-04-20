@@ -35,7 +35,7 @@ class InjectionReportResource extends Resource
 
                         Forms\Components\TextInput::make('employee_name')
                             ->label('Nombre')
-                            ->default(fn () => auth()->user()?->name)
+                            ->default(fn () => auth()->user()?->name ?? '')
                             ->required()
                             ->maxLength(255),
 
@@ -46,9 +46,13 @@ class InjectionReportResource extends Resource
                                 if (! $user || ! method_exists($user, 'getRoleNames')) {
                                     return '';
                                 }
-                                $role = $user->getRoleNames()->first();
-
-                                return $role ? ucfirst(str_replace('_', ' ', $role)) : '';
+                                
+                                try {
+                                    $role = $user->getRoleNames()->first();
+                                    return $role ? ucfirst(str_replace('_', ' ', (string) $role)) : '';
+                                } catch (\Throwable $e) {
+                                    return '';
+                                }
                             })
                             ->required()
                             ->maxLength(255),
@@ -69,9 +73,9 @@ class InjectionReportResource extends Resource
                 Forms\Components\Section::make('Registro de Actividades')
                     ->schema([
                         Forms\Components\Repeater::make('items')
-                            ->relationship('items', fn ($query) => $query->orderBy('date'))
+                            ->relationship('items')
                             ->label('')
-                            ->itemLabel(fn ($state): string => ($state['activity'] ?? null) ?: 'Actividad')
+                            ->itemLabel(fn ($state) => $state['activity'] ?? 'Actividad')
                             ->createButtonLabel('Agregar Día/Actividad')
                             ->deletableItems(false)
                             ->schema([
