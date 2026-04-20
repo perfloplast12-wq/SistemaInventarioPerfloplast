@@ -30,10 +30,34 @@ class InjectionReportResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('employee_name')
-                    ->label('Nombre del Empleado')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Section::make('Información del Empleado')
+                    ->schema([
+                        Forms\Components\Hidden::make('user_id')
+                            ->default(fn () => auth()->id()),
+
+                        Forms\Components\TextInput::make('employee_name')
+                            ->label('Nombre')
+                            ->default(fn () => auth()->user()?->name ?? '')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('position')
+                            ->label('Puesto')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('department')
+                            ->label('Área-departamento')
+                            ->default('Inyección, paletizado')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('week_range')
+                            ->label('Semana')
+                            ->placeholder('Ej: lunes - sábado')
+                            ->required()
+                            ->maxLength(255),
+                    ])->columns(2),
             ]);
     }
 
