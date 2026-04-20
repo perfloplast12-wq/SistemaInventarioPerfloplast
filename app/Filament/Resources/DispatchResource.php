@@ -451,7 +451,7 @@ class DispatchResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['truck', 'driver']);
 
         if (auth()->user()?->hasRole('conductor')) {
             $query->where('driver_id', auth()->id());

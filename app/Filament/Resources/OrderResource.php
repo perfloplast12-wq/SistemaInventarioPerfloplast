@@ -247,7 +247,7 @@ class OrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['items', 'creator', 'dispatch']);
 
         if (auth()->user()?->hasRole('conductor')) {
             $query->where(function (Builder $q) {
