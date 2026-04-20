@@ -43,6 +43,19 @@ class InjectionReportResource extends Resource
 
                         Forms\Components\TextInput::make('position')
                             ->label('Puesto')
+                            ->default(function () {
+                                $user = auth()->user();
+                                if (! $user || ! method_exists($user, 'getRoleNames')) {
+                                    return '';
+                                }
+                                
+                                try {
+                                    $role = $user->getRoleNames()->first();
+                                    return $role ? ucfirst(str_replace('_', ' ', (string) $role)) : '';
+                                } catch (\Throwable $e) {
+                                    return '';
+                                }
+                            })
                             ->required()
                             ->maxLength(255),
 
@@ -64,27 +77,59 @@ class InjectionReportResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->relationship('items')
                             ->label('')
-                            ->addActionLabel('Agregar Actividad')
+                            ->itemLabel(fn ($state) => (is_array($state) && isset($state['activity'])) ? $state['activity'] : 'Actividad')
+                            ->addActionLabel('Agregar Día/Actividad')
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
-                                    ->required(),
+                                    ->required()
+                                    ->columnSpan(2),
+
+                                Forms\Components\Select::make('day')
+                                    ->label('Día')
+                                    ->options([
+                                        'Lunes' => 'Lunes',
+                                        'Martes' => 'Martes',
+                                        'Miércoles' => 'Miércoles',
+                                        'Jueves' => 'Jueves',
+                                        'Viernes' => 'Viernes',
+                                        'Sábado' => 'Sábado',
+                                        'Domingo' => 'Domingo',
+                                    ])
+                                    ->required()
+                                    ->columnSpan(2),
+
                                 Forms\Components\TextInput::make('activity')
                                     ->label('Actividad')
-                                    ->required(),
+                                    ->required()
+                                    ->columnSpan(3),
+
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Descripción')
+                                    ->rows(2)
+                                    ->columnSpan(3),
+
+                                Forms\Components\Textarea::make('result')
+                                    ->label('Resultado')
+                                    ->rows(2)
+                                    ->columnSpan(2),
                             ])
-                            ->columns(2)
-                            ->defaultItems(1),
+                            ->columns(12)
+                            ->defaultItems(1)
+                            ->reorderable(false),
                     ]),
 
                 Forms\Components\Section::make('Cierre de Semana')
                     ->schema([
                         Forms\Components\Textarea::make('proposals')
                             ->label('Propuestas o mejoras')
-                            ->rows(3),
+                            ->rows(3)
+                            ->columnSpanFull(),
+
                         Forms\Components\Textarea::make('next_week_plan')
                             ->label('Plan de trabajo para la próxima semana')
-                            ->rows(3),
+                            ->rows(3)
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
