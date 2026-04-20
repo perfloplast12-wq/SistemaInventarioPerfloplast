@@ -69,7 +69,7 @@ class InjectionReportResource extends Resource
                 Forms\Components\Section::make('Registro de Actividades')
                     ->schema([
                         Forms\Components\Repeater::make('items')
-                            ->relationship('items')
+                            ->relationship('items', fn ($query) => $query->orderBy('date'))
                             ->label('')
                             ->itemLabel(fn (array $state): string => $state['activity'] ?? 'Actividad')
                             ->schema([
