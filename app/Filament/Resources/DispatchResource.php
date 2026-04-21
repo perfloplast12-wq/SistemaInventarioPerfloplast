@@ -322,7 +322,7 @@ class DispatchResource extends Resource
                     ->label('Ver Ruta')
                     ->icon('heroicon-o-map')
                     ->color('success')
-                    ->visible(fn ($record) => $record->locations()->exists())
+                    ->visible(fn ($record) => $record->locations()->exists() && !auth()->user()?->hasRole('conductor'))
                     ->modalHeading(fn ($record) => 'Historial de Ruta: ' . $record->dispatch_number)
                     ->modalSubmitAction(false) // Solo cerrar
                     ->modalCancelActionLabel('Cerrar')
