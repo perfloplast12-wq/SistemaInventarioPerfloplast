@@ -113,6 +113,23 @@ class Production extends Model
         });
     }
 
+    public function cancel(): void
+    {
+        if ($this->status !== 'confirmed') {
+            return;
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            // Eliminar movimientos asociados (el StockService revertirá el stock mediante el Observer)
+            \App\Models\InventoryMovement::where('source_type', 'production')
+                ->where('source_id', $this->id)
+                ->get()
+                ->each(fn ($m) => $m->delete());
+
+            $this->update(['status' => 'cancelled']);
+        });
+    }
+
     public static function generateProductionNumber(): string
     {
         $latest = self::latest('id')->first();

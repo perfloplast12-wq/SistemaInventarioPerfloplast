@@ -299,6 +299,24 @@ class ProductionResource extends Resource
                             ->success()
                             ->send();
                     }),
+                
+                Tables\Actions\Action::make('cancel')
+                    ->label('Cancelar')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Cancelar producción?')
+                    ->modalDescription('Esto revertirá el stock (devolverá materias primas y descontará el producto terminado).')
+                    ->visible(fn ($record) => $record->status === 'confirmed')
+                    ->action(function (Production $record) {
+                        $record->cancel();
+
+                        Notification::make()
+                            ->title('Producción cancelada')
+                            ->body('El inventario ha sido revertido con éxito.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -6,7 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use App\Models\User;
 use App\Observers\UserObserver;
 use App\Models\InventoryMovement;
+use App\Models\Production;
 use App\Observers\InventoryMovementObserver;
+use App\Observers\ProductionObserver;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Number;
 
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         InventoryMovement::observe(InventoryMovementObserver::class);
+        Production::observe(ProductionObserver::class);
 
         // Super Admin bypass
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
