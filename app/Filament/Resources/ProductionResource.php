@@ -107,14 +107,19 @@ class ProductionResource extends Resource
                             ->schema([
                                 Forms\Components\Select::make('color_id')
                                     ->label('Color / Variante')
-                                    ->options(function () {
-                                        return \App\Models\Color::where('is_active', true)
-                                            ->get()
-                                            ->groupBy(fn ($c) => trim($c->name))
-                                            ->map(fn ($colors) => $colors->pluck('descriptive_label', 'id'));
-                                    })
                                     ->required()
                                     ->searchable()
+                                    ->getSearchResultsUsing(fn (string $search): array => 
+                                        \App\Models\Color::where('is_active', true)
+                                            ->where(function ($q) use ($search) {
+                                                $q->where('name', 'like', "%{$search}%")
+                                                  ->orWhere('code', 'like', "%{$search}%");
+                                            })
+                                            ->limit(50)
+                                            ->pluck('name', 'id')
+                                            ->toArray()
+                                    )
+                                    ->getOptionLabelUsing(fn ($value): ?string => \App\Models\Color::find($value)?->name)
                                     ->preload()
                                     ->live(),
                             ]),
