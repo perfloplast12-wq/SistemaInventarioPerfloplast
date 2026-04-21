@@ -318,6 +318,11 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
 
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('components.silent-tracker')->render(),
+            )
+
             ->login(\App\Filament\Pages\Auth\Login::class)
 
             ->brandLogo(asset('images/logo-perfloplast-premium.png'))

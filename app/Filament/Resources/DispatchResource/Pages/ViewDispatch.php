@@ -76,7 +76,8 @@ class ViewDispatch extends ViewRecord
     {
         return $infolist
             ->schema([
-                Components\Section::make(fn() => auth()->user()?->hasRole('conductor') ? 'Asistente de Logística' : 'Seguimiento de Ruta')
+                Components\Section::make('Seguimiento de Ruta')
+                    ->visible(fn() => !auth()->user()?->hasRole('conductor'))
                     ->schema([
                         Components\ViewEntry::make('tracker')
                             ->view('components.dispatch-tracker')

@@ -129,27 +129,18 @@
             </template>
             <div class="flex flex-col">
                 <span class="text-sm font-bold text-gray-800 dark:text-gray-200">
-                    @if(auth()->user()?->hasRole('conductor'))
-                        <span x-show="status === 'in_progress'">CONEXIÓN DE ASISTENCIA ACTIVA</span>
-                        <span x-show="status !== 'in_progress'" class="text-gray-500 uppercase italic">Esperando inicio de viaje</span>
-                    @else
-                        <span x-show="status === 'in_progress'">SISTEMA DE RASTREO ACTIVO</span>
-                        <span x-show="status !== 'in_progress'" class="text-gray-500 uppercase italic">Esperando inicio de viaje</span>
-                    @endif
+                    <span x-show="status === 'in_progress'">SISTEMA DE RASTREO ACTIVO</span>
+                    <span x-show="status !== 'in_progress'" class="text-gray-500 uppercase italic">Esperando inicio de viaje</span>
                 </span>
                 <span class="text-xs text-gray-500">
-                    @if(auth()->user()?->hasRole('conductor'))
-                        Sincronización logística habilitada
-                    @else
-                        Estado: <span x-text="status" class="font-mono"></span> | ID: <span x-text="dispatchId"></span>
-                    @endif
+                    Estado: <span x-text="status" class="font-mono"></span> | ID: <span x-text="dispatchId"></span>
                 </span>
             </div>
         </div>
         
         <div class="flex items-center space-x-4">
             <div class="text-right">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Última Sincronización</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Última Señal</p>
                 <p class="text-sm font-mono text-gray-700 dark:text-gray-300" x-text="lastUpdate || '--:--:--'"></p>
             </div>
             
@@ -159,15 +150,13 @@
                 :disabled="loading"
                 class="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white text-xs font-bold rounded shadow-sm transition-all"
             >
-                <span x-show="!loading">
-                    {{ auth()->user()?->hasRole('conductor') ? 'SINCRONIZAR ENTREGA' : 'PROBAR GPS AHORA' }}
-                </span>
+                <span x-show="!loading">PROBAR GPS AHORA</span>
                 <span x-show="loading" class="flex items-center">
                     <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    SINCRONIZANDO...
+                    OBTENIENDO...
                 </span>
             </button>
         </div>
@@ -190,11 +179,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12l4.243-4.243a8 8 0 1111.314 11.314z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            @if(auth()->user()?->hasRole('conductor'))
-                <span>Optimizando conexión para tus reportes de entrega automáticos... mantén esta pantalla abierta.</span>
-            @else
-                <span>Buscando satélites... por favor mantén esta pantalla abierta.</span>
-            @endif
+            <span>Buscando satélites... por favor mantén esta pantalla abierta.</span>
         </div>
     </template>
 </div>
