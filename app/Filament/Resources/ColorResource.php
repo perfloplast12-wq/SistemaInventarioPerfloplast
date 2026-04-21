@@ -43,7 +43,7 @@ class ColorResource extends Resource
                     ->label('Nombre del Color')
                     ->required()
                     ->maxLength(255)
-                    ->live()
+                    ->live(debounce: 500)
                     ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
                         // Si el nombre está vacío, limpiar el código
                         if (empty(trim($state ?? ''))) {
