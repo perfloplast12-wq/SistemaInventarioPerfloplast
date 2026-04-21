@@ -43,16 +43,27 @@ class ColorResource extends Resource
                     ->label('Nombre del Color')
                     ->required()
                     ->maxLength(255)
-                    ->live(onBlur: true)
+                    ->live()
                     ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
-                        if (empty($state) || !empty($get('code'))) {
+                        // Si el nombre está vacío, limpiar el código
+                        if (empty(trim($state ?? ''))) {
+                            $set('code', '');
                             return;
                         }
 
-                        $prefix = strtoupper(Str::slug($state));
+                        // Tomar las primeras 3 letras del slug (sin guiones ni números)
+                        $clean = preg_replace('/[^a-z]/i', '', Str::slug($state));
+                        $prefix = strtoupper(substr($clean, 0, 3));
+
+                        // Si el nombre es muy corto, rellenar con X
+                        if (strlen($prefix) < 3) {
+                            $prefix = str_pad($prefix, 3, 'X');
+                        }
+
+                        // Calcular correlativo basado en el prefijo
                         $count = Color::where('code', 'like', "{$prefix}-%")->count();
                         $nextNumber = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
-                        
+
                         $set('code', "{$prefix}-{$nextNumber}");
                     }),
 
@@ -61,8 +72,9 @@ class ColorResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
+                    ->readOnly()
                     ->dehydrateStateUsing(fn ($state) => strtoupper($state))
-                    ->extraInputAttributes(['style' => 'text-transform: uppercase']),
+                    ->extraInputAttributes(['style' => 'text-transform: uppercase; opacity: 0.8; cursor: not-allowed;']),
                 Forms\Components\Toggle::make('is_active')
                     ->label('Activo')
                     ->default(true)
