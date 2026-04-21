@@ -2,8 +2,11 @@
     <!-- El contenedor asume EXACTAMENTE el color de fondo nativo del logo (#f3f4f6) 
          Creando una placa/pill perfecta sin necesidad de filtros destructivos ni recortes -->
     <div class="logo-brand-plaque">
-        <img src="{{ asset('images/logo-perfloplast-premium.png') }}?v={{ time() }}" 
+        <img src="{{ asset('images/logo-perfloplast.png') }}" 
              alt="Perflo-Plast Logo" 
+             width="200"
+             height="80"
+             fetchpriority="high"
              class="fi-logo-img transition-all duration-300">
     </div>
 </div>

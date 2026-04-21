@@ -95,7 +95,7 @@ class AdminPanelProvider extends PanelProvider
                     } catch (\Exception $e) {
                     }
 
-                    $logoUrl = asset('images/logo-perfloplast-premium.png');
+                    $logoUrl = asset('images/logo-perfloplast.png');
 
                     $styles = "
                         <style>
@@ -320,7 +320,7 @@ class AdminPanelProvider extends PanelProvider
 
             ->login(\App\Filament\Pages\Auth\Login::class)
 
-            ->brandLogo(asset('images/logo-perfloplast-premium.png').'?v='.(file_exists(public_path('images/logo-perfloplast-premium.png')) ? filemtime(public_path('images/logo-perfloplast-premium.png')) : time()))
+            ->brandLogo(asset('images/logo-perfloplast.png'))
             ->brandLogoHeight('5rem')
             ->brandName('PERFLOPLAST')
             ->renderHook(
