@@ -51,14 +51,26 @@ class ColorResource extends Resource
                             return;
                         }
 
-                        // Tomar las primeras 3 letras del slug (sin guiones ni números)
-                        $clean = preg_replace('/[^a-z]/i', '', Str::slug($state));
-                        $prefix = strtoupper(substr($clean, 0, 3));
+                        // Limpiar y separar por palabras
+                        $clean = preg_replace('/[^a-z\s]/i', '', Str::ascii($state));
+                        $words = array_filter(explode(' ', $clean));
+                        $words = array_values($words); // Reindexar
 
-                        // Si el nombre es muy corto, rellenar con X
-                        if (strlen($prefix) < 3) {
-                            $prefix = str_pad($prefix, 3, 'X');
+                        $prefix = '';
+                        $countWords = count($words);
+
+                        if ($countWords === 1) {
+                            // 1 palabra: primeras 3 letras
+                            $prefix = substr($words[0], 0, 3);
+                        } elseif ($countWords === 2) {
+                            // 2 palabras: 1ra letra de la primera + primeras 2 de la segunda
+                            $prefix = substr($words[0], 0, 1) . substr($words[1], 0, 2);
+                        } else {
+                            // 3+ palabras: 1ra letra de las primeras 3 palabras
+                            $prefix = substr($words[0], 0, 1) . substr($words[1], 0, 1) . substr($words[2], 0, 1);
                         }
+
+                        $prefix = strtoupper(str_pad($prefix, 3, 'X'));
 
                         // Calcular correlativo basado en el prefijo
                         $count = Color::where('code', 'like', "{$prefix}-%")->count();
