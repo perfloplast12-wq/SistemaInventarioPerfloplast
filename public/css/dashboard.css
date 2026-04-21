@@ -518,3 +518,25 @@ body,
 .dark .fi-sidebar-header {
     border-bottom: 1px solid rgba(255,255,255,0.03) !important;
 }
+
+/* Mobile responsive fixes */
+@media (max-width: 640px) {
+    .pb-slicer {
+        display: flex !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+    .pb-slicer::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
+    }
+    .pb-slicer-lbl {
+        flex-shrink: 0;
+    }
+    .pb-btn {
+        flex-shrink: 0;
+    }
+}

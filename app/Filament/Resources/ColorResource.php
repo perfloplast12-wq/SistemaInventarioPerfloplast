@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -39,7 +42,19 @@ class ColorResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre del Color')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
+                        if (empty($state) || !empty($get('code'))) {
+                            return;
+                        }
+
+                        $prefix = strtoupper(Str::slug($state));
+                        $count = Color::where('code', 'like', "{$prefix}-%")->count();
+                        $nextNumber = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+                        
+                        $set('code', "{$prefix}-{$nextNumber}");
+                    }),
 
                 Forms\Components\TextInput::make('code')
                     ->label('Código')
