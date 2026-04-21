@@ -405,6 +405,30 @@ class DispatchResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Tables\Actions\Action::make('cancel_dispatch')
+                    ->label('Cancelar Despacho')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Cancelar Despacho?')
+                    ->modalDescription('Esto eliminará el despacho y devolverá los productos a la bodega de origen. Los pedidos volverán a estado pendiente.')
+                    ->visible(fn ($record) => in_array($record->status, ['pending', 'in_progress']) && auth()->user()?->can('dispatches.delete'))
+                    ->action(function (Dispatch $record, \App\Services\DispatchService $service): void {
+                        try {
+                            $service->cancel($record);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Despacho Cancelado')
+                                ->body('El stock ha sido devuelto a la bodega con éxito.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('complete_dispatch')
                     ->label('Finalizar Entrega')
                     ->icon('heroicon-o-check-circle')
