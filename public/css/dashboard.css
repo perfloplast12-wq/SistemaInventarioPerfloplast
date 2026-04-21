@@ -526,7 +526,9 @@ body,
         overflow-x: auto !important;
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
-        width: 100%;
+        width: 100% !important;
+        max-width: calc(100vw - 40px) !important;
+        box-sizing: border-box !important;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
     }
@@ -535,8 +537,21 @@ body,
     }
     .pb-slicer-lbl {
         flex-shrink: 0;
+        font-size: 8px !important;
+        padding: 0 6px 0 2px !important;
     }
     .pb-btn {
         flex-shrink: 0;
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+    }
+    .pb-btn.on {
+        transform: none !important; /* Prevent clipping */
+    }
+    .pb-hdr {
+        gap: 10px !important;
+    }
+    .pb-title {
+        font-size: 18px !important;
     }
 }
