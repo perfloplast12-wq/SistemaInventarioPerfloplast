@@ -24,18 +24,20 @@ return new class extends Migration {
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
             $table->string('purchase_number')->unique();
+            $table->string('invoice_series')->nullable(); // Consolidated from Model
+            $table->string('supplier_invoice_number')->nullable(); // Consolidated from Model
+            
             $table->dateTime('purchase_date');
+            $table->date('due_date')->nullable();
             
             $table->foreignId('supplier_id')->constrained()->restrictOnDelete();
-            $table->foreignId('warehouse_id')->constrained()->restrictOnDelete();
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             
-            // Industrial/Import info (Consolidated)
-            $table->string('invoice_reference')->nullable();
-            $table->string('customs_document')->nullable();
+            $table->string('payment_condition')->nullable(); // cash, credit
+            $table->string('category')->default('raw_material'); 
             
-            $table->decimal('subtotal', 14, 2)->default(0);
-            $table->decimal('tax', 14, 2)->default(0);
-            $table->decimal('total', 14, 2)->default(0);
+            $table->decimal('total', 14, 3)->default(0);
+            $table->decimal('tax_amount', 14, 3)->default(0);
             
             $table->string('status')->default('completed'); // pending, completed, cancelled
             
@@ -53,8 +55,8 @@ return new class extends Migration {
             $table->foreignId('purchase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->decimal('quantity', 14, 3);
-            $table->decimal('unit_cost', 14, 2);
-            $table->decimal('subtotal', 14, 2);
+            $table->decimal('unit_cost', 14, 3);
+            $table->decimal('subtotal', 14, 3);
             $table->timestamps();
             
             $table->index('purchase_id');
