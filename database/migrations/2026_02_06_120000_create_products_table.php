@@ -11,12 +11,12 @@ return new class extends Migration {
             $table->id();
             
             // Core Identity
-            $table->string('sku')->unique();
+            $table->string('sku')->nullable()->unique(); // Made nullable because it's optional in Filament
             $table->string('name');
             $table->text('description')->nullable();
             
             // Classification
-            $table->string('type')->default('finished');
+            $table->string('type')->default('finished_product'); // Sincronizado con nombres en Resources
             $table->foreignId('unit_of_measure_id')->constrained('unit_of_measures')->restrictOnDelete();
             $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
             
