@@ -201,7 +201,7 @@ class AppearanceSettings extends Page
             ->title('Ajustes guardados correctamente')
             ->success()
             ->send();
-            
-        // Forzar recompilación o refresco visual si es necesario
+
+        $this->js('window.location.reload()');
     }
 }
