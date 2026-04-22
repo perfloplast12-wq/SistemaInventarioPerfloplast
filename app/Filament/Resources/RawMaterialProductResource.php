@@ -8,6 +8,8 @@ use App\Models\Warehouse;
 use App\Models\InventoryMovement;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -110,7 +112,7 @@ class RawMaterialProductResource extends Resource
                                     ->label('Bodega')
                                     ->options(\App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
                                     ->dehydrated(false)
-                                    ->required(fn (Forms\Get $get) => filled($get('initial_stock'))),
+                                    ->required(fn (Get $get) => filled($get('initial_stock'))),
 
                                 Forms\Components\TextInput::make('initial_stock')
                                     ->label('Cantidad Inicial')
@@ -268,5 +270,10 @@ class RawMaterialProductResource extends Resource
             'create' => Pages\CreateRawMaterialProduct::route('/create'),
             'edit'   => Pages\EditRawMaterialProduct::route('/{record}/edit'),
         ];
+    }
+
+    public static function getRedirectUrl(): string
+    {
+        return static::getUrl('index');
     }
 }
