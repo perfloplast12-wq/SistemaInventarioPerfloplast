@@ -11,7 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('abbreviation', 10);
-            $table->boolean('is_active')->default(true); // Added back for Seeder compatibility
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete(); // Restored missing field
             $table->timestamps();
             $table->softDeletes();
         });

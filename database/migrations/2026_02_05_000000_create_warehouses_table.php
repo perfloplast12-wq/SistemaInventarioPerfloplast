@@ -13,8 +13,9 @@ return new class extends Migration {
             $table->string('code')->unique();
             $table->string('address')->nullable();
             $table->string('type')->default('storage'); // storage, factory, retail
-            $table->boolean('is_factory')->default(false); // Consolidated
+            $table->boolean('is_factory')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->text('notes')->nullable(); // Restored missing field
             $table->timestamps();
             $table->softDeletes();
 
@@ -23,7 +24,7 @@ return new class extends Migration {
 
         Schema::create('trucks', function (Blueprint $table) {
             $table->id();
-            $table->string('plate_number')->unique();
+            $table->string('plate')->unique(); // Fixed: plate instead of plate_number to match Model
             $table->string('name')->nullable();
             $table->string('brand')->nullable();
             $table->string('model')->nullable();
@@ -31,6 +32,7 @@ return new class extends Migration {
             
             // Driver Assignment (Consolidated)
             $table->foreignId('driver_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('driver_name')->nullable(); // Restored missing field
             
             $table->boolean('is_active')->default(true);
             $table->timestamps();

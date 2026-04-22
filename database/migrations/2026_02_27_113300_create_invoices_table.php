@@ -21,19 +21,28 @@ return new class extends Migration {
             $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
             $table->foreignId('sale_id')->nullable()->constrained('sales')->nullOnDelete();
             
-            // Totals
+            // Financials (Restored missing fields from Model)
+            $table->string('payment_method')->nullable();
+            $table->string('sale_type')->nullable(); // factory, retail, etc.
+            
             $table->decimal('subtotal', 14, 2)->default(0);
+            $table->decimal('discount_amount', 14, 2)->default(0);
             $table->decimal('tax', 14, 2)->default(0);
             $table->decimal('total', 14, 2)->default(0);
             
+            $table->decimal('amount_paid', 14, 2)->default(0);
+            $table->decimal('change_amount', 14, 2)->default(0);
+            
             $table->string('status')->default('active'); // active, cancelled
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             
             $table->timestamps();
-            $table->softDeletes(); // Consolidated
+            $table->softDeletes();
 
             // Indices
             $table->index('customer_nit');
             $table->index('invoice_date');
+            $table->index('status');
         });
 
         Schema::create('invoice_items', function (Blueprint $table) {
