@@ -19,8 +19,4 @@ Route::get('/admin/injection-reports/{report}/pdf', [\App\Http\Controllers\Injec
     ->name('injection-reports.pdf')
     ->middleware(['auth']);
 
-Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::class, 'store'])
-    ->name('api.tracking');
 
-Route::get('/api/tracking/{dispatch}', [\App\Http\Controllers\Api\TrackingController::class, 'show'])
-    ->name('api.tracking.show');
