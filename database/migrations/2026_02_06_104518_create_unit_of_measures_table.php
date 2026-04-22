@@ -11,12 +11,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('abbreviation', 10);
+            $table->boolean('is_active')->default(true); // Added back for Seeder compatibility
             $table->timestamps();
             $table->softDeletes();
-            
-            // Relaxed unique constraint to allow soft deletes (Consolidated)
-            // Instead of a global unique on 'name', we can use a unique on name + deleted_at or just remove it if not critical.
-            // But usually name/abbrev should be unique per active record.
         });
     }
 
