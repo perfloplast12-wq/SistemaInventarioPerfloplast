@@ -11,29 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('sale_date');
-        });
+        $this->addIndexSafe('sales', 'status');
+        $this->addIndexSafe('sales', 'sale_date');
+        $this->addIndexSafe('orders', 'status');
+        $this->addIndexSafe('orders', 'order_date');
+        $this->addIndexSafe('productions', 'status');
+        $this->addIndexSafe('productions', 'production_date');
+        $this->addIndexSafe('dispatches', 'status');
+        $this->addIndexSafe('inventory_movements', 'type');
+        $this->addIndexSafe('inventory_movements', 'created_at');
+    }
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('order_date');
-        });
+    private function addIndexSafe(string $tableName, string $columnName): void
+    {
+        $indexName = "{$tableName}_{$columnName}_index";
+        $conn = \Illuminate\Support\Facades\Schema::getConnection();
+        $results = $conn->select("SHOW INDEX FROM {$tableName} WHERE Key_name = '{$indexName}'");
 
-        Schema::table('productions', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('production_date');
-        });
-
-        Schema::table('dispatches', function (Blueprint $table) {
-            $table->index('status');
-        });
-
-        Schema::table('inventory_movements', function (Blueprint $table) {
-            $table->index('type');
-            $table->index('created_at');
-        });
+        if (count($results) === 0) {
+            \Illuminate\Support\Facades\Schema::table($tableName, function (\Illuminate\Database\Schema\Blueprint $table) use ($columnName) {
+                $table->index($columnName);
+            });
+        }
     }
 
     /**
@@ -41,28 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-            $table->dropIndex(['sale_date']);
-        });
-
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-            $table->dropIndex(['order_date']);
-        });
-
-        Schema::table('productions', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-            $table->dropIndex(['production_date']);
-        });
-
-        Schema::table('dispatches', function (Blueprint $table) {
-            $table->dropIndex(['status']);
-        });
-
-        Schema::table('inventory_movements', function (Blueprint $table) {
-            $table->dropIndex(['type']);
-            $table->dropIndex(['created_at']);
-        });
+        // No destructivo
     }
 };
