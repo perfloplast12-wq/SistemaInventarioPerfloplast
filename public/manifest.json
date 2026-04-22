@@ -1,0 +1,17 @@
+{
+  "name": "Perfloplast Sistema de Inventario",
+  "short_name": "Perfloplast",
+  "description": "Sistema de gestión logística y despacho Perfloplast",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#040609",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/images/logo-perfloplast-premium.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

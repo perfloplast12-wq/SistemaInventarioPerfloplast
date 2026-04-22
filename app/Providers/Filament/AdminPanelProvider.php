@@ -348,12 +348,23 @@ class AdminPanelProvider extends PanelProvider
                         </style>
                     ";
 
-                    return new HtmlString("
-                        <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
-                        <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
-                        <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
-                        {$styles}
-                    ");
+351:                     return new HtmlString("
+352:                         <link rel=\"manifest\" href=\"/manifest.json\">
+353:                         <meta name=\"theme-color\" content=\"#6366f1\">
+354:                         <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
+355:                         <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
+356:                         <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
+357:                         <script>
+358:                             if ('serviceWorker' in navigator) {
+359:                                 window.addEventListener('load', () => {
+360:                                     navigator.serviceWorker.register('/sw.js')
+361:                                         .then(reg => console.log('SW Registered', reg))
+362:                                         .catch(err => console.log('SW Error', err));
+363:                                 });
+364:                             }
+365:                         </script>
+366:                         {$styles}
+367:                     ");
                 }
             )
 

@@ -15,6 +15,11 @@ class ViewDispatch extends ViewRecord
 {
     protected static string $resource = DispatchResource::class;
 
+18:     protected function getPollInterval(): ?string
+19:     {
+20:         return null; // Desactivado para mayor velocidad. Refrescar manualmente o usar actualizaciones específicas.
+21:     }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -24,7 +29,7 @@ class ViewDispatch extends ViewRecord
                 ->color('info')
                 ->requiresConfirmation()
                 ->modalHeading('¿Iniciar despacho?')
-                ->modalDescription('Se transferirá el stock de la bodega al camión y se notificará a los pedidos.')
+                ->modalDescription('Se transferirá el stock de la bodega al camión y se notificará a los pedidos. Asegúrate de tener el GPS activo.')
                 ->visible(fn () => $this->record->status === 'pending' && (auth()->user()?->can('dispatches.start') || (auth()->user()?->hasRole('conductor') && $this->record->driver_id === auth()->id())))
                 ->action(function (DispatchService $service) {
                     try {
@@ -72,6 +77,11 @@ class ViewDispatch extends ViewRecord
         ];
     }
 
+    protected function getHeaderWidgets(): array
+    {
+        return [];
+    }
+
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -82,6 +92,20 @@ class ViewDispatch extends ViewRecord
                         Components\ViewEntry::make('tracker')
                             ->view('components.dispatch-tracker')
                             ->state(fn ($record) => $record->status)
+                            ->columnSpanFull(),
+                    ]),
+
+                // MAPA DE SEGUIMIENTO EN TIEMPO REAL (Solo visible en progreso para admins)
+                Components\Section::make('Mapa de Seguimiento en Tiempo Real')
+                    ->visible(fn ($record) => $record->status === 'in_progress' && !auth()->user()?->hasRole('conductor'))
+                    ->collapsible()
+                    ->schema([
+                        Components\ViewEntry::make('map')
+                            ->view('components.leaflet-route-map')
+                            ->viewData([
+                                'locations' => $this->record->locations()->orderBy('created_at', 'asc')->get(),
+                                'dispatchId' => $this->record->id
+                            ])
                             ->columnSpanFull(),
                     ]),
 

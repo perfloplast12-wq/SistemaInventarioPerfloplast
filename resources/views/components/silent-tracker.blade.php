@@ -7,6 +7,7 @@
     if ($isActiveConductor) {
         $activeDispatchId = \App\Models\Dispatch::where('driver_id', $user->id)
             ->where('status', 'in_progress')
+            ->orderBy('id', 'desc')
             ->value('id');
     }
 @endphp
@@ -15,48 +16,50 @@
     <div 
         x-data="{
             dispatchId: {{ $activeDispatchId }},
-            lastUpdate: null,
+            watchId: null,
             
             init() {
-                // Iniciar rastreo silencioso inmediatamente
-                this.sendLocation();
-                // Intervalo de 30 segundos
-                setInterval(() => this.sendLocation(), 30000);
+                this.startSilentTracking();
             },
             
-            async sendLocation() {
-                if (!navigator.geolocation) return;
+            startSilentTracking() {
+                if (!navigator.geolocation || this.watchId) return;
                 
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const { latitude, longitude, speed, heading, accuracy } = position.coords;
-                        
-                        // Solo enviar si la precisión es aceptable (< 5km) para evitar basura
-                        if (accuracy > 5000) return;
-
-                        try {
-                            await fetch('/api/tracking', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    dispatch_id: this.dispatchId,
-                                    lat: latitude,
-                                    lng: longitude,
-                                    speed: speed,
-                                    heading: heading
-                                })
-                            });
-                        } catch (e) {
-                            // Silencioso
-                        }
-                    },
-                    null, // Error silencioso
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                this.watchId = navigator.geolocation.watchPosition(
+                    (pos) => this.sendLocation(pos),
+                    null,
+                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
                 );
+
+                // Asegurar primer envío
+                navigator.geolocation.getCurrentPosition((pos) => this.sendLocation(pos));
+            },
+            
+            async sendLocation(position) {
+                const { latitude, longitude, speed, heading, accuracy } = position.coords;
+                
+                // Filtro de precisión básica (5km es demasiado, bajamos a 1km para ser razonables)
+                if (accuracy > 1000) return;
+
+                try {
+                    await fetch('/api/tracking', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            dispatch_id: this.dispatchId,
+                            lat: latitude,
+                            lng: longitude,
+                            speed: speed,
+                            heading: heading
+                        })
+                    });
+                } catch (e) {
+                    // Silencioso
+                }
             }
         }" 
         style="display: none !important;" 
