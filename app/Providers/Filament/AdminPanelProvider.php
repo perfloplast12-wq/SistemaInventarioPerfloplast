@@ -174,7 +174,8 @@ class AdminPanelProvider extends PanelProvider
                                 border-bottom: none !important;
                                 backdrop-filter: blur(20px) !important;
                                 -webkit-backdrop-filter: blur(20px) !important;
-                                background-color: color-mix(in srgb, var(--p-1), transparent 85%) !important;
+                                background: var(--main-gradient) !important;
+                                box-shadow: none !important;
                             }
 
                             .fi-card, .fi-section, .fi-sidebar {
@@ -224,7 +225,9 @@ class AdminPanelProvider extends PanelProvider
                         padding-left: 0.75rem !important; 
                         padding-right: 0.75rem !important;
                         margin-bottom: 0.5rem;
-                        background-color: transparent !important;
+                        background: var(--main-gradient) !important;
+                        border-bottom: none !important;
+                        border-inline-end: none !important;
                     }
 
                     .fi-sidebar-header > div, 
@@ -246,7 +249,7 @@ class AdminPanelProvider extends PanelProvider
                     }
 
                     .fi-logo {
-                        height: 5rem !important;
+                        height: 4.5rem !important; /* Slightly smaller to fit better in the bar */
                         width: auto !important;
                         max-width: 100% !important;
                         object-fit: contain;

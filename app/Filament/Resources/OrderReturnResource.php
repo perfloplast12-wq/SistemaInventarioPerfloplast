@@ -231,6 +231,16 @@ class OrderReturnResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Exportar a Excel')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('success')
+                    ->action(fn ($livewire) => \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\OrderReturnsExport($livewire->getFilteredTableQuery()->get()),
+                        'devoluciones_' . now()->format('Y-m-d_H-i') . '.xlsx'
+                    )),
             ]);
     }
 

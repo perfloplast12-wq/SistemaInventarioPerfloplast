@@ -67,28 +67,14 @@ class InvoiceResource extends Resource
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('export_csv')
+                Tables\Actions\Action::make('export_excel')
                     ->label('Exportar a Excel')
                     ->icon('heroicon-o-table-cells')
                     ->color('success')
-                    ->action(function ($livewire) {
-                        $records = $livewire->getFilteredTableQuery()->get();
-                        $filename = "facturas_" . now()->format('Ymd_His') . ".csv";
-                        $headers = [
-                            "Content-type"        => "text/csv",
-                            "Content-Disposition" => "attachment; filename=$filename",
-                        ];
-                        $callback = function() use ($records) {
-                            $file = fopen('php://output', 'w');
-                            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-                            fputcsv($file, ['Nro Factura', 'Fecha', 'Cliente', 'Tipo Venta', 'Total']);
-                            foreach ($records as $record) {
-                                fputcsv($file, [$record->invoice_number, $record->invoice_date->format('d/m/Y'), $record->customer_name, $record->sale_type, $record->total]);
-                            }
-                            fclose($file);
-                        };
-                        return response()->stream($callback, 200, $headers);
-                    }),
+                    ->action(fn ($livewire) => \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\InvoicesExport($livewire->getFilteredTableQuery()->get()),
+                        'facturas_' . now()->format('Y-m-d_H-i') . '.xlsx'
+                    )),
                 Tables\Actions\Action::make('export_sat')
                     ->label('Exportar SAT')
                     ->icon('heroicon-o-document-arrow-down')
@@ -160,27 +146,14 @@ class InvoiceResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('bulk_export_csv')
+                    Tables\Actions\BulkAction::make('bulk_export_excel')
                         ->label('Exportar Seleccionados')
                         ->icon('heroicon-o-table-cells')
                         ->color('success')
-                        ->action(function (\Illuminate\Support\Collection $records) {
-                            $filename = "facturas_seleccionadas_" . now()->format('Ymd_His') . ".csv";
-                            $headers = [
-                                "Content-type"        => "text/csv",
-                                "Content-Disposition" => "attachment; filename=$filename",
-                            ];
-                            $callback = function() use ($records) {
-                                $file = fopen('php://output', 'w');
-                                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-                                fputcsv($file, ['Nro Factura', 'Fecha', 'Cliente', 'Tipo Venta', 'Total']);
-                                foreach ($records as $record) {
-                                    fputcsv($file, [$record->invoice_number, $record->invoice_date->format('d/m/Y'), $record->customer_name, $record->sale_type, $record->total]);
-                                }
-                                fclose($file);
-                            };
-                            return response()->stream($callback, 200, $headers);
-                        }),
+                        ->action(fn ($records) => \Maatwebsite\Excel\Facades\Excel::download(
+                            new \App\Exports\InvoicesExport($records),
+                            'facturas_seleccionadas_' . now()->format('Y-m-d_H-i') . '.xlsx'
+                        )),
                     Tables\Actions\BulkAction::make('bulk_export_sat')
                         ->label('Exportar SAT')
                         ->icon('heroicon-o-document-arrow-down')

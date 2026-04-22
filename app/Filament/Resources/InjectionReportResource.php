@@ -181,6 +181,16 @@ class InjectionReportResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Exportar a Excel')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('success')
+                    ->action(fn ($livewire) => \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\ActivityReportsExport($livewire->getFilteredTableQuery()->get()),
+                        'reportes_actividad_' . now()->format('Y-m-d_H-i') . '.xlsx'
+                    )),
             ]);
     }
 
