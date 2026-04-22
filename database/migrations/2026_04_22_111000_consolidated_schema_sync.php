@@ -76,6 +76,19 @@ return new class extends Migration
                 }
             });
         }
+
+        // 6. GPS Tracking Table: Missing dispatch_locations
+        if (!Schema::hasTable('dispatch_locations')) {
+            Schema::create('dispatch_locations', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('dispatch_id')->constrained()->cascadeOnDelete();
+                $table->decimal('lat', 10, 8);
+                $table->decimal('lng', 11, 8);
+                $table->decimal('speed', 8, 2)->nullable();
+                $table->decimal('heading', 8, 2)->nullable();
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

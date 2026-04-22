@@ -186,8 +186,23 @@
         </template>
     </div>
     
-    <div x-show="isConductor" class="hidden">
-        <!-- Background activity for conductor -->
-        <span x-text="loading ? 'Updating...' : 'Ready'"></span>
+    <div x-show="isConductor" class="py-2 px-1">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        <span x-show="status === 'in_progress'">VIAJE EN CURSO</span>
+                        <span x-show="status !== 'in_progress'" class="text-gray-400 italic">ESPERANDO SALIDA...</span>
+                    </span>
+                    <span class="text-[10px] text-gray-400 uppercase tracking-widest">
+                        Sincronización de ruta activa
+                    </span>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] text-gray-400 block">TIEMPO TRANSCURRIDO</span>
+                <span class="text-xs font-mono text-gray-600 dark:text-gray-400" x-text="lastUpdate ? 'Sincronizado' : '--:--'"></span>
+            </div>
+        </div>
     </div>
 </div>
