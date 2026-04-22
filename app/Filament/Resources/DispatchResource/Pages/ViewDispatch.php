@@ -25,7 +25,7 @@ class ViewDispatch extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('¿Iniciar despacho?')
                 ->modalDescription('Se transferirá el stock de la bodega al camión y se notificará a los pedidos.')
-                ->visible(fn () => $this->record->status === 'pending' && auth()->user()?->can('dispatches.start'))
+                ->visible(fn () => $this->record->status === 'pending' && (auth()->user()?->can('dispatches.start') || (auth()->user()?->hasRole('conductor') && $this->record->driver_id === auth()->id())))
                 ->action(function (DispatchService $service) {
                     try {
                         $service->start($this->record);
@@ -76,8 +76,8 @@ class ViewDispatch extends ViewRecord
     {
         return $infolist
             ->schema([
-                Components\Section::make('Seguimiento de Ruta')
-                    ->visible(fn() => !auth()->user()?->hasRole('conductor'))
+                Components\Section::make('Estatus del Despacho')
+                    ->visible(true)
                     ->schema([
                         Components\ViewEntry::make('tracker')
                             ->view('components.dispatch-tracker')
