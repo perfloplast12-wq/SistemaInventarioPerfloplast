@@ -78,6 +78,12 @@ class Production extends Model
             return;
         }
 
+        // Prevent duplicates if movements already exist (e.g. from a previous interrupted attempt)
+        if (\App\Models\InventoryMovement::where('source_type', 'production')->where('source_id', $this->id)->exists()) {
+            $this->update(['status' => 'confirmed']);
+            return;
+        }
+
         \Illuminate\Support\Facades\DB::transaction(function () {
             // 1. Salida de Materias Primas
             foreach ($this->items as $item) {
