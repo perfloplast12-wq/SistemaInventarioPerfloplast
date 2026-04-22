@@ -114,7 +114,8 @@ class OrderResource extends Resource
                                     ->searchable()
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                        $set('unit_price', Product::find($state)?->sale_price ?? 0);
+                                        $price = Product::find($state)?->sale_price ?? 0;
+                                        $set('unit_price', number_format((float) $price, 2, '.', ''));
                                         $set('color_id', null);
                                     }),
                                 Forms\Components\Select::make('color_id')

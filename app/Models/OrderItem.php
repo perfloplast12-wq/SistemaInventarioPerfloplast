@@ -18,8 +18,8 @@ class OrderItem extends Model
 
     protected $casts = [
         'quantity' => 'decimal:3',
-        'unit_price' => 'decimal:3',
-        'subtotal' => 'decimal:3',
+        'unit_price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
     public function order(): BelongsTo
