@@ -12,6 +12,8 @@ class TrackingController extends Controller
 {
     public function store(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('GPS Tracking Request:', $request->all());
+
         $validated = $request->validate([
             'dispatch_id' => 'required|exists:dispatches,id',
             'lat' => 'required|numeric',

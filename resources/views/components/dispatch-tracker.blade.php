@@ -118,7 +118,8 @@
         
         for (const point of pointsToSync) {
             try {
-                const response = await fetch('/api/tracking', {
+                const url = window.location.origin + '/api/tracking';
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -242,18 +243,22 @@
         </div>
 
         {{-- Errores Críticos (Solo Conductor) --}}
-        <div x-show="error" x-cloak class="p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-500 rounded-xl text-red-700 dark:text-red-300">
+        <div x-show="error || lastError" x-cloak class="p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-500 rounded-xl text-red-700 dark:text-red-300">
             <div class="flex items-center gap-3 mb-2">
                 <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span class="font-black text-sm uppercase">¡Acción Requerida!</span>
+                <span class="font-black text-sm uppercase">Falla de Sincronización</span>
             </div>
-            <p class="text-xs font-bold leading-relaxed" x-text="error"></p>
-            <div class="mt-2 text-[9px] font-mono opacity-70" x-show="warning" x-text="'Detalle: ' + warning"></div>
-            <button @click="window.location.reload()" class="mt-3 w-full py-2 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg hover:bg-red-700 transition-colors uppercase">
-                Reintentar Conexión
-            </button>
+            <p class="text-xs font-bold leading-relaxed" x-text="error || lastError"></p>
+            <div class="mt-3 flex gap-2">
+                <button @click="syncBuffer()" class="flex-1 py-2 bg-emerald-600 text-white text-[10px] font-black rounded-lg shadow-lg hover:bg-emerald-700 transition-colors uppercase">
+                    Reintentar Envío
+                </button>
+                <button @click="window.location.reload()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] font-black rounded-lg uppercase">
+                    Refrescar
+                </button>
+            </div>
         </div>
 
         {{-- Estado del Buffer y Sincronización --}}
