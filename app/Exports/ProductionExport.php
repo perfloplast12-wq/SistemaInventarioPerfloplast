@@ -61,9 +61,9 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setPath(public_path('images/logo-perfloplast-premium.png'));
-        $drawing->setHeight(55);
+        $drawing->setHeight(50);
         $drawing->setCoordinates('A1');
-        $drawing->setOffsetX(5);
+        $drawing->setOffsetX(10);
         $drawing->setOffsetY(5);
         return $drawing;
     }
@@ -72,8 +72,12 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
     {
         $lastColumn = $sheet->getHighestColumn();
         $lastRow = $sheet->getHighestRow();
-        $sheet->insertNewRowBefore(1, 5);
+        $sheet->insertNewRowBefore(1, 6);
         
+        for ($i = 1; $i <= 6; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(18);
+        }
+
         $sheet->mergeCells("C2:G4");
         $sheet->setCellValue('C2', "REPORTE DE PRODUCCIÓN");
         $sheet->getStyle('C2')->applyFromArray([
@@ -81,7 +85,7 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
 
-        $headerRange = "A6:{$lastColumn}6";
+        $headerRange = "A7:{$lastColumn}7";
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => [
@@ -90,9 +94,9 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
             ],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
-        $sheet->getRowDimension(6)->setRowHeight(25);
+        $sheet->getRowDimension(7)->setRowHeight(25);
 
-        for ($i = 7; $i <= ($lastRow + 5); $i++) {
+        for ($i = 8; $i <= ($lastRow + 6); $i++) {
             if ($i % 2 == 0) {
                 $sheet->getStyle("A{$i}:{$lastColumn}{$i}")->getFill()
                     ->setFillType(Fill::FILL_SOLID)

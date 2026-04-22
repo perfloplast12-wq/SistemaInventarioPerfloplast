@@ -63,9 +63,9 @@ class SalesExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setPath(public_path('images/logo-perfloplast-premium.png'));
-        $drawing->setHeight(55);
+        $drawing->setHeight(50);
         $drawing->setCoordinates('A1');
-        $drawing->setOffsetX(5);
+        $drawing->setOffsetX(10);
         $drawing->setOffsetY(5);
 
         return $drawing;
@@ -76,10 +76,15 @@ class SalesExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $lastColumn = $sheet->getHighestColumn();
         $lastRow = $sheet->getHighestRow();
 
-        // 1. Crear espacio para cabecera (5 filas)
-        $sheet->insertNewRowBefore(1, 5);
+        // 1. Crear espacio para cabecera (6 filas para seguridad)
+        $sheet->insertNewRowBefore(1, 6);
         
-        // 2. Título Centrado (Fila 2 a 4)
+        // 2. Dar altura a las filas de la cabecera para que el logo quepa bien
+        for ($i = 1; $i <= 6; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(18);
+        }
+
+        // 3. Título Centrado (Fila 2 a 4)
         $sheet->mergeCells("C2:G4");
         $sheet->setCellValue('C2', "REPORTE DE VENTAS");
         $sheet->getStyle('C2')->applyFromArray([
@@ -94,8 +99,8 @@ class SalesExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             ],
         ]);
 
-        // 3. Estilo del Encabezado de Tabla (Fila 6)
-        $headerRange = "A6:{$lastColumn}6";
+        // 4. Estilo del Encabezado de Tabla (Fila 7)
+        $headerRange = "A7:{$lastColumn}7";
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => [
@@ -106,20 +111,17 @@ class SalesExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical' => Alignment::VERTICAL_CENTER,
             ],
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'FFFFFF']],
-            ],
         ]);
-        $sheet->getRowDimension(6)->setRowHeight(25);
+        $sheet->getRowDimension(7)->setRowHeight(25);
 
-        // 4. Filas de Datos y Cebreado
-        for ($i = 7; $i <= ($lastRow + 5); $i++) {
+        // 5. Filas de Datos y Cebreado
+        for ($i = 8; $i <= ($lastRow + 6); $i++) {
             if ($i % 2 == 0) {
                 $sheet->getStyle("A{$i}:{$lastColumn}{$i}")->getFill()
                     ->setFillType(Fill::FILL_SOLID)
                     ->getStartColor()->setRGB('F9FAFB');
             }
-            $sheet->getRowDimension($i)->setRowHeight(20);
+            $sheet->getRowDimension($i)->setRowHeight(18);
         }
 
         return [];
