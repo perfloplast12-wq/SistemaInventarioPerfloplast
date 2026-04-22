@@ -27,6 +27,7 @@ class Product extends Model
         'cost_price',
         'purchase_cost',
         'presentation_sale_price',
+        'minimum_stock',
     ];
 
     protected $casts = [

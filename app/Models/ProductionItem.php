@@ -14,6 +14,7 @@ class ProductionItem extends Model
         'production_id',
         'product_id',
         'quantity',
+        'waste_quantity',
     ];
 
     protected $casts = [

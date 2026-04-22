@@ -29,6 +29,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
             $table->decimal('quantity', 12, 3);
             $table->decimal('unit_price', 12, 3);
             $table->decimal('subtotal', 12, 3);

@@ -18,6 +18,7 @@ class Truck extends Model
         'brand',
         'model',
         'driver_name',
+        'capacity_kg',
         'is_active',
     ];
 

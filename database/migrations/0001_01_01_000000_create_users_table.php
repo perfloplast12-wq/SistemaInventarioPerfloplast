@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('theme_color')->nullable();
             
             $table->rememberToken();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes(); // Consolidated
             

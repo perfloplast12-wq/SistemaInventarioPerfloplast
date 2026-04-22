@@ -11,8 +11,12 @@ return new class extends Migration {
             $table->id();
             $table->string('return_number')->unique();
             $table->foreignId('order_id')->constrained()->restrictOnDelete();
+            $table->foreignId('dispatch_id')->nullable()->constrained('dispatches')->nullOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
+            $table->foreignId('driver_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('truck_id')->nullable()->constrained('trucks')->nullOnDelete();
+            $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
             
             $table->decimal('quantity', 14, 3);
             $table->string('reason');

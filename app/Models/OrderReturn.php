@@ -18,6 +18,8 @@ class OrderReturn extends Model
         'status',
         'resolved_by',
         'notes',
+        'return_number',
+        'created_by',
     ];
 
     public function dispatch() { return $this->belongsTo(Dispatch::class); }

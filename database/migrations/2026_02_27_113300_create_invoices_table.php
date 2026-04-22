@@ -48,10 +48,11 @@ return new class extends Migration {
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
-            $table->string('description');
+            $table->string('product_code')->nullable();
+            $table->string('product_name');
             $table->decimal('quantity', 14, 3);
             $table->decimal('unit_price', 14, 2);
-            $table->decimal('subtotal', 14, 2);
+            $table->decimal('total', 14, 2);
             $table->timestamps();
 
             $table->index('invoice_id');

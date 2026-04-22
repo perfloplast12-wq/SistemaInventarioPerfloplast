@@ -10,7 +10,9 @@ return new class extends Migration {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->unique();
             $table->string('type')->default('shelf'); // shelf, bin, section
+            $table->text('notes')->nullable();
             
             // Parent Infrastructure (Consolidated)
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
