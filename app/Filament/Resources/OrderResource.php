@@ -136,10 +136,9 @@ class OrderResource extends Resource
                                     ->numeric()
                                     ->required()
                                     ->prefix('Q')
-                                    ->reactive()
-                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
-                                    ->afterStateUpdated(fn ($state, $get, Forms\Set $set) => 
-                                        $set('subtotal', (float)$state * (float)$get('quantity'))),
+                                    ->readOnly()
+                                    ->dehydrated()
+                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', '')),
                                 Forms\Components\TextInput::make('subtotal')
                                     ->label('Subtotal')
                                     ->numeric()
