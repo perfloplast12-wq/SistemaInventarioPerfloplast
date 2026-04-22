@@ -318,6 +318,19 @@ class ProductionResource extends Resource
                             ->send();
                     }),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export_excel')
+                    ->label('Exportar Excel Premium')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function ($livewire) {
+                        $records = $livewire->getFilteredTableQuery()->get();
+                        return \Maatwebsite\Excel\Facades\Excel::download(
+                            new \App\Exports\ProductionExport($records), 
+                            "Produccion_Perfloplast_" . now()->format('Ymd_His') . ".xlsx"
+                        );
+                    }),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

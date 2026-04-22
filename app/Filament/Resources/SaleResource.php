@@ -540,47 +540,20 @@ class SaleResource extends Resource
                                 }
                                 fclose($file);
                             };
-                            return response()->stream($callback, 200, $headers);
-                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('export_filtered')
-                    ->label('Exportar Todo a Excel')
-                    ->icon('heroicon-o-table-cells')
+                Tables\Actions\Action::make('export_excel')
+                    ->label('Exportar Excel Premium')
+                    ->icon('heroicon-o-document-arrow-down')
                     ->color('success')
                     ->action(function ($livewire) {
                         $records = $livewire->getFilteredTableQuery()->get();
-                        $filename = "reporte_ventas_" . now()->format('Ymd_His') . ".csv";
-                        $headers = [
-                            "Content-type"        => "text/csv",
-                            "Content-Disposition" => "attachment; filename=$filename",
-                            "Pragma"              => "no-cache",
-                            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-                            "Expires"             => "0"
-                        ];
-
-                        $callback = function() use ($records) {
-                            $file = fopen('php://output', 'w');
-                            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-                            fwrite($file, "sep=;\n");
-                            fputcsv($file, ['Nro Venta', 'Fecha', 'Cliente', 'Total Bruto', 'Pagado', 'Saldo', 'Vendedor', 'Estado'], ';');
-                            foreach ($records as $record) {
-                                fputcsv($file, [
-                                    $record->sale_number,
-                                    $record->sale_date ? $record->sale_date->format('d/m/Y H:i') : '',
-                                    $record->customer_name,
-                                    $record->total,
-                                    $record->total_paid,
-                                    $record->balance,
-                                    $record->creator?->name,
-                                    $record->status
-                                ], ';');
-                            }
-                            fclose($file);
-                        };
-                        return response()->stream($callback, 200, $headers);
+                        return \Maatwebsite\Excel\Facades\Excel::download(
+                            new \App\Exports\SalesExport($records), 
+                            "Ventas_Perfloplast_" . now()->format('Ymd_His') . ".xlsx"
+                        );
                     }),
             ])
             ->defaultSort('created_at', 'desc')

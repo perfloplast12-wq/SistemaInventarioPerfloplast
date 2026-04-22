@@ -89,6 +89,20 @@ class Inventario extends Page
         return auth()->user()?->can('inventory.view') ?? false;
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('export_excel')
+                ->label('Exportar Inventario Premium')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->action(fn () => \Maatwebsite\Excel\Facades\Excel::download(
+                    new \App\Exports\InventoryExport(\App\Models\Stock::with(['product', 'color', 'warehouse'])->get()), 
+                    "Inventario_Perfloplast_" . now()->format('Ymd_His') . ".xlsx"
+                )),
+        ];
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [];
