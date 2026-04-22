@@ -187,7 +187,8 @@ class InvoiceResource extends Resource
                             return response()->stream($callback, 200, $headers);
                         }),
                 ])
-            ]);
+            ])
+            ->poll('10s');
     }
 
     public static function infolist(Infolist $infolist): Infolist
