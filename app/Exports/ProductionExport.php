@@ -61,8 +61,10 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
         $drawing = new Drawing();
         $drawing->setName('Logo');
         $drawing->setPath(public_path('images/logo-perfloplast-premium.png'));
-        $drawing->setHeight(60);
+        $drawing->setHeight(55);
         $drawing->setCoordinates('A1');
+        $drawing->setOffsetX(5);
+        $drawing->setOffsetY(5);
         return $drawing;
     }
 
@@ -72,10 +74,12 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
         $lastRow = $sheet->getHighestRow();
         $sheet->insertNewRowBefore(1, 5);
         
-        $sheet->mergeCells("B2:{$lastColumn}4");
-        $sheet->setCellValue('B2', "PERFLO-PLAST: REPORTE DE PRODUCCIÓN");
-        $sheet->getStyle('B2')->getFont()->setSize(18)->setBold(true)->getColor()->setRGB('10B981');
-        $sheet->getStyle('B2')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->mergeCells("C2:G4");
+        $sheet->setCellValue('C2', "REPORTE DE PRODUCCIÓN");
+        $sheet->getStyle('C2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 20, 'color' => ['rgb' => '10B981']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+        ]);
 
         $headerRange = "A6:{$lastColumn}6";
         $sheet->getStyle($headerRange)->applyFromArray([
@@ -84,8 +88,9 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => '10B981'],
             ],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
+        $sheet->getRowDimension(6)->setRowHeight(25);
 
         for ($i = 7; $i <= ($lastRow + 5); $i++) {
             if ($i % 2 == 0) {
