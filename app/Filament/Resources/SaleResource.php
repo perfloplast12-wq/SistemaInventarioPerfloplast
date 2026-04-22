@@ -519,7 +519,7 @@ class SaleResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->striped()
-            ->poll('10s');
+            ->poll('5s');
     }
 
     public static function getPages(): array

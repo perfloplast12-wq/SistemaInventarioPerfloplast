@@ -14,7 +14,7 @@ use Carbon\Carbon;
 
 class StatsOverview extends BaseWidget
 {
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '2s';
     protected static ?int $sort = -2;
 
     protected function getStats(): array
