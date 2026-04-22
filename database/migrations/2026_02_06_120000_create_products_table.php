@@ -16,30 +16,36 @@ return new class extends Migration {
             $table->text('description')->nullable();
             
             // Classification
-            $table->string('type')->default('finished'); // raw_material, finished
+            $table->string('type')->default('finished');
             $table->foreignId('unit_of_measure_id')->constrained('unit_of_measures')->restrictOnDelete();
             $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
             
-            // Pricing & Costs (Consolidated)
-            $table->decimal('purchase_cost', 14, 2)->default(0);
-            $table->decimal('wholesale_price', 14, 2)->default(0);
-            $table->decimal('retail_price', 14, 2)->default(0);
-            $table->decimal('distributor_price', 14, 2)->default(0);
+            // Pricing & Costs (Restored original names from Model)
+            $table->decimal('purchase_cost', 14, 3)->default(0);
+            $table->decimal('cost_price', 14, 3)->default(0);
+            $table->decimal('sale_price', 14, 3)->default(0);
+            
+            // Tiered Pricing (Added in history)
+            $table->decimal('wholesale_price', 14, 3)->default(0);
+            $table->decimal('retail_price', 14, 3)->default(0);
+            $table->decimal('distributor_price', 14, 3)->default(0);
+            
+            // Presentation (Restored original names from Model)
+            $table->foreignId('presentation_unit_id')->nullable()->constrained('unit_of_measures')->nullOnDelete();
+            $table->decimal('units_per_presentation', 14, 4)->default(1);
+            $table->decimal('presentation_sale_price', 14, 3)->default(0);
             
             // Inventory Rules
-            $table->decimal('minimum_stock', 14, 2)->default(0);
+            $table->decimal('minimum_stock', 14, 3)->default(0);
             $table->boolean('is_active')->default(true);
             
-            // Presentation (Consolidated)
-            $table->string('presentation_type')->nullable(); // Bolsa, Saco, Granel
-            $table->decimal('presentation_quantity', 14, 2)->nullable();
-            
             $table->timestamps();
-            $table->softDeletes(); // Consolidated
+            $table->softDeletes();
 
             // Optimization Indices
             $table->index(['type', 'is_active']);
             $table->index('unit_of_measure_id');
+            $table->index('color_id');
         });
     }
 
