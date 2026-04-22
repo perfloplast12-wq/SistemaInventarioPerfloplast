@@ -177,16 +177,16 @@ class AdminPanelProvider extends PanelProvider
                             }
                             
                             .fi-header {
-                                background: var(--main-gradient) !important;
-                                margin-top: 0 !important;
-                                padding-top: 1rem !important;
-                                padding-bottom: 1rem !important;
-                                border-bottom: 2px solid rgba(0,0,0,0.1) !important;
+                                background: transparent !important;
+                                margin-top: 1rem !important;
                             }
 
-                            .fi-header-heading, 
+                            .fi-header-heading {
+                                color: var(--text-primary) !important;
+                            }
+                            
                             .fi-breadcrumbs {
-                                color: #ffffff !important;
+                                color: var(--text-muted) !important;
                             }
                             
                             .fi-sidebar-item-active, .fi-btn-color-primary {
