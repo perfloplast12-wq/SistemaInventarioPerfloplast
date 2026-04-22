@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 class ProductionStatsOverview extends BaseWidget
 {
-    protected static ?string $pollingInterval = '10s';
+    protected static ?string $pollingInterval = '5s';
 
     protected function getStats(): array
     {

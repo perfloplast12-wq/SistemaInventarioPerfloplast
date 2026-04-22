@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->spa() // ✅ Navegación instantánea sin recargar toda la página
             ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotificationsPolling('5s')
             ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
