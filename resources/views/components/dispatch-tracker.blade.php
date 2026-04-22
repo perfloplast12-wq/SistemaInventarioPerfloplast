@@ -137,7 +137,8 @@
                     this.lastSyncTime = Date.now();
                     this.lastError = null;
                 } else {
-                    this.lastError = 'Servidor respondió con error ' + response.status;
+                    const errorData = await response.json().catch(() => ({}));
+                    this.lastError = 'Servidor (' + response.status + '): ' + (errorData.message || 'Falla interna');
                     break;
                 }
             } catch (err) {
