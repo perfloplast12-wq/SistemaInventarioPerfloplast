@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->spa() // ✅ Navegación instantánea sin recargar toda la página
             ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
-            ->databaseNotificationsPolling('5s')
+            ->databaseNotificationsPolling('30s')
             ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
@@ -88,15 +88,13 @@ class AdminPanelProvider extends PanelProvider
                         default => $br,
                     };
 
-                    // Use a static version string or a more reliable cache for the file time
-                    $v = '1.0.0';
-                    try {
-                        $path = public_path('css/dashboard.css');
-                        if (file_exists($path)) {
-                            $v = filemtime($path);
-                        }
-                    } catch (\Exception $e) {
-                    }
+                    // Cached version to avoid disk I/O
+                    $v = Cache::remember('css_version', 3600, function() {
+                        try {
+                            $path = public_path('css/dashboard.css');
+                            return file_exists($path) ? filemtime($path) : '1.0.0';
+                        } catch (\Exception $e) { return '1.0.0'; }
+                    });
 
                     $logoUrl = asset('images/logo-perfloplast-premium.png');
 
