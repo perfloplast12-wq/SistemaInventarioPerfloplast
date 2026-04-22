@@ -10,12 +10,12 @@
     loading: false,
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
-    lastSyncTime: Date.now(),
+    lastSyncTime: 0, // Iniciar en 0 para forzar el primer envío
+    lastError: null,
     
     init() {
         console.log('Tracker Init - Status:', this.status, 'IsConductor:', this.isConductor);
         
-        // Intentar sincronizar buffer pendiente al iniciar
         if (this.buffer.length > 0) this.syncBuffer();
 
         if (this.status === 'in_progress' && this.isConductor) {
@@ -25,10 +25,9 @@
             this.requestPermission();
         }
 
-        // Intervalo de sincronización de respaldo
         setInterval(() => {
             if (this.buffer.length > 0) this.syncBuffer();
-        }, 30000);
+        }, 20000); // Sincronizar más seguido
     },
     
     requestPermission() {
@@ -38,8 +37,8 @@
         }
         navigator.geolocation.getCurrentPosition(
             (pos) => { 
-                console.log('GPS Permiso concedido (Warm up)');
                 this.accuracy = pos.coords.accuracy;
+                this.handleNewPosition(pos); // Primer hit manual
             },
             (err) => { this.handleGpsError(err); },
             { enableHighAccuracy: true, timeout: 5000 }
@@ -48,17 +47,11 @@
     
     startTracking() {
         if (this.watchId) return;
-        
-        console.log('Iniciando watchPosition para despacho #' + this.dispatchId);
         this.loading = true;
         
         this.watchId = navigator.geolocation.watchPosition(
-            (position) => {
-                this.handleNewPosition(position);
-            },
-            (err) => {
-                this.handleGpsError(err);
-            },
+            (position) => { this.handleNewPosition(position); },
+            (err) => { this.handleGpsError(err); },
             { 
                 enableHighAccuracy: true, 
                 timeout: 30000, 
@@ -71,14 +64,13 @@
     
     handleGpsError(err) {
         this.loading = false;
+        this.lastError = 'Error GPS (' + err.code + '): ' + err.message;
         if (err.code === 1) {
-            this.error = 'BLOQUEADO: Debes permitir el acceso al GPS.';
+            this.error = 'BLOQUEADO: Activa el GPS en la configuración del sitio.';
         } else if (err.code === 2) {
-            this.error = 'SIN SEÑAL: No se puede obtener ubicación.';
-        } else if (err.code === 3) {
-            this.warning = 'TIEMPO EXCEDIDO: Buscando señal GPS...';
+            this.error = 'SIN SEÑAL: No hay ubicación disponible.';
         } else {
-            this.error = 'GPS Error: ' + err.message;
+            this.warning = 'GPS: ' + err.message;
         }
     },
     
@@ -86,25 +78,22 @@
         const { latitude, longitude, speed, heading, accuracy } = position.coords;
         this.accuracy = accuracy;
         this.loading = false;
+        this.error = null;
         
-        if (accuracy > 100) {
-            this.warning = 'Baja Precisión (±' + Math.round(accuracy) + 'm).';
+        if (accuracy > 80) {
+            this.warning = 'Baja Precisión (' + Math.round(accuracy) + 'm).';
         } else {
             this.warning = null;
         }
-        
-        this.error = null;
 
-        // Filtro de distancia (no enviar si no se ha movido > 10m)
+        // Filtro de distancia (excepto si es el primer punto o ha pasado mucho tiempo)
         if (this.lastCoords) {
             const distance = this.calculateDistance(latitude, longitude, this.lastCoords.lat, this.lastCoords.lng);
-            // Si se movió menos de 10 metros y pasaron menos de 2 minutos, ignorar
-            if (distance < 0.01 && (Date.now() - this.lastSyncTime < 120000)) {
+            if (distance < 0.005 && (Date.now() - this.lastSyncTime < 60000)) { // 5 metros o 1 minuto
                 return;
             }
         }
 
-        // Guardar en buffer
         const point = {
             dispatch_id: this.dispatchId,
             lat: latitude,
@@ -116,7 +105,6 @@
 
         this.buffer.push(point);
         this.saveBuffer();
-        
         await this.syncBuffer();
     },
 
@@ -126,9 +114,6 @@
 
     async syncBuffer() {
         if (this.buffer.length === 0) return;
-
-        // Intentar enviar el punto más reciente (o todos en batch si el API lo soporta)
-        // Por ahora uno por uno para mantener compatibilidad con TrackingController@store
         const pointsToSync = [...this.buffer];
         
         for (const point of pointsToSync) {
@@ -144,17 +129,18 @@
                 });
                 
                 if (response.ok) {
-                    // Eliminar del buffer si se envió con éxito
                     this.buffer = this.buffer.filter(p => p.timestamp !== point.timestamp);
                     this.saveBuffer();
                     this.lastUpdate = new Date().toLocaleTimeString();
                     this.lastCoords = { lat: point.lat, lng: point.lng };
                     this.lastSyncTime = Date.now();
+                    this.lastError = null;
                 } else {
-                    break; // Parar si hay error de servidor (posiblemente offline)
+                    this.lastError = 'Servidor respondió con error ' + response.status;
+                    break;
                 }
             } catch (err) {
-                console.error('Offline - GPS guardado en buffer');
+                this.lastError = 'Falla de red: ' + err.message;
                 break;
             }
         }
@@ -264,17 +250,22 @@
                 <span class="font-black text-sm uppercase">¡Acción Requerida!</span>
             </div>
             <p class="text-xs font-bold leading-relaxed" x-text="error"></p>
+            <div class="mt-2 text-[9px] font-mono opacity-70" x-show="warning" x-text="'Detalle: ' + warning"></div>
             <button @click="window.location.reload()" class="mt-3 w-full py-2 bg-red-600 text-white text-[10px] font-black rounded-lg shadow-lg hover:bg-red-700 transition-colors uppercase">
-                Reactivar GPS Ahora
+                Reintentar Conexión
             </button>
         </div>
 
-        {{-- Advertencias (Solo Conductor) --}}
-        <div x-show="warning && !error" x-cloak class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-700 dark:text-amber-400 flex items-center gap-3">
-            <svg class="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
-            </svg>
-            <span class="text-[10px] font-bold" x-text="warning"></span>
+        {{-- Estado del Buffer y Sincronización --}}
+        <div class="mt-2 grid grid-cols-2 gap-2">
+            <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-center">
+                <span class="block text-[8px] text-gray-500 uppercase font-bold">Pendientes</span>
+                <span class="text-sm font-black" :class="buffer.length > 0 ? 'text-amber-500' : 'text-gray-400'" x-text="buffer.length"></span>
+            </div>
+            <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-center">
+                <span class="block text-[8px] text-gray-500 uppercase font-bold">Precisión</span>
+                <span class="text-sm font-black text-gray-700 dark:text-gray-300" x-text="accuracy ? Math.round(accuracy) + 'm' : '--'"></span>
+            </div>
         </div>
 
         {{-- Indicador de Éxito (Solo Conductor) --}}
@@ -287,3 +278,12 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Forzar que el GPS esté activo si la página está abierta
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            console.log('App visible - Refrescando GPS');
+        }
+    });
+</script>
