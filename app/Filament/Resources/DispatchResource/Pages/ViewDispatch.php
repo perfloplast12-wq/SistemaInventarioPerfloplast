@@ -15,10 +15,10 @@ class ViewDispatch extends ViewRecord
 {
     protected static string $resource = DispatchResource::class;
 
-18:     protected function getPollInterval(): ?string
-19:     {
-20:         return null; // Desactivado para mayor velocidad. Refrescar manualmente o usar actualizaciones específicas.
-21:     }
+    protected function getPollInterval(): ?string
+    {
+        return null; // Desactivado para mayor velocidad. Refrescar manualmente o usar actualizaciones específicas.
+    }
 
     protected function getHeaderActions(): array
     {

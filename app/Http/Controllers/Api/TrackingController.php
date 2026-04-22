@@ -28,6 +28,9 @@ class TrackingController extends Controller
 
         $location = DispatchLocation::create($validated);
 
+        // Disparar evento para tiempo real
+        event(new \App\Events\LocationUpdated($location));
+
         return response()->json([
             'message' => 'Location recorded',
             'location' => $location
