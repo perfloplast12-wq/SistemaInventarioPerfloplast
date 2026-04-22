@@ -23,7 +23,7 @@ class GeneralReports extends Page
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Reporte Maestro (Gerencial)';
     protected static ?string $title = 'Panel Gerencial Consolidado';
-    protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.general-reports';

@@ -21,7 +21,7 @@ class OrderReturnResource extends Resource
     protected static ?string $navigationLabel = 'Devoluciones';
     protected static ?string $modelLabel = 'Devolución / Rechazo';
     protected static ?string $pluralModelLabel = 'Gestión de Devoluciones';
-    protected static ?string $navigationGroup = 'Operación';
+
     protected static ?int $navigationSort = 21;
 
     public static function canViewAny(): bool

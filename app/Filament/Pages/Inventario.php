@@ -18,7 +18,7 @@ class Inventario extends Page
     protected static ?string $title = 'Inventario';
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $navigationGroup = 'Operación';
+
 
     protected static string $view = 'filament.pages.inventario';
 

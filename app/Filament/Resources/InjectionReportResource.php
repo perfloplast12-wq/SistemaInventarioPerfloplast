@@ -24,7 +24,7 @@ class InjectionReportResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Reportes de Actividad';
 
-    protected static ?string $navigationGroup = 'Mantenimiento';
+
 
     public static function form(Form $form): Form
     {

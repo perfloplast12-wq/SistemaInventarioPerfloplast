@@ -174,7 +174,7 @@
         <div class="pb-grid">
             <div class="gc-12">
                 <div class="pb-tile-hdr">
-                    <div><div class="pb-tile-hdr-title">Rendimiento Operativo por Turno</div><div class="pb-tile-hdr-sub">Gauge · Comparación · Tendencia</div></div>
+                    <div><div class="pb-tile-hdr-title">Rendimiento Operativo por Turno</div><div class="pb-tile-hdr-sub">Comparación · Tendencia</div></div>
                     <span class="pb-tile-hdr-badge">Producción</span>
                 </div>
                 <div class="pb-widget">@livewire(\App\Filament\Widgets\ProductionByShiftChart::class, ['filters' => $this->filters], key('s10-'.$fk))</div>

@@ -170,7 +170,7 @@ class AdminPanelProvider extends PanelProvider
                             }
 
                             .fi-topbar {
-                                height: 5.5rem !important;
+                                height: 6.5rem !important;
                                 border-bottom: none !important;
                                 backdrop-filter: blur(20px) !important;
                                 -webkit-backdrop-filter: blur(20px) !important;
@@ -217,13 +217,14 @@ class AdminPanelProvider extends PanelProvider
 
                     /* Optimización para el Logo en Sidebar */
                     .fi-sidebar-header {
-                        height: 6.5rem !important; /* Aumentado ligeramente para dar aire */
+                        height: 6.5rem !important;
                         display: flex;
                         align-items: center;
-                        justify-content: flex-start !important;
-                        padding-left: 1.5rem !important; 
-                        padding-right: 1.5rem;
-                        margin-bottom: 0.5rem; /* Separación con el primer item */
+                        justify-content: center !important;
+                        padding-left: 0.75rem !important; 
+                        padding-right: 0.75rem !important;
+                        margin-bottom: 0.5rem;
+                        background-color: transparent !important;
                     }
 
                     .fi-sidebar-header > div, 
@@ -245,15 +246,14 @@ class AdminPanelProvider extends PanelProvider
                     }
 
                     .fi-logo {
-                        height: auto !important;
-                        max-height: 3.5rem !important; /* Reducido para que no pise los items */
+                        height: 5rem !important;
                         width: auto !important;
+                        max-width: 100% !important;
                         object-fit: contain;
                         image-rendering: auto;
                         -webkit-font-smoothing: antialiased;
                         -moz-osx-font-smoothing: grayscale;
                         transform: translateZ(0);
-                        margin-left: 0.5rem;
                     }
 
                     /* FIX CRITICO PARA DROPDOWNS */
@@ -345,13 +345,6 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
 
-            ->navigationGroups([
-                NavigationGroup::make()->label('Escritorio'),
-                NavigationGroup::make()->label('Operación'),
-                NavigationGroup::make()->label('Catálogos'),
-                NavigationGroup::make()->label('Usuarios y Roles'),
-                NavigationGroup::make()->label('Bitácoras y Auditoría'),
-            ])
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

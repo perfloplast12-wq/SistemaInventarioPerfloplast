@@ -1,7 +1,6 @@
 @php
 $d   = $this->getChartData();
 $uid = 'pshift-' . uniqid();
-$g   = $d['gaugeData'];
 @endphp
 
 <div x-data="{
@@ -23,11 +22,6 @@ $g   = $d['gaugeData'];
             style="font-size:11px;font-weight:700;padding:5px 14px;border-radius:100px;cursor:pointer;transition:all .15s;border:none;">
             Tendencia Temporal
         </button>
-        <button @click="switchTab('gauge')"
-            :style="tab === 'gauge' ? 'background:var(--pb-accent, #4f46e5);color:#fff;' : 'background:var(--pb-subtle, #f1f5f9);color:var(--pb-muted, #64748b);'"
-            style="font-size:11px;font-weight:700;padding:5px 14px;border-radius:100px;cursor:pointer;transition:all .15s;border:none;">
-            Gauge Turno Activo
-        </button>
     </div>
 
     {{-- Chart panels --}}
@@ -38,7 +32,6 @@ $g   = $d['gaugeData'];
         <div x-show="tab === 'trend'" class="pb-chart-scrollable" style="display:none;" x-bind:style="tab === 'trend' ? '' : 'display:none;'">
             <div id="{{ $uid }}-trn" style="width:100%;min-height:400px;min-width:800px;"></div>
         </div>
-        <div id="{{ $uid }}-gau" x-show="tab === 'gauge'" style="width:100%;min-height:400px;display:none;"></div>
     </div>
 
     @script
@@ -93,48 +86,6 @@ $g   = $d['gaugeData'];
             if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
         })();
 
-        // Gauge
-        (function(){
-            var el = document.getElementById('{{ $uid }}-gau');
-            if (!el) return;
-            function init() {
-                if (typeof ApexCharts === 'undefined') { setTimeout(init, 200); return; }
-                @if(!empty($g))
-                var pct   = {{ $g['pct'] ?? 0 }};
-                var color = '{{ $g['color'] ?? '#94a3b8' }}';
-                var real  = {{ $g['real'] ?? 0 }};
-                var goal  = {{ $g['goal'] ?? 0 }};
-                var name  = '{{ addslashes($g['shiftName'] ?? 'Sin Turno') }}';
-                new ApexCharts(el, {
-                    chart: { type: 'radialBar', height: 380, toolbar: { show: false }, fontFamily: 'Outfit, sans-serif' },
-                    series: [pct],
-                    colors: [color],
-                    plotOptions: {
-                        radialBar: {
-                            startAngle: -135, endAngle: 135,
-                            hollow: { size: '70%', background: 'transparent' },
-                            track: { background: '#e5e7eb', strokeWidth: '100%' },
-                            dataLabels: {
-                                name: { show: true, fontSize: '12px', fontWeight: '700', color: '#64748b', offsetY: -8 },
-                                value: { show: true, fontSize: '36px', fontWeight: '900', color: color, offsetY: 12, formatter: function(v){ return v + '%'; } }
-                            }
-                        }
-                    },
-                    labels: [name],
-                    stroke: { lineCap: 'round' },
-                    fill: { type: 'solid' }
-                }).render();
-                // Sub-text
-                var sub = document.createElement('div');
-                sub.style.cssText = 'text-align:center;padding:8px 0 16px;font-family:Outfit,sans-serif;display:flex;justify-content:center;gap:32px;';
-                sub.innerHTML = '<span style="font-size:12px;font-weight:700;color:#64748b;">Real: <strong style="color:#0f172a;">' + Number(real).toLocaleString() + ' u</strong></span>' +
-                    '<span style="font-size:12px;font-weight:700;color:#64748b;">Meta: <strong style="color:#0f172a;">' + (goal > 0 ? Number(goal).toLocaleString() + ' u' : 'No configurada') + '</strong></span>';
-                el.parentNode.insertBefore(sub, el.nextSibling);
-                @else
-                el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#94a3b8;font-size:14px;font-family:Outfit,sans-serif;">No hay turnos configurados</div>';
-                @endif
-            }
-            if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
         })();
     })();
     </script>

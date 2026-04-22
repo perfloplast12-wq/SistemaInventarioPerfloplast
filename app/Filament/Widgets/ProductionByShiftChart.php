@@ -21,7 +21,7 @@ class ProductionByShiftChart extends Widget
 
     public function setMode(string $m): void
     {
-        $this->mode = in_array($m, ['gauge', 'comparison', 'trend']) ? $m : 'comparison';
+        $this->mode = in_array($m, ['comparison', 'trend']) ? $m : 'comparison';
     }
 
     /** Returns all chart data in one shot for the view */
@@ -74,26 +74,6 @@ class ProductionByShiftChart extends Widget
             $trendSeries[] = ['name' => $shift->name, 'data' => $values];
         }
 
-        // ── Gauge data ───────────────────────────────────────────────────
-        $currentTime   = now()->format('H:i:s');
-        $activeShift   = $shifts->filter(function($s) use ($currentTime) {
-            if ($s->start_time < $s->end_time) {
-                return $currentTime >= $s->start_time && $currentTime <= $s->end_time;
-            }
-            return $currentTime >= $s->start_time || $currentTime <= $s->end_time;
-        })->first() ?? $shifts->first();
-
-        $gaugeData = [];
-        if ($activeShift) {
-            $real = (float) Production::where('shift_id', $activeShift->id)->where('status', 'confirmed')
-                ->whereBetween('production_date', [$start, $end])->sum('quantity');
-            $daysCount = max(1, $start->diffInDays($end) + 1);
-            $goal      = (float)($activeShift->daily_goal > 0 ? $activeShift->daily_goal * $daysCount : 0);
-            $pct       = $goal > 0 ? min(100, round(($real / $goal) * 100)) : 0;
-            $color     = $pct >= 100 ? '#22c55e' : ($pct >= 70 ? '#eab308' : ($pct > 0 ? '#ef4444' : '#94a3b8'));
-            $gaugeData = compact('pct', 'color', 'real', 'goal') + ['shiftName' => $activeShift->name];
-        }
-
-        return compact('compNames', 'compValues', 'trendLabels', 'trendSeries', 'gaugeData', 'palette');
+        return compact('compNames', 'compValues', 'trendLabels', 'trendSeries', 'palette');
     }
 }
