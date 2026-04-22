@@ -112,10 +112,19 @@ class EditSale extends EditRecord
 
     protected function afterSave(): void
     {
-        Notification::make()
-            ->title('✓ Venta actualizada')
-            ->body('Los cambios han sido guardados correctamente.')
+        // Logica adicional si fuera necesaria
+    }
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
             ->success()
-            ->send();
+            ->title('Venta actualizada')
+            ->body('Los cambios se han guardado correctamente.');
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

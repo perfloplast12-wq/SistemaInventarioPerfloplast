@@ -39,4 +39,9 @@ class CreateDispatch extends CreateRecord
             Order::whereIn('id', $orderIds)->update(['dispatch_id' => $record->id]);
         }
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

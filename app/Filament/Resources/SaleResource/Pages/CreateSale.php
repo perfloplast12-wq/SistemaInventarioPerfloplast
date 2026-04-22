@@ -87,16 +87,18 @@ class CreateSale extends CreateRecord
                 'payment_date' => now(),
             ]);
         }
+    }
 
-        Notification::make()
-            ->title('✓ Venta creada como borrador')
-            ->body('Revisá los datos y confirmá la venta.')
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
             ->success()
-            ->send();
+            ->title('Venta registrada')
+            ->body('La venta se ha creado correctamente en estado borrador.');
     }
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+        return $this->getResource()::getUrl('index');
     }
 }

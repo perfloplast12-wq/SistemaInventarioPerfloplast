@@ -36,6 +36,9 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
+            ->spa() // ✅ Navegación instantánea sin recargar toda la página
+            ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
+            ->databaseNotificationsPolling('30s')
             ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
@@ -334,7 +337,7 @@ class AdminPanelProvider extends PanelProvider
             )
 
             ->colors([
-                'primary' => Color::Lime,
+                'primary' => Color::Indigo, // ✅ Color más profesional que el Lima
                 'success' => Color::Emerald,
                 'info' => Color::Blue,
                 'warning' => Color::Amber,
