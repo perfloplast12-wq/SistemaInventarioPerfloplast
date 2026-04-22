@@ -98,7 +98,7 @@ class RawMaterialProductResource extends Resource
 
                         Forms\Components\Placeholder::make('stock_total_display')
                             ->label('Stock Actual (Base)')
-                            ->content(fn ($record) => number_format((float)($record?->stock_total ?? 0), 2, '.', ',') . ' ' . ($record?->unitOfMeasure?->name ?? ''))
+                            ->content(fn ($record) => $record ? (number_format((float)($record->stock_total ?? 0), 2, '.', ',') . ' ' . ($record->unitOfMeasure?->name ?? '')) : '0.00')
                             ->hidden(fn ($operation) => $operation === 'create')
                             ->extraAttributes(['class' => 'font-bold text-primary-600']),
                     ]),
@@ -110,9 +110,9 @@ class RawMaterialProductResource extends Resource
                             Forms\Components\Grid::make(3)->schema([
                                 Forms\Components\Select::make('initial_warehouse_id')
                                     ->label('Bodega')
-                                    ->options(\App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
+                                    ->options(fn () => \App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
                                     ->dehydrated(false)
-                                    ->required(fn (Get $get) => filled($get('initial_stock'))),
+                                    ->required(fn ($get) => filled($get('initial_stock'))),
 
                                 Forms\Components\TextInput::make('initial_stock')
                                     ->label('Cantidad Inicial')
@@ -203,11 +203,11 @@ class RawMaterialProductResource extends Resource
                                 ->live(),
 
                             Forms\Components\TextInput::make('quantity')
-                                ->label(fn (Get $get) => $get('entry_unit') === 'presentation' ? 'Número de Sacos/Paquetes' : 'Cantidad Exacta')
+                                ->label('Cantidad')
                                 ->numeric()
                                 ->required()
                                 ->minValue(0.01)
-                                ->helperText(function (Get $get, Product $record) {
+                                ->helperText(function ($get, Product $record) {
                                     if ($get('entry_unit') === 'presentation' && $record->units_per_presentation > 0) {
                                         return "Se ingresarán " . ($record->units_per_presentation * (float)($get('quantity') ?: 0)) . " " . ($record->unitOfMeasure?->name ?? '');
                                     }
