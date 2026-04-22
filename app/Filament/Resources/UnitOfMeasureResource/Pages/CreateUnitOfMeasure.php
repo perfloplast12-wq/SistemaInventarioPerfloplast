@@ -28,4 +28,9 @@ class CreateUnitOfMeasure extends CreateRecord
                 ->url(Catalogos::getUrl()),
         ];
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

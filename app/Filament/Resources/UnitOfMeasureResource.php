@@ -63,11 +63,21 @@ class UnitOfMeasureResource extends Resource
                             'unique' => 'Este nombre ya está registrado. Usa uno diferente.',
                         ]),
 
+                    Forms\Components\TextInput::make('abbreviation')
+                        ->label('Abreviación')
+                        ->required()
+                        ->maxLength(10),
+
                     Forms\Components\Toggle::make('is_active')
                         ->label('Activo')
                         ->default(true),
-                ])->columns(2),
+                ])->columns(3),
         ]);
+    }
+
+    public static function getRedirectUrl(): string
+    {
+        return static::getUrl('index');
     }
 
     public static function table(Table $table): Table
