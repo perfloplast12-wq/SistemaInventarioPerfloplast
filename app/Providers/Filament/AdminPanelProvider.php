@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->spa() // ✅ Navegación instantánea sin recargar toda la página
             ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotificationsPolling('5s')
             ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
@@ -170,10 +170,20 @@ class AdminPanelProvider extends PanelProvider
                             }
 
                             .fi-topbar {
-                                height: 5rem !important;
+                                height: 4rem !important;
                                 position: sticky !important;
                                 top: 0 !important;
                                 z-index: 30 !important;
+                                background: var(--main-gradient) !important;
+                                border-bottom: none !important;
+                                box-shadow: none !important;
+                            }
+                            
+                            .fi-topbar > nav,
+                            .fi-topbar-content {
+                                background: transparent !important;
+                                height: 100% !important;
+                                color: #ffffff !important;
                             }
                             
                             .fi-header {
@@ -200,6 +210,12 @@ class AdminPanelProvider extends PanelProvider
                                 border-radius: var(--border-radius) !important;
                                 border: 1px solid var(--border-color) !important;
                                 overflow: visible !important; /* Esencial para que los dropdowns no se corten */
+                            }
+
+                            .fi-sidebar {
+                                border-inline-end: none !important;
+                                border-top: none !important;
+                                box-shadow: none !important;
                             }
 
                             ".($isGlass ? '
@@ -236,15 +252,17 @@ class AdminPanelProvider extends PanelProvider
 
                     /* Optimización para el Logo en Sidebar */
                     .fi-sidebar-header {
-                        height: 5rem !important;
+                        height: 4rem !important;
+                        min-height: 4rem !important;
+                        max-height: 4rem !important;
                         display: flex;
                         align-items: center;
                         justify-content: center !important;
-                        padding-left: 0.75rem !important; 
-                        padding-right: 0.75rem !important;
+                        padding: 0 0.75rem !important; 
                         background: var(--main-gradient) !important;
                         border-bottom: none !important;
                         border-inline-end: none !important;
+                        margin: 0 !important;
                     }
 
                     .fi-sidebar-header > div, 
@@ -266,7 +284,7 @@ class AdminPanelProvider extends PanelProvider
                     }
 
                     .fi-logo {
-                        height: 4.5rem !important; /* Slightly smaller to fit better in the bar */
+                        height: 3rem !important; /* Smaller to fit in 4rem bar */
                         width: auto !important;
                         max-width: 100% !important;
                         object-fit: contain;
