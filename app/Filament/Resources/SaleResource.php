@@ -501,45 +501,6 @@ class SaleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('export_excel')
-                        ->label('Exportar a Excel')
-                        ->icon('heroicon-o-table-cells')
-                        ->color('green')
-                        ->action(function (\Illuminate\Support\Collection $records) {
-                            $filename = "ventas_seleccionadas_" . now()->format('Ymd_His') . ".csv";
-                            $headers = [
-                                "Content-type"        => "text/csv",
-                                "Content-Disposition" => "attachment; filename=$filename",
-                                "Pragma"              => "no-cache",
-                                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-                                "Expires"             => "0"
-                            ];
-
-                            $callback = function() use ($records) {
-                                $file = fopen('php://output', 'w');
-                                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-                                fputcsv($file, ['Nro Venta', 'Fecha', 'Cliente', 'Total Bruto', 'Pagado', 'Saldo Pendiente', 'Método Pago', 'Vendedor', 'Estado']);
-                                foreach ($records as $record) {
-                                    $paymentMethods = $record->payments->pluck('method')->unique()->implode(', ');
-                                    fputcsv($file, [
-                                        $record->sale_number,
-                                        $record->sale_date->format('d/m/Y H:i'),
-                                        $record->customer_name,
-                                        $record->total,
-                                        $record->total_paid,
-                                        $record->balance,
-                                        strtoupper($paymentMethods ?: 'Crédito'),
-                                        $record->creator?->name,
-                                        match($record->status) {
-                                            'draft' => 'Borrador',
-                                            'confirmed' => 'Confirmada',
-                                            'cancelled' => 'Cancelada',
-                                            default => $record->status
-                                        }
-                                    ]);
-                                }
-                                fclose($file);
-                            };
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
