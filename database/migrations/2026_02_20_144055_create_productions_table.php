@@ -4,32 +4,51 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('productions', function (Blueprint $table) {
             $table->id();
-            $table->string('production_number')->unique(); // P-000001
+            $table->string('production_number')->unique();
             $table->dateTime('production_date');
             
-            // Producto terminado a producir
-            $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
+            // Context
+            $table->foreignId('shift_id')->constrained('shifts')->restrictOnDelete();
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             
-            // Bodega donde entra el stock (usualmente fábrica)
-            $table->foreignId('to_warehouse_id')->constrained('warehouses')->restrictOnDelete();
+            // Main Product (Legacy or Primary reference)
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
+            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
             
-            $table->decimal('quantity', 14, 3);
-            $table->string('status')->default('draft'); // draft, confirmed, cancelled
-            $table->text('note')->nullable();
+            $table->string('status')->default('pending'); // pending, confirmed, cancelled
+            $table->decimal('total_quantity', 14, 3)->default(0);
             
-            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->text('notes')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            
             $table->timestamps();
+            $table->softDeletes(); // Consolidated
+
+            // Indices
+            $table->index(['production_date', 'status']);
+            $table->index(['shift_id', 'color_id']);
+        });
+
+        Schema::create('production_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('production_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->decimal('quantity', 14, 3);
+            $table->decimal('waste_quantity', 14, 3)->default(0);
+            $table->timestamps();
+
+            $table->index(['production_id', 'product_id']);
         });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('production_items');
         Schema::dropIfExists('productions');
     }
 };

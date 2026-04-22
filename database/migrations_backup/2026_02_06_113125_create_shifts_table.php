@@ -9,18 +9,9 @@ return new class extends Migration {
     {
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Matutino, Vespertino, Nocturno
-            
-            // Scheduling (Consolidated)
-            $table->time('start_time')->nullable();
-            $table->time('end_time')->nullable();
-            
-            // Goals (Consolidated)
-            $table->decimal('daily_goal', 14, 2)->default(0);
-            
+            $table->string('name'); // Mañana, Tarde, Noche
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

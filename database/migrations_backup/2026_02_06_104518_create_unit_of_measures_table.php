@@ -9,14 +9,16 @@ return new class extends Migration {
     {
         Schema::create('unit_of_measures', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('abbreviation', 10);
+
+            $table->string('name', 80);          // Unidad, Paquete, Kg...
+            $table->string('abbreviation', 20)->nullable(); // u, pq, kg, etc
+            $table->boolean('is_active')->default(true);
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
-            $table->softDeletes();
-            
-            // Relaxed unique constraint to allow soft deletes (Consolidated)
-            // Instead of a global unique on 'name', we can use a unique on name + deleted_at or just remove it if not critical.
-            // But usually name/abbrev should be unique per active record.
+
+            $table->unique('name');
         });
     }
 

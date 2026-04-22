@@ -9,24 +9,35 @@ return new class extends Migration {
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-
-            $table->string('name', 150);
-            $table->string('sku', 60)->nullable()->unique(); // opcional
-            $table->enum('type', ['raw_material', 'finished_product']); // MP / PT
-
-            $table->foreignId('unit_of_measure_id')
-                ->constrained('unit_of_measures')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
-
-            $table->boolean('is_active')->default(true);
-
-            // Opcionales (si quieres desde ya)
+            
+            // Core Identity
+            $table->string('sku')->unique();
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->string('color')->nullable(); // si luego lo manejas por variación/código
-
+            
+            // Classification
+            $table->string('type')->default('finished'); // raw_material, finished
+            $table->foreignId('unit_of_measure_id')->constrained('unit_of_measures')->restrictOnDelete();
+            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
+            
+            // Pricing & Costs (Consolidated)
+            $table->decimal('purchase_cost', 14, 2)->default(0);
+            $table->decimal('wholesale_price', 14, 2)->default(0);
+            $table->decimal('retail_price', 14, 2)->default(0);
+            $table->decimal('distributor_price', 14, 2)->default(0);
+            
+            // Inventory Rules
+            $table->decimal('minimum_stock', 14, 2)->default(0);
+            $table->boolean('is_active')->default(true);
+            
+            // Presentation (Consolidated)
+            $table->string('presentation_type')->nullable(); // Bolsa, Saco, Granel
+            $table->decimal('presentation_quantity', 14, 2)->nullable();
+            
             $table->timestamps();
+            $table->softDeletes(); // Consolidated
 
+            // Optimization Indices
             $table->index(['type', 'is_active']);
             $table->index('unit_of_measure_id');
         });

@@ -4,32 +4,30 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('order_returns', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dispatch_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('driver_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('truck_id')->constrained()->cascadeOnDelete();
-            $table->decimal('quantity', 12, 4);
+            $table->string('return_number')->unique();
+            $table->foreignId('order_id')->constrained()->restrictOnDelete();
+            $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
+            
+            $table->decimal('quantity', 14, 3);
             $table->string('reason');
-            $table->string('status')->default('pending'); // pending, returned_to_warehouse, reassigned
-            $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('status')->default('pending'); // pending, processed, rejected
+            
             $table->text('notes')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['order_id', 'product_id', 'status']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('order_returns');
