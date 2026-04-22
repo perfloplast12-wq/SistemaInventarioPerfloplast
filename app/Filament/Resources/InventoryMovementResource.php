@@ -220,7 +220,7 @@ class InventoryMovementResource extends Resource
 
                             // ─── DESTINO ──────────────
                             Forms\Components\Select::make('to_warehouse_id')
-                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '📍 Seleccione Bodega a Corregir' : '🎯 Bodega de Destino')
+                                ->label(fn($get) => $get('type') === 'adjust' ? '📍 Seleccione Bodega a Corregir' : '🎯 Bodega de Destino')
                                 ->options(Warehouse::query()->where('is_active', true)->pluck('name', 'id'))
                                 ->searchable()
                                 ->visible(fn(Get $get) => 
@@ -238,7 +238,7 @@ class InventoryMovementResource extends Resource
                                 ->columnSpan(1),
 
                             Forms\Components\Select::make('to_truck_id')
-                                ->label(fn(Get $get) => $get('type') === 'adjust' ? '🚚 Seleccione Camión a Corregir' : '🎯 Camión de Destino')
+                                ->label(fn($get) => $get('type') === 'adjust' ? '🚚 Seleccione Camión a Corregir' : '🎯 Camión de Destino')
                                 ->options(Truck::query()->where('is_active', true)->pluck('name', 'id'))
                                 ->searchable()
                                 ->visible(fn(Get $get) => 

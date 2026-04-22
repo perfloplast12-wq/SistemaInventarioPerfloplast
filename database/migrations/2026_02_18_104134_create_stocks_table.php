@@ -15,6 +15,11 @@ return new class extends Migration {
                 ->constrained()
                 ->restrictOnDelete();
 
+            $table->foreignId('color_id')
+                ->nullable()
+                ->constrained('colors')
+                ->nullOnDelete();
+
             $table->foreignId('warehouse_id')
                 ->nullable()
                 ->constrained('warehouses')
@@ -29,12 +34,13 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            // Un producto solo puede tener 1 registro por bodega / por camión
-            $table->unique(['product_id', 'warehouse_id'], 'stocks_product_warehouse_unique');
-            $table->unique(['product_id', 'truck_id'], 'stocks_product_truck_unique');
+            // Un producto (con su color) solo puede tener 1 registro por bodega / por camión
+            $table->unique(['product_id', 'color_id', 'warehouse_id'], 'stocks_product_color_warehouse_unique');
+            $table->unique(['product_id', 'color_id', 'truck_id'], 'stocks_product_color_truck_unique');
 
             $table->index('warehouse_id', 'stocks_warehouse_idx');
             $table->index('truck_id', 'stocks_truck_idx');
+            $table->index('color_id', 'stocks_color_idx');
         });
 
         // CHECK: exactamente uno de warehouse_id o truck_id debe estar lleno
