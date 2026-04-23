@@ -4,7 +4,6 @@
         isLoaded: false,
         dispatchId: {{ $dispatchId }},
         truckMarker: null,
-        routeLine: null,
         allPoints: [],
         
         async init() {
@@ -73,36 +72,33 @@
                                 .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
 
             if (this.allPoints.length > 0) {
-                this.drawRoute(true);
+                this.drawPosition(true);
             }
         },
 
-        drawRoute(forceFocus = false) {
+        drawPosition(forceFocus = false) {
             if (!this.map || this.allPoints.length === 0) return;
 
             const lastPoint = this.allPoints[this.allPoints.length - 1];
 
+            // Icono de Camión Premium (Verde)
+            const truckIcon = L.divIcon({
+                html: `<div style='background:#10b981;padding:8px;border-radius:12px;border:2px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;'>
+                          <svg style='width:20px;height:20px;color:white;' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1' stroke-width='2.5'/>
+                          </svg>
+                       </div>`,
+                className: '',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
             if (this.truckMarker) this.map.removeLayer(this.truckMarker);
             
-            // Marcador simple pero efectivo (Círculo esmeralda con borde blanco)
-            this.truckMarker = L.circleMarker(lastPoint, {
-                radius: 10,
-                fillColor: '#10b981',
-                color: '#ffffff',
-                weight: 3,
-                opacity: 1,
-                fillOpacity: 1
-            }).addTo(this.map);
-
-            if (this.routeLine) this.map.removeLayer(this.routeLine);
-            this.routeLine = L.polyline(this.allPoints, {
-                color: '#3b82f6',
-                weight: 5,
-                opacity: 0.5
-            }).addTo(this.map);
+            this.truckMarker = L.marker(lastPoint, { icon: truckIcon }).addTo(this.map);
 
             if (forceFocus) {
-                this.map.setView(lastPoint, 16); 
+                this.map.setView(lastPoint, 17); 
             } else {
                 this.map.panTo(lastPoint);
             }
@@ -116,7 +112,7 @@
                     const lng = parseFloat(data.lng);
                     if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) {
                         this.allPoints.push([lat, lng]);
-                        this.drawRoute();
+                        this.drawPosition();
                     }
                 });
         }
