@@ -19,11 +19,5 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function ($response, $e) {
-            if ($response->getStatusCode() === 419) {
-                return redirect()->route('filament.admin.auth.login')
-                    ->with('error', 'Tu sesión ha expirado por seguridad. Por favor, ingresa de nuevo.');
-            }
-            return $response;
-        });
+        //
     })->create();

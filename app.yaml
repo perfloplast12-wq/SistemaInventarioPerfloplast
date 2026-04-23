@@ -27,7 +27,7 @@ services:
         value: mysql
       - key: SESSION_DRIVER
         scope: RUN_TIME
-        value: cookie
+        value: file
       - key: APP_URL
         scope: RUN_AND_BUILD_TIME
         value: https://perfloplast-app-6t3dz.ondigitalocean.app
