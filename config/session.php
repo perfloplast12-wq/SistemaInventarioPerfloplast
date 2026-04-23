@@ -34,7 +34,7 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
-    'expire_on_close' => true,
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -127,7 +127,10 @@ return [
     |
     */
 
-    'cookie' => 'perfloplast_session_v2',
+    'cookie' => env(
+        'SESSION_COOKIE',
+        Str::slug((string) env('APP_NAME', 'perfloplast')).'_session'
+    ),
 
     /*
     |--------------------------------------------------------------------------
