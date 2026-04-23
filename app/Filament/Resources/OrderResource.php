@@ -46,7 +46,7 @@ class OrderResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Información del Cliente')
-                    ->columns(2)
+                    ->columns(['default' => 1, 'sm' => 2])
                     ->schema([
                         Forms\Components\TextInput::make('order_number')
                             ->label('Nro. Pedido')
@@ -76,7 +76,7 @@ class OrderResource extends Resource
                     ]),
 
                 Forms\Components\Section::make('Pago y Estado')
-                    ->columns(2)
+                    ->columns(['default' => 1, 'sm' => 2])
                     ->schema([
                         Forms\Components\Select::make('payment_method')
                             ->label('Método de Pago')
@@ -106,6 +106,7 @@ class OrderResource extends Resource
                     ->schema([
                         Forms\Components\Repeater::make('items')
                             ->relationship()
+                            ->columns(['default' => 1, 'sm' => 2, 'md' => 4])
                             ->schema([
                                 Forms\Components\Select::make('product_id')
                                     ->label('Producto')
