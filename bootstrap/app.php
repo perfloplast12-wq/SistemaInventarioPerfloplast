@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->validateCsrfTokens(except: [
             '/api/tracking',
+            'admin/login',
+            'admin/logout',
+            'livewire/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
