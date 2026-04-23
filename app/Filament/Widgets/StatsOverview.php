@@ -19,7 +19,7 @@ class StatsOverview extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 2;
+        return 3;
     }
 
     protected static ?int $sort = -2;

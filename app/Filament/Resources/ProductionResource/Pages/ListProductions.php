@@ -33,6 +33,6 @@ class ListProductions extends ListRecords
 
     public function getHeaderWidgetsColumns(): int | array
     {
-        return 2;
+        return 3;
     }
 }

@@ -15,7 +15,7 @@ class SalesOverview extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 2;
+        return 3;
     }
 
     protected function getStats(): array
