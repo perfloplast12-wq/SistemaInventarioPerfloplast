@@ -9,11 +9,12 @@ use Carbon\Carbon;
 
 class DispatchesOverview extends BaseWidget
 {
+    protected static bool $isLazy = true;
     protected static ?string $pollingInterval = '30s';
 
     protected function getColumns(): int
     {
-        return 3;
+        return 2;
     }
 
     protected function getStats(): array

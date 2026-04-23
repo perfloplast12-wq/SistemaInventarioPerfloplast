@@ -14,11 +14,12 @@ use Carbon\Carbon;
 
 class StatsOverview extends BaseWidget
 {
+    protected static bool $isLazy = true;
     protected static ?string $pollingInterval = '30s';
 
     protected function getColumns(): int
     {
-        return 3;
+        return 2;
     }
 
     protected static ?int $sort = -2;
