@@ -7,7 +7,6 @@
     lastUpdate: null,
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
-    permissionError: false,
     
     init() {
         if (this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
@@ -21,39 +20,33 @@
     
     requestPermission() {
         if (!navigator.geolocation) return;
-        
         navigator.geolocation.getCurrentPosition(
             (pos) => { 
                 this.handleNewPosition(pos); 
-                this.showLock = false;
-                this.permissionError = false;
-                window.location.reload(); // Un solo reload para limpiar todo al dar permiso
+                this.showLock = false; 
             },
-            (err) => { 
-                if (err.code === 1) { 
-                    this.showLock = true; 
-                    this.permissionError = true;
-                } 
-            },
-            { enableHighAccuracy: true, timeout: 5000 }
+            (err) => { if (err.code === 1) this.showLock = true; },
+            { enableHighAccuracy: true }
         );
     },
     
     startTracking() {
         if (this.watchId) return;
+        
         this.watchId = navigator.geolocation.watchPosition(
             (pos) => { 
                 this.handleNewPosition(pos); 
                 this.showLock = false; 
-                this.permissionError = false;
             },
-            (err) => { if (err.code === 1) this.showLock = true; },
+            (err) => { 
+                if (err.code === 1) this.showLock = true; 
+            },
             { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
         );
 
-        // Intento inicial
+        // Intento silencioso para ocultar el bloqueo si ya hay permiso
         navigator.geolocation.getCurrentPosition(
-            (pos) => { this.handleNewPosition(pos); this.showLock = false; },
+            (pos) => { this.showLock = false; },
             (err) => { if (err.code === 1) this.showLock = true; }
         );
     },
@@ -98,7 +91,7 @@
 }" 
 :class="isConductor ? '' : 'p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm'">
     
-    {{-- CONTENIDO PARA ADMIN --}}
+    {{-- VISTA ADMIN --}}
     <div x-show="!isConductor">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -114,7 +107,7 @@
         </div>
     </div>
     
-    {{-- BLOQUEO TOTAL PARA CONDUCTOR --}}
+    {{-- BLOQUEO TOTAL SIN RECARGAS --}}
     <template x-if="isConductor && showLock">
         <div 
             class="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-black"
@@ -136,21 +129,12 @@
                     Para continuar, es obligatorio habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
                 </p>
                 
-                {{-- Botón de Acción --}}
                 <button 
                     @click="requestPermission()" 
                     class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]"
                 >
                     Habilitar y Continuar
                 </button>
-
-                {{-- Instrucción si ya está bloqueado --}}
-                <div x-show="permissionError" class="mt-10 p-6 bg-white/5 rounded-3xl border border-white/10">
-                    <p class="text-amber-400 text-xs font-black uppercase mb-4 tracking-widest">Acceso bloqueado en el navegador</p>
-                    <p class="text-white/50 text-[11px] leading-relaxed">
-                        Toque el icono del <span class="text-white font-bold text-lg">candado 🔒</span> o los <span class="text-white font-bold text-lg">tres puntos ⋮</span> en la barra superior de su navegador, seleccione <span class="text-white font-bold text-lg">'Permisos'</span> y active la <span class="text-white font-bold text-lg">'Ubicación'</span>.
-                    </p>
-                </div>
             </div>
         </div>
     </template>

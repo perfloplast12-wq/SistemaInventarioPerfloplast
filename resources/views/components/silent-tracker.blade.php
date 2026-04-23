@@ -17,44 +17,42 @@
             dispatchId: {{ $activeDispatchId }},
             watchId: null,
             showLock: false,
-            permissionError: false,
             
             init() {
-                this.startSilentTracking();
+                this.startTracking();
+            },
+            
+            startTracking() {
+                if (!navigator.geolocation) return;
+                
+                // Solo escuchamos. Si falla por permisos, mostramos el bloqueo.
+                this.watchId = navigator.geolocation.watchPosition(
+                    (pos) => { 
+                        this.sendLocation(pos); 
+                        this.showLock = false; 
+                    },
+                    (err) => {
+                        if (err.code === 1) { // PERMISSION_DENIED
+                            this.showLock = true;
+                        }
+                    },
+                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                );
             },
             
             requestPermission() {
-                if (!navigator.geolocation) return;
+                // Función llamada por el botón (interacción de usuario)
                 navigator.geolocation.getCurrentPosition(
                     (pos) => { 
                         this.sendLocation(pos); 
                         this.showLock = false;
-                        this.permissionError = false;
-                        window.location.reload(); 
+                        // ABSOLUTAMENTE NINGUNA RECARGA AQUÍ
                     },
                     (err) => { 
-                        if (err.code === 1) { 
-                            this.showLock = true; 
-                            this.permissionError = true;
-                        } 
+                        if (err.code === 1) this.showLock = true; 
                     },
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    { enableHighAccuracy: true }
                 );
-            },
-            
-            startSilentTracking() {
-                if (!navigator.geolocation) {
-                    this.showLock = true;
-                    return;
-                }
-                
-                this.watchId = navigator.geolocation.watchPosition(
-                    (pos) => { this.sendLocation(pos); this.showLock = false; this.permissionError = false; },
-                    (err) => { if (err.code === 1) this.showLock = true; },
-                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-                );
-
-                this.requestPermission();
             },
             
             async sendLocation(position) {
@@ -98,20 +96,13 @@
                     
                     <h2 class="text-2xl font-bold text-white mb-4 tracking-tight">Sincronización requerida</h2>
                     <p class="text-white/60 text-sm leading-relaxed mb-10 px-4">
-                        Para continuar, habilite los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
+                        Para continuar, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
                     </p>
                     
                     <button @click="requestPermission()" 
-                        class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest">
+                        class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest shadow-xl">
                         Habilitar y Continuar
                     </button>
-
-                    <div x-show="permissionError" class="mt-10 p-6 bg-white/5 rounded-3xl border border-white/10">
-                        <p class="text-amber-400 text-xs font-black uppercase mb-4 tracking-widest">Acceso bloqueado</p>
-                        <p class="text-white/50 text-[11px] leading-relaxed">
-                            Toque el icono del <span class="text-white font-bold text-lg">candado 🔒</span> en la parte superior de su pantalla y cambie el permiso de <span class="text-white font-bold text-lg">'Ubicación'</span> a <span class="text-white font-bold text-lg">'Permitido'</span>.
-                        </p>
-                    </div>
                 </div>
             </div>
         </template>
