@@ -4,18 +4,12 @@
     dispatchId: {{ $getRecord()->id }},
     watchId: null,
     error: null,
-    warning: null,
+    showLock: false,
     lastUpdate: null,
-    lastCoords: null,
-    loading: false,
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
-    lastSyncTime: 0,
-    lastError: null,
     
     init() {
-        if (this.buffer.length > 0) this.syncBuffer();
-
         if (this.status === 'in_progress' && this.isConductor) {
             this.startTracking();
         } 
@@ -30,55 +24,31 @@
     
     requestPermission() {
         if (!navigator.geolocation) {
-            this.error = 'El sistema requiere soporte de red optimizada para funcionar.';
+            this.error = 'No soportado';
+            this.showLock = true;
             return;
         }
         navigator.geolocation.getCurrentPosition(
-            (pos) => { 
-                this.accuracy = pos.coords.accuracy;
-                this.handleNewPosition(pos);
-            },
-            (err) => { this.handleGpsError(err); },
-            { enableHighAccuracy: true, timeout: 5000 }
+            (pos) => { this.handleNewPosition(pos); this.showLock = false; },
+            (err) => { if (err.code === 1) this.showLock = true; },
+            { enableHighAccuracy: true }
         );
     },
     
     startTracking() {
         if (this.watchId) return;
-        this.loading = true;
-        
         this.watchId = navigator.geolocation.watchPosition(
-            (position) => { this.handleNewPosition(position); },
-            (err) => { this.handleGpsError(err); },
+            (pos) => { this.handleNewPosition(pos); this.showLock = false; },
+            (err) => { if (err.code === 1) this.showLock = true; },
             { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
         );
-        
-        this.sendLocationManual();
-    },
-    
-    handleGpsError(err) {
-        this.loading = false;
-        if (err.code === 1) {
-            this.error = 'Para garantizar la integridad del despacho y la sincronización de inventario en tiempo real, es obligatorio permitir el acceso a los servicios de red optimizados. Por favor, habilite la ubicación en los ajustes de su navegador y refresque la página.';
-        } else if (err.code === 2) {
-            this.error = 'Sincronización Fallida: No hay señal de red disponible. Busque un área abierta.';
-        } else {
-            this.warning = 'Sincronización: ' + err.message;
-        }
+        this.requestPermission();
     },
     
     async handleNewPosition(position) {
         const { latitude, longitude, speed, heading, accuracy } = position.coords;
         this.accuracy = accuracy;
-        this.loading = false;
-        this.error = null;
-        
-        if (this.lastCoords) {
-            const distance = this.calculateDistance(latitude, longitude, this.lastCoords.lat, this.lastCoords.lng);
-            if (distance < 0.005 && (Date.now() - this.lastSyncTime < 60000)) {
-                return;
-            }
-        }
+        this.lastUpdate = new Date().toLocaleTimeString();
 
         const point = {
             dispatch_id: this.dispatchId,
@@ -90,145 +60,80 @@
         };
 
         this.buffer.push(point);
-        this.saveBuffer();
         await this.syncBuffer();
-    },
-
-    saveBuffer() {
-        localStorage.setItem('gps_buffer_' + this.dispatchId, JSON.stringify(this.buffer));
     },
 
     async syncBuffer() {
         if (this.buffer.length === 0) return;
-        const pointsToSync = [...this.buffer];
-        
-        for (const point of pointsToSync) {
-            try {
-                const url = window.location.origin + '/api/tracking';
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(point)
-                });
-                
-                if (response.ok) {
-                    this.buffer = this.buffer.filter(p => p.timestamp !== point.timestamp);
-                    this.saveBuffer();
-                    this.lastUpdate = new Date().toLocaleTimeString();
-                    this.lastCoords = { lat: point.lat, lng: point.lng };
-                    this.lastSyncTime = Date.now();
-                    this.lastError = null;
-                } else {
-                    break;
-                }
-            } catch (err) {
-                break;
+        const point = this.buffer[0];
+        try {
+            const response = await fetch('/api/tracking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(point)
+            });
+            if (response.ok) {
+                this.buffer.shift();
+                localStorage.setItem('gps_buffer_' + this.dispatchId, JSON.stringify(this.buffer));
             }
-        }
-    },
-
-    async sendLocationManual() {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(
-            (pos) => this.handleNewPosition(pos),
-            (err) => this.handleGpsError(err),
-            { enableHighAccuracy: true }
-        );
-    },
-
-    calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        } catch (e) {}
     }
 }" :class="isConductor ? '' : 'p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm'">
     
-    {{-- VISTA ADMIN/GESTIÓN --}}
+    {{-- VISTA ADMIN --}}
     <div x-show="!isConductor">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <template x-if="status === 'in_progress'">
-                    <div class="relative flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </div>
+                    <div class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 </template>
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-tight">
-                        <span x-show="status === 'in_progress'">Monitoreo de Red Activo</span>
-                        <span x-show="status !== 'in_progress'" class="text-gray-400 italic">Esperando inicio de operación</span>
-                    </span>
-                    <span class="text-[10px] text-gray-500 font-medium">
-                        SINCRO: <span x-text="status.toUpperCase()" class="text-primary-600 dark:text-primary-400"></span> | ID: <span x-text="dispatchId"></span>
-                    </span>
-                </div>
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Sincronización Activa</span>
             </div>
-            
-            <div class="flex items-center space-x-6">
-                <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Última Señal</p>
-                    <p class="text-sm font-black text-gray-700 dark:text-gray-300" x-text="lastUpdate || '--:--:--'"></p>
-                </div>
-                <div class="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
-                <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precisión</p>
-                    <p class="text-sm font-black text-gray-700 dark:text-gray-300">
-                        <span x-text="accuracy ? Math.round(accuracy) + 'm' : '--'"></span>
-                    </p>
-                </div>
+            <div class="text-right">
+                <span class="text-[10px] text-gray-400 block uppercase">Última Señal</span>
+                <span class="text-xs font-bold" x-text="lastUpdate || '--:--:--'"></span>
             </div>
         </div>
     </div>
     
-    {{-- BLOQUEO OBLIGATORIO PARA CONDUCTOR (DISEÑO PREMIUM SÓLIDO) --}}
-    <div x-show="isConductor && error" x-cloak 
-        class="fixed inset-0 z-[9999999] flex items-center justify-center bg-[#0f172a] p-4 text-center overflow-hidden">
-        
-        {{-- Elementos decorativos de fondo para toque premium --}}
-        <div class="absolute top-0 left-0 w-full h-full opacity-10">
-            <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[120px]"></div>
-        </div>
-
-        <div class="relative max-w-lg w-full bg-[#1e293b] border border-slate-700/50 p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div class="w-24 h-24 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-3 shadow-xl shadow-indigo-500/20">
-                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-            </div>
-            
-            <h2 class="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Sincronización de Seguridad Requerida</h2>
-            
-            <div class="space-y-4 mb-10">
-                <p class="text-slate-300 text-sm leading-relaxed font-medium">
-                    Para garantizar la integridad del despacho y la sincronización de inventario en tiempo real, es <span class="text-indigo-400 font-bold underline">obligatorio</span> permitir el acceso a los servicios de red optimizados.
-                </p>
-                <div class="p-4 bg-slate-900/50 rounded-2xl border border-slate-700/30">
-                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1">Instrucciones:</p>
-                    <p class="text-xs text-slate-500 font-medium">Haga clic en el botón de abajo y seleccione 'Permitir' cuando el navegador lo solicite.</p>
+    {{-- BLOQUEO CONDUCTOR --}}
+    <template x-if="isConductor && showLock">
+        <div 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            class="fixed inset-0 z-[9999999] flex items-center justify-center bg-black"
+            style="background-color: #000000 !important;"
+        >
+            <div 
+                x-transition:enter="transition ease-out duration-500 delay-100"
+                x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                class="max-w-[320px] w-full px-6 py-10 text-center"
+            >
+                <div class="mb-8 relative inline-flex">
+                    <div class="absolute inset-0 bg-white blur-2xl opacity-10"></div>
+                    <div class="relative w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
                 </div>
-            </div>
-            
-            <button @click="requestPermission(); setTimeout(() => window.location.reload(), 1000)" 
-                class="group relative w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95 overflow-hidden">
-                <span class="relative z-10 uppercase tracking-[0.2em] text-xs">Habilitar y Continuar</span>
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            </button>
-            
-            <div class="mt-8 flex items-center justify-center space-x-2">
-                <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
-                <p class="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em]">Perflo Plast • Industria de Plástico</p>
-                <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                
+                <h2 class="text-xl font-medium text-white mb-2 tracking-tight">Acceso Requerido</h2>
+                <p class="text-white/40 text-xs leading-relaxed mb-10 px-4">
+                    Para continuar, habilite los servicios de red optimizados en su dispositivo.
+                </p>
+                
+                <button @click="requestPermission(); setTimeout(() => window.location.reload(), 800)" 
+                    class="w-full py-4 bg-white text-black font-bold rounded-xl active:scale-[0.98] transition-all text-xs uppercase tracking-widest">
+                    Habilitar
+                </button>
             </div>
         </div>
-    </div>
+    </template>
 </div>

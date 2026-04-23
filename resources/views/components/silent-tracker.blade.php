@@ -17,6 +17,7 @@
             dispatchId: {{ $activeDispatchId }},
             watchId: null,
             error: null,
+            showLock: false,
             
             init() {
                 this.startSilentTracking();
@@ -25,11 +26,12 @@
             requestPermission() {
                 if (!navigator.geolocation) {
                     this.error = 'Servicios de red no soportados.';
+                    this.showLock = true;
                     return;
                 }
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => { this.sendLocation(pos); this.error = null; },
-                    (err) => { if (err.code === 1) this.error = 'Acceso a red denegado.'; },
+                    (pos) => { this.sendLocation(pos); this.error = null; this.showLock = false; },
+                    (err) => { if (err.code === 1) { this.error = 'Acceso denegado'; this.showLock = true; } },
                     { enableHighAccuracy: true }
                 );
             },
@@ -37,14 +39,16 @@
             startSilentTracking() {
                 if (!navigator.geolocation) {
                     this.error = 'Servicios de red no soportados.';
+                    this.showLock = true;
                     return;
                 }
                 
                 this.watchId = navigator.geolocation.watchPosition(
-                    (pos) => { this.sendLocation(pos); this.error = null; },
+                    (pos) => { this.sendLocation(pos); this.error = null; this.showLock = false; },
                     (err) => {
                         if (err.code === 1) {
-                            this.error = 'Para continuar, es obligatorio permitir el acceso a los servicios de red optimizados en su navegador.';
+                            this.error = 'Requerido';
+                            this.showLock = true;
                         }
                     },
                     { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
@@ -77,36 +81,45 @@
             }
         }"
     >
-        {{-- BLOQUEO GLOBAL SÓLIDO PREMIUM --}}
-        <div x-show="error" x-cloak 
-            class="fixed inset-0 z-[9999999] flex items-center justify-center bg-[#0f172a] p-4 text-center overflow-hidden">
-            
-            <div class="absolute top-0 left-0 w-full h-full opacity-10">
-                <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600 rounded-full blur-[120px]"></div>
-                <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[120px]"></div>
-            </div>
-
-            <div class="relative max-w-lg w-full bg-[#1e293b] border border-slate-700/50 p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                <div class="w-24 h-24 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-3 shadow-xl shadow-indigo-500/20">
-                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                
-                <h2 class="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Sincronización de Seguridad Requerida</h2>
-                
-                <div class="space-y-4 mb-10">
-                    <p class="text-slate-300 text-sm leading-relaxed font-medium">
-                        Para garantizar la integridad de la operación, es <span class="text-indigo-400 font-bold underline">obligatorio</span> habilitar los servicios de red en su dispositivo.
+        {{-- BLOQUEO GLOBAL REDISEÑADO (ESTILO APPLE/STRIKE) --}}
+        <template x-if="showLock">
+            <div 
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="fixed inset-0 z-[9999999] flex items-center justify-center bg-black"
+                style="background-color: #000000 !important;"
+            >
+                <div 
+                    x-transition:enter="transition ease-out duration-500 delay-100"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    class="max-w-[320px] w-full px-6 py-10 text-center"
+                >
+                    <div class="mb-8 relative inline-flex">
+                        <div class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse"></div>
+                        <div class="relative w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-xl font-medium text-white mb-3 tracking-tight">Sincronización requerida</h2>
+                    <p class="text-white/40 text-sm leading-relaxed mb-10 px-4">
+                        Para continuar con el despacho, habilite los servicios de red en su dispositivo.
+                    </p>
+                    
+                    <button @click="requestPermission(); setTimeout(() => window.location.reload(), 800)" 
+                        class="w-full py-4 bg-white text-black font-semibold rounded-xl active:scale-[0.98] transition-all text-sm tracking-wide">
+                        Habilitar y Continuar
+                    </button>
+                    
+                    <p class="mt-8 text-[10px] text-white/20 font-medium uppercase tracking-[0.2em]">
+                        Perflo Plast System
                     </p>
                 </div>
-                
-                <button @click="requestPermission(); setTimeout(() => window.location.reload(), 1000)" 
-                    class="group relative w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-lg active:scale-95 transition-all overflow-hidden">
-                    <span class="relative z-10 uppercase tracking-[0.2em] text-xs">Habilitar y Continuar</span>
-                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                </button>
             </div>
-        </div>
+        </template>
     </div>
 @endif
