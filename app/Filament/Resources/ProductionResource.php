@@ -331,7 +331,7 @@ class ProductionResource extends Resource
                         );
                     }),
             ])
-            ->poll('5s')
+            ->poll('15s')
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

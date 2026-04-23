@@ -10,19 +10,23 @@ use Carbon\Carbon;
 
 class SalesOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '30s';
+
+    protected function getColumns(): int
+    {
+        return 3;
+    }
+
     protected function getStats(): array
     {
         $today = Carbon::today();
         $thisMonth = Carbon::now()->startOfMonth();
 
-        // Ventas del día
         $salesToday = Sale::where('status', 'confirmed')->whereDate('sale_date', $today)->sum('total');
         
-        // Ingresos del mes
         $salesMonth = Sale::where('status', 'confirmed')->where('sale_date', '>=', $thisMonth)->sum('total');
         $paidMonth = SalePayment::whereHas('sale', fn($q) => $q->where('status', 'confirmed')->where('sale_date', '>=', $thisMonth))->sum('amount');
         
-        // Cuentas por Cobrar (Global)
         $totalSalesGlobal = Sale::where('status', 'confirmed')->sum('total');
         $totalPaidGlobal = SalePayment::whereHas('sale', fn($q) => $q->where('status', 'confirmed'))->sum('amount');
         $pendingTotal = $totalSalesGlobal - $totalPaidGlobal;

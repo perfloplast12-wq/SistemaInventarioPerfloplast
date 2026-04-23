@@ -9,15 +9,19 @@ use Carbon\Carbon;
 
 class DispatchesOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '30s';
+
+    protected function getColumns(): int
+    {
+        return 3;
+    }
+
     protected function getStats(): array
     {
         $today = Carbon::today();
         $thisMonth = Carbon::now()->startOfMonth();
 
-        // Despachos de hoy
         $dispatchesToday = Dispatch::whereDate('dispatch_date', $today)->count();
-        
-        // Despachos completados vs pendientes en el mes
         $completedMonth = Dispatch::where('status', 'delivered')->where('dispatch_date', '>=', $thisMonth)->count();
         $pendingNow = Dispatch::whereIn('status', ['pending', 'in_transit'])->count();
 
