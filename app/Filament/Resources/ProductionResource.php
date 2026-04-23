@@ -142,7 +142,6 @@ class ProductionResource extends Resource
                                     ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->live(onBlur: true),
                             ]),
-                    ]),
 
                         Forms\Components\Placeholder::make('status_display')
                             ->label('Estado Actual')
