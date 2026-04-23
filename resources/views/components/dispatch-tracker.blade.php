@@ -3,18 +3,14 @@
     status: '{{ $getState() }}',
     dispatchId: {{ $getRecord()->id }},
     watchId: null,
-    error: null,
     showLock: false,
     lastUpdate: null,
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
     
     init() {
-        if (this.status === 'in_progress' && this.isConductor) {
+        if (this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
             this.startTracking();
-        } 
-        else if (this.status === 'pending' && this.isConductor) {
-            this.requestPermission();
         }
 
         setInterval(() => {
@@ -23,18 +19,13 @@
     },
     
     requestPermission() {
-        if (!navigator.geolocation) {
-            this.showLock = true;
-            return;
-        }
+        if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
             (pos) => { 
                 this.handleNewPosition(pos); 
                 this.showLock = false; 
-                this.error = null;
-                window.location.reload(); 
             },
-            (err) => { if (err.code === 1) { this.showLock = true; this.error = 'Denegado'; } },
+            (err) => { if (err.code === 1) this.showLock = true; },
             { enableHighAccuracy: true }
         );
     },
@@ -42,11 +33,21 @@
     startTracking() {
         if (this.watchId) return;
         this.watchId = navigator.geolocation.watchPosition(
-            (pos) => { this.handleNewPosition(pos); this.showLock = false; },
-            (err) => { if (err.code === 1) { this.showLock = true; this.error = 'Denegado'; } },
+            (pos) => { 
+                this.handleNewPosition(pos); 
+                this.showLock = false; 
+            },
+            (err) => { 
+                if (err.code === 1) this.showLock = true; 
+            },
             { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
         );
-        this.requestPermission();
+
+        // Intentar un hit inicial silencioso
+        navigator.geolocation.getCurrentPosition(
+            (pos) => { this.handleNewPosition(pos); this.showLock = false; },
+            (err) => { if (err.code === 1) this.showLock = true; }
+        );
     },
     
     async handleNewPosition(position) {
@@ -95,7 +96,7 @@
                 <template x-if="status === 'in_progress'">
                     <div class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 </template>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Sincronización de Ruta Activa</span>
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Sincronización Activa</span>
             </div>
             <div class="text-right">
                 <span class="text-[10px] text-gray-400 block uppercase font-bold">Última Señal</span>
@@ -104,7 +105,7 @@
         </div>
     </div>
     
-    {{-- BLOQUEO CONDUCTOR REFINADO --}}
+    {{-- BLOQUEO CONDUCTOR --}}
     <template x-if="isConductor && showLock">
         <div 
             x-transition:enter="transition ease-out duration-300"
@@ -121,7 +122,7 @@
             >
                 <div class="mb-10 relative inline-flex">
                     <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-30 animate-pulse"></div>
-                    <div class="relative w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+                    <div class="relative w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl">
                         <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12l4.243-4.243a8 8 0 1111.314 11.314z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -131,17 +132,13 @@
                 
                 <h2 class="text-2xl font-bold text-white mb-4 tracking-tight">Sincronización requerida</h2>
                 <p class="text-white/60 text-sm leading-relaxed mb-10 px-4">
-                    Para continuar con el despacho, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
+                    Para continuar, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
                 </p>
                 
                 <button @click="requestPermission()" 
-                    class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20">
+                    class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest shadow-xl">
                     Habilitar y Continuar
                 </button>
-
-                <p x-show="error === 'Denegado'" class="mt-6 text-[11px] text-amber-400 font-medium leading-tight">
-                    Acceso bloqueado en el navegador.<br>Por favor, actívelo en los ajustes del sitio.
-                </p>
             </div>
         </div>
     </template>

@@ -16,53 +16,42 @@
         x-data="{
             dispatchId: {{ $activeDispatchId }},
             watchId: null,
-            error: null,
             showLock: false,
             
             init() {
-                this.startSilentTracking();
+                this.checkAndStart();
             },
             
-            requestPermission() {
-                if (!navigator.geolocation) {
-                    this.error = 'No soportado';
-                    this.showLock = true;
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
+            checkAndStart() {
+                if (!navigator.geolocation) return;
+                
+                // Intentar iniciar el rastreo. Si falla por falta de permiso, mostramos el bloqueo.
+                this.watchId = navigator.geolocation.watchPosition(
                     (pos) => { 
                         this.sendLocation(pos); 
-                        this.error = null; 
-                        this.showLock = false;
-                        window.location.reload(); // Recargar para limpiar el estado
+                        this.showLock = false; 
                     },
-                    (err) => { 
-                        if (err.code === 1) { 
-                            this.error = 'Denegado'; 
-                            this.showLock = true; 
-                        } 
-                    },
-                    { enableHighAccuracy: true }
-                );
-            },
-            
-            startSilentTracking() {
-                if (!navigator.geolocation) {
-                    this.showLock = true;
-                    return;
-                }
-                
-                this.watchId = navigator.geolocation.watchPosition(
-                    (pos) => { this.sendLocation(pos); this.error = null; this.showLock = false; },
                     (err) => {
-                        if (err.code === 1) {
+                        if (err.code === 1) { // PERMISSION_DENIED
                             this.showLock = true;
                         }
                     },
                     { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
                 );
-
-                this.requestPermission();
+            },
+            
+            requestPermission() {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { 
+                        this.sendLocation(pos); 
+                        this.showLock = false;
+                        // NO RECARGAR, solo ocultar el bloqueo y dejar que watchPosition tome el control
+                    },
+                    (err) => { 
+                        if (err.code === 1) this.showLock = true; 
+                    },
+                    { enableHighAccuracy: true }
+                );
             },
             
             async sendLocation(position) {
@@ -89,7 +78,7 @@
             }
         }"
     >
-        {{-- BLOQUEO GLOBAL REFINADO --}}
+        {{-- BLOQUEO GLOBAL SIN RECARGAS --}}
         <template x-if="showLock">
             <div 
                 x-transition:enter="transition ease-out duration-300"
@@ -106,7 +95,7 @@
                 >
                     <div class="mb-10 relative inline-flex">
                         <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-30 animate-pulse"></div>
-                        <div class="relative w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+                        <div class="relative w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl">
                             <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12l4.243-4.243a8 8 0 1111.314 11.314z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -116,17 +105,13 @@
                     
                     <h2 class="text-2xl font-bold text-white mb-4 tracking-tight">Sincronización requerida</h2>
                     <p class="text-white/60 text-sm leading-relaxed mb-10">
-                        Para continuar con el despacho, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
+                        Para continuar, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
                     </p>
                     
                     <button @click="requestPermission()" 
-                        class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20">
+                        class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest">
                         Habilitar y Continuar
                     </button>
-                    
-                    <p x-show="error === 'Denegado'" class="mt-6 text-[11px] text-amber-400 font-medium leading-tight">
-                        Acceso bloqueado en el navegador.<br>Por favor, actívelo en los ajustes del sitio.
-                    </p>
                 </div>
             </div>
         </template>
