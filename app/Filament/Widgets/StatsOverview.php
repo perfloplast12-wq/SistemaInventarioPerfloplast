@@ -16,13 +16,11 @@ class StatsOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = '30s';
 
-    protected function getColumns(): int | string | array
+    protected function getColumns(): int
     {
-        return [
-            'default' => 1,
-            'md' => 3,
-        ];
+        return 3;
     }
+
     protected static ?int $sort = -2;
 
     protected function getStats(): array
