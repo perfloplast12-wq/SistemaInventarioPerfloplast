@@ -21,66 +21,64 @@ class ProductionStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        return cache()->remember('production_stats_data', 30, function () {
-            $todayStart = Carbon::today();
-            $todayEnd = Carbon::today()->endOfDay();
-            $monthStart = Carbon::now()->startOfMonth();
+        $todayStart = Carbon::today();
+        $todayEnd = Carbon::today()->endOfDay();
+        $monthStart = Carbon::now()->startOfMonth();
 
-            // 1. Producido Hoy
-            $todayProduced = Production::where('status', 'confirmed')
-                ->whereBetween('production_date', [$todayStart, $todayEnd])
+        // 1. Producido Hoy
+        $todayProduced = Production::where('status', 'confirmed')
+            ->whereBetween('production_date', [$todayStart, $todayEnd])
+            ->sum('quantity');
+
+        // 2. Producciones en Borrador (Pendientes)
+        $draftCount = Production::where('status', 'draft')->count();
+
+        // 3. Eficiencia estimada del Turno Actual
+        $currentTime = now()->format('H:i:s');
+        $activeShift = Shift::where('is_active', true)
+            ->get()
+            ->filter(function($s) use ($currentTime) {
+                if ($s->start_time < $s->end_time) {
+                    return $currentTime >= $s->start_time && $currentTime <= $s->end_time;
+                }
+                return $currentTime >= $s->start_time || $currentTime <= $s->end_time;
+            })->first();
+
+        $efficiencyStat = null;
+        if ($activeShift && $activeShift->daily_goal > 0) {
+            $realToday = (float)$todayProduced;
+            $goal = (float)$activeShift->daily_goal;
+            $pct = round(($realToday / $goal) * 100);
+            
+            $efficiencyStat = Stat::make('Eficiencia (' . $activeShift->name . ')', $pct . '%')
+                ->description('Meta diaria: ' . number_format($goal, 0))
+                ->descriptionIcon($pct >= 100 ? 'heroicon-m-check-badge' : 'heroicon-m-arrow-trending-up')
+                ->color($pct >= 100 ? 'success' : ($pct >= 70 ? 'warning' : 'danger'))
+                ->chart([$pct/2, $pct/1.5, $pct]);
+        } else {
+            // Si no hay turno activo o meta, mostrar total del mes
+            $monthlyProduced = Production::where('status', 'confirmed')
+                ->whereBetween('production_date', [$monthStart, now()])
                 ->sum('quantity');
 
-            // 2. Producciones en Borrador (Pendientes)
-            $draftCount = Production::where('status', 'draft')->count();
+            $efficiencyStat = Stat::make('Producción Mensual', number_format($monthlyProduced, 2, '.', ','))
+                ->description('Acumulado de ' . Carbon::now()->translatedFormat('F'))
+                ->descriptionIcon('heroicon-m-calendar')
+                ->color('info');
+        }
 
-            // 3. Eficiencia estimada del Turno Actual
-            $currentTime = now()->format('H:i:s');
-            $activeShift = Shift::where('is_active', true)
-                ->get()
-                ->filter(function($s) use ($currentTime) {
-                    if ($s->start_time < $s->end_time) {
-                        return $currentTime >= $s->start_time && $currentTime <= $s->end_time;
-                    }
-                    return $currentTime >= $s->start_time || $currentTime <= $s->end_time;
-                })->first();
+        return [
+            Stat::make('Producido Hoy', number_format($todayProduced, 2, '.', ','))
+                ->description('Confirmadas hoy')
+                ->descriptionIcon('heroicon-m-bolt')
+                ->color('success'),
+            
+            $efficiencyStat,
 
-            $efficiencyStat = null;
-            if ($activeShift && $activeShift->daily_goal > 0) {
-                $realToday = (float)$todayProduced;
-                $goal = (float)$activeShift->daily_goal;
-                $pct = round(($realToday / $goal) * 100);
-                
-                $efficiencyStat = Stat::make('Eficiencia (' . $activeShift->name . ')', $pct . '%')
-                    ->description('Meta diaria: ' . number_format($goal, 0))
-                    ->descriptionIcon($pct >= 100 ? 'heroicon-m-check-badge' : 'heroicon-m-arrow-trending-up')
-                    ->color($pct >= 100 ? 'success' : ($pct >= 70 ? 'warning' : 'danger'))
-                    ->chart([$pct/2, $pct/1.5, $pct]);
-            } else {
-                // Si no hay turno activo o meta, mostrar total del mes
-                $monthlyProduced = Production::where('status', 'confirmed')
-                    ->whereBetween('production_date', [$monthStart, now()])
-                    ->sum('quantity');
-
-                $efficiencyStat = Stat::make('Producción Mensual', number_format($monthlyProduced, 2, '.', ','))
-                    ->description('Acumulado de ' . Carbon::now()->translatedFormat('F'))
-                    ->descriptionIcon('heroicon-m-calendar')
-                    ->color('info');
-            }
-
-            return [
-                Stat::make('Producido Hoy', number_format($todayProduced, 2, '.', ','))
-                    ->description('Confirmadas hoy')
-                    ->descriptionIcon('heroicon-m-bolt')
-                    ->color('success'),
-                
-                $efficiencyStat,
-
-                Stat::make('Pendientes', $draftCount)
-                    ->description($draftCount > 0 ? 'En borrador' : 'Todo confirmado')
-                    ->descriptionIcon('heroicon-m-clock')
-                    ->color($draftCount > 0 ? 'warning' : 'gray'),
-            ];
-        });
+            Stat::make('Pendientes', $draftCount)
+                ->description($draftCount > 0 ? 'En borrador' : 'Todo confirmado')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color($draftCount > 0 ? 'warning' : 'gray'),
+        ];
     }
 }
