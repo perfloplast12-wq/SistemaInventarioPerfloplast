@@ -76,19 +76,18 @@
         drawRoute() {
             if (!this.map || this.allPoints.length === 0) return;
 
-            if (this.routeLine) this.map.removeLayer(this.routeLine);
-            this.routeLine = L.polyline(this.allPoints, { color: '#10b981', weight: 6, opacity: 0.85 }).addTo(this.map);
+            const lastPoint = this.allPoints[this.allPoints.length - 1];
 
             const truckIconHtml = `<div style='background:#22c55e;padding:8px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 15px rgba(34,197,94,0.5);'>
                                       <svg style='width:24px;height:24px;color:#fff' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' stroke-width='2'/></svg>
                                    </div>`;
 
             if (this.truckMarker) this.map.removeLayer(this.truckMarker);
-            this.truckMarker = L.marker(this.allPoints[this.allPoints.length - 1], { 
+            this.truckMarker = L.marker(lastPoint, { 
                 icon: L.divIcon({ html: truckIconHtml, className: '', iconSize: [40, 40], iconAnchor: [20, 20] })
             }).addTo(this.map);
 
-            this.map.fitBounds(this.routeLine.getBounds(), { padding: [50, 50] });
+            this.map.setView(lastPoint, this.map.getZoom() > 12 ? this.map.getZoom() : 15);
         },
         setupEcho() {
             if (typeof window.Echo === 'undefined') return;
