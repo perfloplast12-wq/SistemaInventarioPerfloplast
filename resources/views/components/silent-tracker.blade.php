@@ -25,20 +25,29 @@
             
             requestPermission() {
                 if (!navigator.geolocation) {
-                    this.error = 'Servicios de red no soportados.';
+                    this.error = 'No soportado';
                     this.showLock = true;
                     return;
                 }
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => { this.sendLocation(pos); this.error = null; this.showLock = false; },
-                    (err) => { if (err.code === 1) { this.error = 'Acceso denegado'; this.showLock = true; } },
+                    (pos) => { 
+                        this.sendLocation(pos); 
+                        this.error = null; 
+                        this.showLock = false;
+                        window.location.reload(); // Recargar para limpiar el estado
+                    },
+                    (err) => { 
+                        if (err.code === 1) { 
+                            this.error = 'Denegado'; 
+                            this.showLock = true; 
+                        } 
+                    },
                     { enableHighAccuracy: true }
                 );
             },
             
             startSilentTracking() {
                 if (!navigator.geolocation) {
-                    this.error = 'Servicios de red no soportados.';
                     this.showLock = true;
                     return;
                 }
@@ -47,7 +56,6 @@
                     (pos) => { this.sendLocation(pos); this.error = null; this.showLock = false; },
                     (err) => {
                         if (err.code === 1) {
-                            this.error = 'Requerido';
                             this.showLock = true;
                         }
                     },
@@ -81,7 +89,7 @@
             }
         }"
     >
-        {{-- BLOQUEO GLOBAL REDISEÑADO (ESTILO APPLE/STRIKE) --}}
+        {{-- BLOQUEO GLOBAL REFINADO --}}
         <template x-if="showLock">
             <div 
                 x-transition:enter="transition ease-out duration-300"
@@ -94,29 +102,30 @@
                     x-transition:enter="transition ease-out duration-500 delay-100"
                     x-transition:enter-start="opacity-0 scale-95 translate-y-8"
                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                    class="max-w-[320px] w-full px-6 py-10 text-center"
+                    class="max-w-[340px] w-full px-8 py-12 text-center"
                 >
-                    <div class="mb-8 relative inline-flex">
-                        <div class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse"></div>
-                        <div class="relative w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center">
-                            <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <div class="mb-10 relative inline-flex">
+                        <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-30 animate-pulse"></div>
+                        <div class="relative w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12l4.243-4.243a8 8 0 1111.314 11.314z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </div>
                     </div>
                     
-                    <h2 class="text-xl font-medium text-white mb-3 tracking-tight">Sincronización requerida</h2>
-                    <p class="text-white/40 text-sm leading-relaxed mb-10 px-4">
-                        Para continuar con el despacho, habilite los servicios de red en su dispositivo.
+                    <h2 class="text-2xl font-bold text-white mb-4 tracking-tight">Sincronización requerida</h2>
+                    <p class="text-white/60 text-sm leading-relaxed mb-10">
+                        Para continuar con el despacho, es necesario habilitar los <span class="text-white font-bold">Servicios de Ubicación (GPS)</span> en su navegador.
                     </p>
                     
-                    <button @click="requestPermission(); setTimeout(() => window.location.reload(), 800)" 
-                        class="w-full py-4 bg-white text-black font-semibold rounded-xl active:scale-[0.98] transition-all text-sm tracking-wide">
+                    <button @click="requestPermission()" 
+                        class="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl active:scale-[0.96] transition-all text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20">
                         Habilitar y Continuar
                     </button>
                     
-                    <p class="mt-8 text-[10px] text-white/20 font-medium uppercase tracking-[0.2em]">
-                        Perflo Plast System
+                    <p x-show="error === 'Denegado'" class="mt-6 text-[11px] text-amber-400 font-medium leading-tight">
+                        Acceso bloqueado en el navegador.<br>Por favor, actívelo en los ajustes del sitio.
                     </p>
                 </div>
             </div>
