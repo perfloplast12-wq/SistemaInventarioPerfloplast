@@ -1,15 +1,14 @@
 <x-filament-panels::page>
     @php
         $d = $this->getReportData();
-        // Preparar datos para JS de forma segura
-        $trendLabels = $d['dailySales']->map(fn($v) => \Carbon\Carbon::parse($v->date)->format('d/m'))->values();
+        $trendLabels = $d['dailySales']->map(function($v) { return \Illuminate\Support\Carbon::parse($v->date)->format('d/m'); })->values();
         $trendSales = $d['dailySales']->pluck('total')->values();
         $trendProd = $d['dailyProduction']->pluck('total')->values();
         $profitNames = $d['profitByProduct']->pluck('name')->values();
         $profitVals = $d['profitByProduct']->pluck('profit')->values();
         $topNames = $d['topProducts']->pluck('name')->values();
         $topProfits = $d['topProducts']->pluck('profit')->values();
-        $dispLabels = $d['dailyDispatches']->map(fn($v) => \Carbon\Carbon::parse($v->date)->format('d/m'))->values();
+        $dispLabels = $d['dailyDispatches']->map(function($v) { return \Illuminate\Support\Carbon::parse($v->date)->format('d/m'); })->values();
         $dispVals = $d['dailyDispatches']->pluck('total')->values();
     @endphp
 
