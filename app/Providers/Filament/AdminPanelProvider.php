@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            ->spa() // ✅ Navegación instantánea sin recargar toda la página
+            // ->spa() // Desactivado temporalmente para evitar problemas de sesión/cache durante el desarrollo
             ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
             ->databaseNotificationsPolling('30s')
             ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
