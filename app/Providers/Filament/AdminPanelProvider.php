@@ -345,6 +345,27 @@ class AdminPanelProvider extends PanelProvider
                                 padding: 3rem !important;
                                 max-width: 28rem !important;
                             }
+
+                            /* ═══ KPIs: 2 columnas en móvil ═══ */
+                            @media (max-width: 768px) {
+                                .fi-wi-stats-overview-stats-ctn {
+                                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                                    gap: 0.5rem !important;
+                                }
+                                .fi-wi-stats-overview-stats-ctn > * {
+                                    min-width: 0 !important;
+                                }
+                                /* Textos más compactos en KPIs móvil */
+                                .fi-wi-stats-overview-stat {
+                                    padding: 0.75rem !important;
+                                }
+                                .fi-wi-stats-overview-stat-value {
+                                    font-size: 1.25rem !important;
+                                }
+                                .fi-wi-stats-overview-stat-description {
+                                    font-size: 0.65rem !important;
+                                }
+                            }
                         </style>
                     ";
 
