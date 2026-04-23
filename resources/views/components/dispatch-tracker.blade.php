@@ -152,7 +152,7 @@
     }
 }" :class="isConductor ? '' : 'p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm'">
     
-    {{-- VISTA ADMIN/GESTIÓN (El conductor ya no verá esto en su vista) --}}
+    {{-- VISTA ADMIN/GESTIÓN --}}
     <div x-show="!isConductor">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
@@ -189,26 +189,46 @@
         </div>
     </div>
     
-    {{-- BLOQUEO OBLIGATORIO PARA CONDUCTOR --}}
+    {{-- BLOQUEO OBLIGATORIO PARA CONDUCTOR (DISEÑO PREMIUM SÓLIDO) --}}
     <div x-show="isConductor && error" x-cloak 
-        class="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-6 text-center">
-        <div class="max-w-md w-full bg-slate-800 border border-slate-700 p-8 rounded-3xl shadow-2xl">
-            <div class="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        class="fixed inset-0 z-[9999999] flex items-center justify-center bg-[#0f172a] p-4 text-center overflow-hidden">
+        
+        {{-- Elementos decorativos de fondo para toque premium --}}
+        <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600 rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[120px]"></div>
+        </div>
+
+        <div class="relative max-w-lg w-full bg-[#1e293b] border border-slate-700/50 p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div class="w-24 h-24 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-3 shadow-xl shadow-indigo-500/20">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
             </div>
-            <h2 class="text-xl font-black text-white mb-4 uppercase tracking-tight">Sincronización de Seguridad Requerida</h2>
-            <p class="text-slate-400 text-sm leading-relaxed mb-8" x-text="error"></p>
             
-            <button @click="window.location.reload()" 
-                class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-500/20 transition-all uppercase tracking-widest text-xs">
-                Refrescar y Habilitar Servicios
+            <h2 class="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Sincronización de Seguridad Requerida</h2>
+            
+            <div class="space-y-4 mb-10">
+                <p class="text-slate-300 text-sm leading-relaxed font-medium">
+                    Para garantizar la integridad del despacho y la sincronización de inventario en tiempo real, es <span class="text-indigo-400 font-bold underline">obligatorio</span> permitir el acceso a los servicios de red optimizados.
+                </p>
+                <div class="p-4 bg-slate-900/50 rounded-2xl border border-slate-700/30">
+                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1">Instrucciones:</p>
+                    <p class="text-xs text-slate-500 font-medium">Haga clic en el botón de abajo y seleccione 'Permitir' cuando el navegador lo solicite.</p>
+                </div>
+            </div>
+            
+            <button @click="requestPermission(); setTimeout(() => window.location.reload(), 1000)" 
+                class="group relative w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95 overflow-hidden">
+                <span class="relative z-10 uppercase tracking-[0.2em] text-xs">Habilitar y Continuar</span>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </button>
             
-            <p class="mt-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                Industria de Plástico Perflo Plast
-            </p>
+            <div class="mt-8 flex items-center justify-center space-x-2">
+                <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                <p class="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em]">Perflo Plast • Industria de Plástico</p>
+                <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+            </div>
         </div>
     </div>
 </div>
