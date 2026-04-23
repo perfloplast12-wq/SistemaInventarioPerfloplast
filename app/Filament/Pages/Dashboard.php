@@ -45,7 +45,7 @@ class Dashboard extends Page
 
     public function mount(): void
     {
-        $this->setPeriod('this_month');
+        $this->setPeriod('this_week');
         $this->customStart = $this->filters['startDate'];
         $this->customEnd   = $this->filters['endDate'];
     }

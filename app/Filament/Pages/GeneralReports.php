@@ -21,8 +21,8 @@ class GeneralReports extends Page
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
-    protected static ?string $navigationLabel = 'Reporte Maestro (Gerencial)';
-    protected static ?string $title = 'Panel Gerencial Consolidado';
+    protected static ?string $navigationLabel = 'Reporte General';
+    protected static ?string $title = 'Panel Estratégico General';
 
     protected static ?int $navigationSort = 1;
 

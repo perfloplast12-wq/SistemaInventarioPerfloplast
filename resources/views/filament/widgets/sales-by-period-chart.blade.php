@@ -34,7 +34,7 @@
                 { opposite: true, title: { text: 'Unidades Producidas', style: { fontWeight: '800', color: '#10b981' } }, labels: { style: { colors: '#10b981', fontWeight: 'bold' }, formatter: function(v){ return Number(v).toLocaleString(); } } }
             ],
             legend: { position: 'top', horizontalAlign: 'right', fontWeight: '800', markers: { radius: 12 } },
-            grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
+            grid: { borderColor: 'rgba(148, 163, 184, 0.1)', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
             tooltip: { 
                 shared: true, intersect: false, 
                 theme: 'dark',
