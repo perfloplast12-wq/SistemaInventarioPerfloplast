@@ -25,6 +25,12 @@ services:
       - key: DB_CONNECTION
         scope: RUN_TIME
         value: mysql
+      - key: SESSION_DRIVER
+        scope: RUN_TIME
+        value: cookie
+      - key: APP_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://perfloplast-app-6t3dz.ondigitalocean.app
 
 jobs:
   - name: migrate-and-seed
