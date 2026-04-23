@@ -43,7 +43,7 @@ class ProductionResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Información Principal')
                     ->schema([
-                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2, 'md' => 3])
+                        Forms\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\TextInput::make('production_number')
                                     ->label('Nro. Producción')
@@ -103,7 +103,7 @@ class ProductionResource extends Resource
                                     }),
                             ]),
 
-                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
+                        Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('color_id')
                                     ->label('Color / Variante')
@@ -124,7 +124,7 @@ class ProductionResource extends Resource
                             ->preload()
                             ->columnSpanFull(),
                         
-                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
+                        Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('to_warehouse_id')
                                     ->label('Bodega de Destino')
@@ -218,7 +218,7 @@ class ProductionResource extends Resource
                     ->label('Producto Producido')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('color.name')
+                Tables\Columns\TextColumn::make('color.display_name')
                     ->label('Color')
                     ->sortable(),
 

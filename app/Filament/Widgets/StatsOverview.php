@@ -14,17 +14,8 @@ use Carbon\Carbon;
 
 class StatsOverview extends BaseWidget
 {
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '2s';
     protected static ?int $sort = -2;
-
-    protected function getColumns(): int | string | array
-    {
-        return [
-            'default' => 1,
-            'md' => 2,
-            'lg' => 3,
-        ];
-    }
 
     protected function getStats(): array
     {
@@ -39,9 +30,9 @@ class StatsOverview extends BaseWidget
             
         $todayOrders = Order::whereDate('order_date', Carbon::today())->count();
         
-        $activeDispatches = Dispatch::whereIn('status', ['started', 'in_transit', 'in_progress'])->count();
+        $activeDispatches = Dispatch::whereIn('status', ['started', 'in_transit'])->count();
 
-        $lowStockCount = Stock::where('quantity', '<=', 10)->count();
+        $lowStockCount = Stock::where('quantity', '<=', 10)->count(); // Umbral configurable luego
         
         $inventoryValue = DB::table('stocks')
             ->join('products', 'stocks.product_id', '=', 'products.id')
@@ -72,11 +63,11 @@ class StatsOverview extends BaseWidget
                 ->color('danger'),
                 
             Stat::make('Devoluciones', $pendingReturns)
-                ->description('Pendientes de revisar')
+                ->description('Devoluciones pendientes de revisar')
                 ->descriptionIcon('heroicon-m-arrow-u-turn-left')
                 ->color($pendingReturns > 0 ? 'danger' : 'success'),
 
-            Stat::make('Valor Inventario', 'Q ' . number_format($inventoryValue, 2))
+            Stat::make('Valor de Inventario', 'Q ' . number_format($inventoryValue, 2))
                 ->description('Costo total en almacén')
                 ->descriptionIcon('heroicon-m-presentation-chart-line')
                 ->color('gray'),

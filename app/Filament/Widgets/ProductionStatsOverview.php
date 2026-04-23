@@ -9,15 +9,7 @@ use Illuminate\Support\Carbon;
 
 class ProductionStatsOverview extends BaseWidget
 {
-    protected static ?string $pollingInterval = '30s';
-
-    protected function getColumns(): int | string | array
-    {
-        return [
-            'default' => 1,
-            'md' => 3,
-        ];
-    }
+    protected static ?string $pollingInterval = '2s';
 
     protected function getStats(): array
     {
@@ -51,7 +43,7 @@ class ProductionStatsOverview extends BaseWidget
             $pct = round(($realToday / $goal) * 100);
             
             $efficiencyStat = Stat::make('Eficiencia (' . $activeShift->name . ')', $pct . '%')
-                ->description('Meta diaria: ' . number_format($goal, 0))
+                ->description('Avance sobre meta diaria de ' . number_format($goal, 0) . ' unidades')
                 ->descriptionIcon($pct >= 100 ? 'heroicon-m-check-badge' : 'heroicon-m-arrow-trending-up')
                 ->color($pct >= 100 ? 'success' : ($pct >= 70 ? 'warning' : 'danger'))
                 ->chart([$pct/2, $pct/1.5, $pct]);
@@ -69,14 +61,14 @@ class ProductionStatsOverview extends BaseWidget
 
         return [
             Stat::make('Producido Hoy', number_format($todayProduced, 2, '.', ','))
-                ->description('Confirmadas hoy')
+                ->description('Unidades confirmadas hoy')
                 ->descriptionIcon('heroicon-m-bolt')
                 ->color('success'),
             
             $efficiencyStat,
 
-            Stat::make('Pendientes', $draftCount)
-                ->description($draftCount > 0 ? 'En borrador' : 'Todo confirmado')
+            Stat::make('Pendientes de Confirmar', $draftCount)
+                ->description($draftCount > 0 ? 'Registros en borrador' : 'Todo confirmado')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($draftCount > 0 ? 'warning' : 'gray'),
         ];
