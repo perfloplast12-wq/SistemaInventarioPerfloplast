@@ -218,7 +218,7 @@ class ProductionResource extends Resource
                     ->label('Producto Producido')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('color.display_name')
+                Tables\Columns\TextColumn::make('color.name')
                     ->label('Color')
                     ->sortable(),
 
