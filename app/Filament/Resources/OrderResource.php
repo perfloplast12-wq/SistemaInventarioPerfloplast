@@ -46,7 +46,7 @@ class OrderResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Información del Cliente')
-                    ->columns(2)
+                    ->columns(['default' => 1, 'sm' => 2])
                     ->schema([
                         Forms\Components\TextInput::make('order_number')
                             ->label('Nro. Pedido')
@@ -76,7 +76,7 @@ class OrderResource extends Resource
                     ]),
 
                 Forms\Components\Section::make('Pago y Estado')
-                    ->columns(2)
+                    ->columns(['default' => 1, 'sm' => 2])
                     ->schema([
                         Forms\Components\Select::make('payment_method')
                             ->label('Método de Pago')
@@ -148,7 +148,7 @@ class OrderResource extends Resource
                                     ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                     ->prefix('Q'),
                             ])
-                            ->columns(4)
+                            ->columns(['default' => 1, 'md' => 2, 'lg' => 4])
                             ->itemLabel(fn (array $state): ?string => 
                                 ($state['product_id'] ?? null) 
                                 ? Product::find($state['product_id'])?->name . 
@@ -248,7 +248,7 @@ class OrderResource extends Resource
                         'pedidos_' . now()->format('Y-m-d_H-i') . '.xlsx'
                     )),
             ])
-            ->poll('5s');
+            ->poll('15s');
     }
 
     public static function getRelations(): array

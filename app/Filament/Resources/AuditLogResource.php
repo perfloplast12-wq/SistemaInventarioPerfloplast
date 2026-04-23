@@ -39,54 +39,57 @@ class AuditLogResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Split::make([
-                Forms\Components\Section::make('Resumen de Actividad')
-                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
-                    ->schema([
-                        Forms\Components\Placeholder::make('summary_html')
-                            ->label('')
-                            ->content(fn ($record) => new \Illuminate\Support\HtmlString(
-                                '<div class="prose dark:prose-invert max-w-none">' . 
-                                static::humanChangesSummary($record) . 
-                                '</div>'
-                            )),
-                        
-                        Forms\Components\Textarea::make('description')
-                            ->label('Contexto / Nota')
-                            ->placeholder('Sin descripción adicional')
-                            ->disabled()
-                            ->rows(2)
-                            ->visible(fn ($record) => !empty($record->description)),
-                    ])->grow(),
+            Forms\Components\Grid::make(['default' => 1, 'md' => 12])
+                ->schema([
+                    Forms\Components\Section::make('Resumen de Actividad')
+                        ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                        ->schema([
+                            Forms\Components\Placeholder::make('summary_html')
+                                ->label('')
+                                ->content(fn ($record) => new \Illuminate\Support\HtmlString(
+                                    '<div class="prose dark:prose-invert max-w-none">' . 
+                                    static::humanChangesSummary($record) . 
+                                    '</div>'
+                                )),
+                            
+                            Forms\Components\Textarea::make('description')
+                                ->label('Contexto / Nota')
+                                ->placeholder('Sin descripción adicional')
+                                ->disabled()
+                                ->rows(2)
+                                ->visible(fn ($record) => !empty($record->description)),
+                        ])
+                        ->columnSpan(['default' => 1, 'md' => 8]),
 
-                Forms\Components\Section::make('Información del Evento')
-                    ->icon('heroicon-o-information-circle')
-                    ->schema([
-                        Forms\Components\TextInput::make('event')
-                            ->label('Acción')
-                            ->disabled()
-                            ->formatStateUsing(fn ($state) => static::humanEvent($state))
-                            ->prefixIcon('heroicon-o-bolt'),
+                    Forms\Components\Section::make('Información del Evento')
+                        ->icon('heroicon-o-information-circle')
+                        ->schema([
+                            Forms\Components\TextInput::make('event')
+                                ->label('Acción')
+                                ->disabled()
+                                ->formatStateUsing(fn ($state) => static::humanEvent($state))
+                                ->prefixIcon('heroicon-o-bolt'),
 
-                        Forms\Components\TextInput::make('module')
-                            ->label('Módulo')
-                            ->disabled()
-                            ->formatStateUsing(fn ($state) => static::humanModule($state))
-                            ->prefixIcon('heroicon-o-cube'),
+                            Forms\Components\TextInput::make('module')
+                                ->label('Módulo')
+                                ->disabled()
+                                ->formatStateUsing(fn ($state) => static::humanModule($state))
+                                ->prefixIcon('heroicon-o-cube'),
 
-                        Forms\Components\TextInput::make('user_name')
-                            ->label('Usuario Responsable')
-                            ->disabled()
-                            ->default(fn ($record) => $record->user?->name ?? 'Sistema / Automatizado')
-                            ->prefixIcon('heroicon-o-user'),
+                            Forms\Components\TextInput::make('user_name')
+                                ->label('Usuario Responsable')
+                                ->disabled()
+                                ->default(fn ($record) => $record->user?->name ?? 'Sistema / Automatizado')
+                                ->prefixIcon('heroicon-o-user'),
 
-                        Forms\Components\TextInput::make('created_at')
-                            ->label('Fecha y Hora')
-                            ->disabled()
-                            ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->format('d/m/Y H:i:s'))
-                            ->prefixIcon('heroicon-o-calendar'),
-                    ])->columnSpan(1),
-            ])->columnSpanFull(),
+                            Forms\Components\TextInput::make('created_at')
+                                ->label('Fecha y Hora')
+                                ->disabled()
+                                ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->format('d/m/Y H:i:s'))
+                                ->prefixIcon('heroicon-o-calendar'),
+                        ])
+                        ->columnSpan(['default' => 1, 'md' => 4]),
+                ]),
 
             Forms\Components\Section::make('Detalles Técnicos (Estructura JSON)')
                 ->description('Esta sección contiene la información técnica para auditoría profunda.')
