@@ -82,6 +82,12 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function colors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Color::class);
+    }
+
+
 
     /**
      * Convierte una cantidad en unidades de presentación a la unidad base (KG).

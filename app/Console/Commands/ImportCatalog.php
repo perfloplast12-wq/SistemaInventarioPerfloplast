@@ -50,8 +50,9 @@ class ImportCatalog extends Command
 
             // 2. Procesar Colores
             if (isset($pData['colors']) && is_array($pData['colors'])) {
+                $colors = $pData['colors'] ?? [];
                 $colorIds = [];
-                foreach ($pData['colors'] as $cData) {
+                foreach ($colors as $index => $cData) {
                     $color = Color::updateOrCreate(
                         ['name' => $cData['name']],
                         [
@@ -59,16 +60,17 @@ class ImportCatalog extends Command
                             'hex_code' => $cData['hex'] ?? null,
                             'brightness' => isset($cData['lumina']['brightness']) ? (int)($cData['lumina']['brightness'] * 100) : 100,
                             'contrast' => isset($cData['lumina']['contrast']) ? (int)($cData['lumina']['contrast'] * 100) : 100,
+                            'is_active' => true,
                         ]
                     );
                     $colorIds[] = $color->id;
+
+                    if ($index === 0) {
+                        $product->color_id = $color->id;
+                    }
                 }
-                // Nota: Asumiendo que existe una relación o campo color_id
-                // Si quieres múltiples colores, necesitarías una tabla pivote.
-                // Por ahora asignamos el primero si el modelo Product solo tiene color_id
-                if (!empty($colorIds)) {
-                    $product->update(['color_id' => $colorIds[0]]);
-                }
+                $product->colors()->sync($colorIds);
+                $product->save();
             }
 
             // 3. Procesar Variantes (Types)

@@ -19,10 +19,8 @@ class CatalogController extends Controller
             ->get();
 
         $formattedProducts = $products->map(function ($product) {
-            // Formatear colores
-            // Nota: Por ahora tomamos los colores globales de la tabla colors
-            // En una versión más avanzada podrías filtrar por los que realmente tiene el producto
-            $colors = Color::where('is_active', true)->get()->map(function ($color) {
+            // Formatear colores específicos del producto
+            $colors = $product->colors->map(function ($color) {
                 return [
                     'id' => $color->id,
                     'name' => $color->name,
