@@ -51,26 +51,28 @@ class ImportCatalog extends Command
             // 2. Procesar Colores
             if (isset($pData['colors']) && is_array($pData['colors'])) {
                 $colors = $pData['colors'] ?? [];
-                $colorIds = [];
-                foreach ($colors as $index => $cData) {
-                    $color = Color::updateOrCreate(
-                        ['name' => $cData['name']],
-                        [
-                            'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'])),
-                            'hex_code' => $cData['hex'] ?? null,
+                    $colorIdsWithPivot = [];
+                    foreach ($colors as $index => $cData) {
+                        $color = Color::updateOrCreate(
+                            ['name' => $cData['name']],
+                            [
+                                'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'])),
+                                'hex_code' => $cData['hex'] ?? null,
+                                'is_active' => true,
+                            ]
+                        );
+                        
+                        $colorIdsWithPivot[$color->id] = [
                             'image_url' => $cData['image'] ?? null,
                             'brightness' => isset($cData['lumina']['brightness']) ? (int)($cData['lumina']['brightness'] * 100) : 100,
                             'contrast' => isset($cData['lumina']['contrast']) ? (int)($cData['lumina']['contrast'] * 100) : 100,
-                            'is_active' => true,
-                        ]
-                    );
-                    $colorIds[] = $color->id;
+                        ];
 
-                    if ($index === 0) {
-                        $product->color_id = $color->id;
+                        if ($index === 0) {
+                            $product->color_id = $color->id;
+                        }
                     }
-                }
-                $product->colors()->sync($colorIds);
+                    $product->colors()->sync($colorIdsWithPivot);
                 $product->save();
             }
 

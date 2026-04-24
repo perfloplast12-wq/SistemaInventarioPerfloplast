@@ -25,10 +25,10 @@ class CatalogController extends Controller
                     'id' => $color->id,
                     'name' => $color->name,
                     'hex' => $color->hex_code,
-                    'imageUrl' => $color->image_url, // Este es el link a la textura/imagen real
+                    'imageUrl' => $color->pivot->image_url, // Imagen específica para este producto
                     'lumina' => [
-                        'brightness' => $color->brightness / 100,
-                        'contrast' => $color->contrast / 100,
+                        'brightness' => $color->pivot->brightness / 100,
+                        'contrast' => $color->pivot->contrast / 100,
                     ]
                 ];
             });
