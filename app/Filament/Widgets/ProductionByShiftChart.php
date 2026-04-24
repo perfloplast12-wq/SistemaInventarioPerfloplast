@@ -28,7 +28,7 @@ class ProductionByShiftChart extends Widget
     public function getChartData(): array
     {
         $filters     = $this->filters ?? [];
-        $start       = Carbon::parse($filters['startDate'] ?? now()->subMonths(2)->startOfMonth())->startOfDay();
+        $start       = Carbon::parse($filters['startDate'] ?? now()->subDays(30))->startOfDay();
         $end         = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
         $productId   = $filters['product_id']   ?? null;
 
@@ -54,8 +54,8 @@ class ProductionByShiftChart extends Widget
 
             // ── Trend data ───────────────────────────────────────────────────
             $days        = max(1, $start->diffInDays($end));
-            $format      = $days <= 31 ? '%Y-%m-%d' : '%Y-%m';
-            $labelFormat = $days <= 31 ? 'd M' : 'M Y';
+            $format      = $days <= 62 ? '%Y-%m-%d' : '%Y-%m';
+            $labelFormat = $days <= 62 ? 'd M' : 'M Y';
 
             $trendLabels = [];
             $curr = $start->copy();
