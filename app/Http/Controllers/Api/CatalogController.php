@@ -35,11 +35,10 @@ class CatalogController extends Controller
             });
 
             // Formatear variantes
-            $variants = $product->variants ?? collect();
-            $types = $variants->map(function ($variant) {
+            $types = $product->variants->map(function ($variant) {
                 return [
                     'name' => $variant->name,
-                    'price' => (string)$variant->price,
+                    'price' => number_format((float)$variant->price, 2, '.', ''),
                     'image' => $variant->image_url,
                     'maskImage' => $variant->mask_url,
                     'imageTransform' => $variant->image_transform,
@@ -51,7 +50,7 @@ class CatalogController extends Controller
             return [
                 'id' => (string)$product->id,
                 'name' => $product->name,
-                'price' => (string)$product->sale_price,
+                'price' => number_format((float)$product->sale_price, 2, '.', ''),
                 'image' => $product->image_url,
                 'maskImage' => $product->mask_url,
                 'description' => $product->catalog_description ?? $product->description,

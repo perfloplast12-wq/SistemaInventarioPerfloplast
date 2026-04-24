@@ -20,6 +20,9 @@ class Color extends Model
         'variant',
         'code',
         'is_active',
+        'hex_code',
+        'brightness',
+        'contrast',
     ];
 
     protected $casts = [

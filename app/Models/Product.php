@@ -77,6 +77,12 @@ class Product extends Model
         return $this->hasMany(ProductRecipe::class, 'finished_product_id');
     }
 
+    public function variants(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+
     /**
      * Convierte una cantidad en unidades de presentación a la unidad base (KG).
      * Ejemplo: 5 Sacos * 55 unidades/saco = 275 KG
