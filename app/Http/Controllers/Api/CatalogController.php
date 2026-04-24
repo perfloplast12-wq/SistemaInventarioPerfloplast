@@ -13,9 +13,9 @@ class CatalogController extends Controller
 {
     public function index()
     {
-        // Traer productos activos que deben mostrarse en el catálogo
-        $products = Product::where('show_in_catalog', true)
-            ->where('is_active', true)
+        $products = Product::where('is_active', true)
+            ->where('show_in_catalog', true)
+            ->with(['colors', 'variants'])
             ->get();
 
         $formattedProducts = $products->map(function ($product) {
