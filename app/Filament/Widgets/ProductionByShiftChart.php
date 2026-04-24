@@ -25,7 +25,6 @@ class ProductionByShiftChart extends Widget
         $this->mode = in_array($m, ['comparison', 'trend']) ? $m : 'comparison';
     }
 
-    /** Returns all chart data in one shot for the view */
     public function getChartData(): array
     {
         $filters     = $this->filters ?? [];
@@ -33,48 +32,61 @@ class ProductionByShiftChart extends Widget
         $end         = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
         $productId   = $filters['product_id']   ?? null;
 
-        $shifts = Shift::all();
-        $palette = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6'];
+        $cacheKey = 'prod_shift_chart_' . md5(serialize($filters) . $this->mode);
 
-        // ── Comparison data ──────────────────────────────────────────────
-        $compNames = $compValues = [];
-        foreach ($shifts as $shift) {
-            $q = Production::where('shift_id', $shift->id)->where('status', 'confirmed')
-                ->whereBetween('production_date', [$start, $end]);
-            if ($productId) $q->where('product_id', $productId);
-            $compNames[]  = $shift->name;
-            $compValues[] = (float) $q->sum('quantity');
-        }
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($start, $end, $productId) {
+            $shifts = Shift::all();
+            $palette = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6'];
 
-        // ── Trend data ───────────────────────────────────────────────────
-        $days        = max(1, $start->diffInDays($end));
-        $format      = $days <= 31 ? '%Y-%m-%d' : '%Y-%m';
-        $labelFormat = $days <= 31 ? 'd M' : 'M Y';
-
-        $trendLabels = [];
-        $curr = $start->copy();
-        while ($curr <= $end) {
-            $trendLabels[] = $curr->translatedFormat($labelFormat);
-            $curr          = $days <= 31 ? $curr->addDay() : $curr->addMonth();
-        }
-
-        $trendSeries = [];
-        foreach ($shifts as $shift) {
-            $raw = Production::where('shift_id', $shift->id)->where('status', 'confirmed')
+            // ── Comparison data (Agrupado en una sola consulta) ─────────────
+            $compData = Production::where('status', 'confirmed')
                 ->whereBetween('production_date', [$start, $end])
-                ->select(DB::raw("DATE_FORMAT(production_date, '$format') as d"), DB::raw('SUM(quantity) as q'))
-                ->groupBy('d')->pluck('q', 'd');
+                ->when($productId, fn($q) => $q->where('product_id', $productId))
+                ->select('shift_id', DB::raw('SUM(quantity) as total'))
+                ->groupBy('shift_id')
+                ->pluck('total', 'shift_id');
 
-            $values = [];
-            $cur2   = $start->copy();
-            while ($cur2 <= $end) {
-                $k        = $cur2->format($days <= 31 ? 'Y-m-d' : 'Y-m');
-                $values[] = (float)($raw[$k] ?? 0);
-                $cur2     = $days <= 31 ? $cur2->addDay() : $cur2->addMonth();
+            $compNames = $compValues = [];
+            foreach ($shifts as $shift) {
+                $compNames[]  = $shift->name;
+                $compValues[] = (float)($compData[$shift->id] ?? 0);
             }
-            $trendSeries[] = ['name' => $shift->name, 'data' => $values];
-        }
 
-        return compact('compNames', 'compValues', 'trendLabels', 'trendSeries', 'palette');
+            // ── Trend data ───────────────────────────────────────────────────
+            $days        = max(1, $start->diffInDays($end));
+            $format      = $days <= 31 ? '%Y-%m-%d' : '%Y-%m';
+            $labelFormat = $days <= 31 ? 'd M' : 'M Y';
+
+            $trendLabels = [];
+            $curr = $start->copy();
+            while ($curr <= $end) {
+                $trendLabels[] = $curr->translatedFormat($labelFormat);
+                $curr          = $days <= 31 ? $curr->addDay() : $curr->addMonth();
+            }
+
+            // Traer todos los datos del trend en una sola consulta
+            $trendRaw = Production::where('status', 'confirmed')
+                ->whereBetween('production_date', [$start, $end])
+                ->when($productId, fn($q) => $q->where('product_id', $productId))
+                ->select('shift_id', DB::raw("DATE_FORMAT(production_date, '$format') as d"), DB::raw('SUM(quantity) as q'))
+                ->groupBy('shift_id', 'd')
+                ->get()
+                ->groupBy('shift_id');
+
+            $trendSeries = [];
+            foreach ($shifts as $shift) {
+                $shiftTrend = $trendRaw->get($shift->id)?->pluck('q', 'd') ?? collect();
+                $values = [];
+                $cur2   = $start->copy();
+                while ($cur2 <= $end) {
+                    $k        = $cur2->format($days <= 31 ? 'Y-m-d' : 'Y-m');
+                    $values[] = (float)($shiftTrend[$k] ?? 0);
+                    $cur2     = $days <= 31 ? $cur2->addDay() : $cur2->addMonth();
+                }
+                $trendSeries[] = ['name' => $shift->name, 'data' => $values];
+            }
+
+            return compact('compNames', 'compValues', 'trendLabels', 'trendSeries', 'palette');
+        });
     }
 }

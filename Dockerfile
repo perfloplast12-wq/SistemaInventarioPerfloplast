@@ -44,6 +44,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         xml \
         opcache
 
+# Copy custom opcache configuration
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
 # Enable Apache modules
 RUN a2enmod rewrite
 
