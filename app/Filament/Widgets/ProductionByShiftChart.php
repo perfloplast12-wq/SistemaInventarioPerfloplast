@@ -34,7 +34,7 @@ class ProductionByShiftChart extends Widget
 
         $cacheKey = 'prod_shift_chart_' . md5(serialize($filters) . $this->mode);
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($start, $end, $productId) {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($start, $end, $productId) {
             $shifts = Shift::all();
             $palette = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6'];
 
@@ -79,9 +79,9 @@ class ProductionByShiftChart extends Widget
                 $values = [];
                 $cur2   = $start->copy();
                 while ($cur2 <= $end) {
-                    $k        = $cur2->format($days <= 31 ? 'Y-m-d' : 'Y-m');
+                    $k        = $cur2->format($days <= 62 ? 'Y-m-d' : 'Y-m');
                     $values[] = (float)($shiftTrend[$k] ?? 0);
-                    $cur2     = $days <= 31 ? $cur2->addDay() : $cur2->addMonth();
+                    $cur2     = $days <= 62 ? $cur2->addDay() : $cur2->addMonth();
                 }
                 $trendSeries[] = ['name' => $shift->name, 'data' => $values];
             }
