@@ -26,6 +26,12 @@ class Product extends Model
         'sale_price',
         'cost_price',
         'purchase_cost',
+        'catalog_description',
+        'image_url',
+        'mask_url',
+        'base_hue',
+        'image_transform',
+        'show_in_catalog',
         'presentation_sale_price',
         'minimum_stock',
     ];
@@ -37,6 +43,8 @@ class Product extends Model
         'cost_price' => 'decimal:3',
         'purchase_cost' => 'decimal:3',
         'presentation_sale_price' => 'decimal:3',
+        'image_transform' => 'array',
+        'show_in_catalog' => 'boolean',
     ];
 
     public function scopeIsActive($query)
