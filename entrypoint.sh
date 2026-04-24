@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Perfloplast..."
+echo "🚀 Starting Perfloplast with Laravel Octane (FrankenPHP)..."
 
 # Generate app key if not set
 if [ -z "$APP_KEY" ]; then
@@ -9,12 +9,15 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi
 
-# Run Laravel caching (needs env vars available at runtime)
+# Optimization (Crucial for Octane)
 echo "⚙️  Optimizing Laravel..."
-php artisan filament:optimize --ansi 2>/dev/null || true
+php artisan filament:optimize --ansi || true
 php artisan config:cache --ansi || true
 php artisan route:cache --ansi || true
 php artisan view:cache --ansi || true
 
-echo "✅ Ready! Starting Apache..."
-exec apache2-foreground
+echo "✅ Ready! Starting Octane Server on port 8080..."
+
+# Start Octane with FrankenPHP
+# We use --host=0.0.0.0 and --port=8080 to match DigitalOcean config
+exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8080 --workers=4 --max-requests=500
