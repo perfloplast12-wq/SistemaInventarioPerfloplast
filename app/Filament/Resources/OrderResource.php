@@ -249,7 +249,7 @@ class OrderResource extends Resource
                         'pedidos_' . now()->format('Y-m-d_H-i') . '.xlsx'
                     )),
             ])
-            ->poll('15s');
+            ->poll('60s');
     }
 
     public static function getRelations(): array

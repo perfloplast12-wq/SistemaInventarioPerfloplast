@@ -555,3 +555,136 @@ body,
         font-size: 18px !important;
     }
 }
+/* PREMIUM STYLES */
+body {
+    background-color: var(--bg-color) !important;
+    background-image: 
+        radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 70%) 0, transparent 60%), 
+        radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 70%) 0, transparent 60%),
+        linear-gradient(180deg, 
+            var(--bg-color) 0%, 
+            color-mix(in srgb, var(--bg-color), var(--p-1) 25%) 40%, 
+            color-mix(in srgb, var(--bg-color), var(--p-2) 80%) 100%
+        ) !important;
+    background-attachment: fixed !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.8s ease;
+    min-height: 100vh;
+    overflow-x: clip;
+}
+
+.dark body {
+    background-image: 
+        radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 60%) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 60%) 0, transparent 50%),
+        linear-gradient(180deg, 
+            #040609 0%, 
+            color-mix(in srgb, #040609, var(--p-1) 30%) 50%, 
+            color-mix(in srgb, #040609, var(--p-2) 90%) 100%
+        ) !important;
+}
+
+.fi-layout, .fi-main { background: transparent !important; }
+
+.fi-topbar {
+    height: 4rem !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    background: var(--main-gradient) !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+.fi-topbar > nav,
+.fi-topbar-content {
+    background: transparent !important;
+    height: 100% !important;
+    color: #ffffff !important;
+}
+
+.fi-header {
+    background: transparent !important;
+    margin-top: 1rem !important;
+}
+
+.fi-header-heading {
+    color: var(--text-primary) !important;
+    font-weight: 800 !important;
+}
+
+.fi-breadcrumbs {
+    color: var(--text-muted) !important;
+}
+
+.fi-sidebar-item-active, .fi-btn-color-primary {
+    background: var(--main-gradient) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 15px -1px color-mix(in srgb, var(--p-1), transparent 60%) !important;
+}
+
+.fi-card, .fi-section, .fi-sidebar {
+    border-radius: var(--border-radius) !important;
+    border: 1px solid var(--border-color) !important;
+    overflow: visible !important;
+}
+
+.fi-sidebar {
+    border-inline-end: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.fi-card, .fi-section {
+    background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
+    box-shadow: var(--premium-shadow) !important;
+}
+
+@media (min-width: 1024px) {
+    .fi-sidebar {
+        position: fixed !important;
+        width: var(--fi-sidebar-width) !important;
+    }
+    .fi-main-ctn {
+        margin-inline-start: var(--fi-sidebar-width) !important;
+        width: calc(100vw - var(--fi-sidebar-width)) !important;
+    }
+    .fi-main { width: 100% !important; padding: 2rem !important; }
+}
+
+.fi-sidebar-header {
+    background: var(--main-gradient) !important;
+    height: 4rem !important;
+    border: none !important;
+}
+
+.fi-logo {
+    height: 3rem !important;
+    width: auto !important;
+    mix-blend-mode: darken;
+}
+
+html.dark .fi-logo {
+    mix-blend-mode: screen;
+    filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
+}
+
+.fi-dropdown-panel, .tippy-box, [data-tippy-root] {
+    z-index: 99999 !important;
+}
+
+@media (max-width: 768px) {
+    .fi-wi-stats-overview-stats-ctn {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+    .fi-wi-stats-overview-stat {
+        padding: 0.75rem !important;
+    }
+    .fi-wi-stats-overview-stat-value {
+        font-size: 1.25rem !important;
+    }
+}

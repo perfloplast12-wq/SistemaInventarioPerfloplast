@@ -36,14 +36,14 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            // ->spa() // Desactivado temporalmente para evitar problemas de sesión/cache durante el desarrollo
-            ->databaseNotifications() // ✅ Centralizar notificaciones en la base de datos
-            ->databaseNotificationsPolling('30s')
-            ->maxContentWidth(null) // ✅ Forzar ancho total en todo el panel
+            ->spa() 
+            ->databaseNotifications() 
+            ->databaseNotificationsPolling('60s')
+            ->maxContentWidth(null) 
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 function () {
-                    $settings = Cache::remember('appearance_settings', 1800, function () {
+                    $settings = Cache::remember('appearance_settings', 3600, function () {
                         return Setting::whereIn('key', [
                             'primary_color_1',
                             'primary_color_2',
@@ -88,15 +88,12 @@ class AdminPanelProvider extends PanelProvider
                         default => $br,
                     };
 
-                    // Cached version to avoid disk I/O
                     $v = Cache::remember('css_version', 3600, function() {
                         try {
                             $path = public_path('css/dashboard.css');
                             return file_exists($path) ? filemtime($path) : '1.0.0';
                         } catch (\Exception $e) { return '1.0.0'; }
                     });
-
-                    $logoUrl = asset('images/logo-perfloplast-premium.png');
 
                     $styles = "
                         <style>
@@ -115,263 +112,14 @@ class AdminPanelProvider extends PanelProvider
                                 --text-muted: color-mix(in srgb, var(--text-primary), transparent 40%);
                                 --border-color: rgba(0,0,0,0.08);
                                 --main-gradient: linear-gradient(135deg, var(--p-1), var(--p-2));
-                            }
-
-                            .dark {
-                                --bg-color: #040609;
-                                --sidebar-bg: #090e16;
-                                --card-bg: #0e1420;
-                                --text-primary: #f8fafc;
-                                --border-color: rgba(255,255,255,0.04);
-                                --premium-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
-                            }
-                            
-                            body {
-                                background-color: var(--bg-color) !important;
-                                background-image: 
-                                    radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 70%) 0, transparent 60%), 
-                                    radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 70%) 0, transparent 60%),
-                                    linear-gradient(180deg, 
-                                        var(--bg-color) 0%, 
-                                        color-mix(in srgb, var(--bg-color), var(--p-1) 25%) 40%, 
-                                        color-mix(in srgb, var(--bg-color), var(--p-2) 80%) 100%
-                                    ) !important;
-                                background-attachment: fixed !important;
-                                color: var(--text-primary) !important;
-                                transition: background-color 0.8s ease;
-                                min-height: 100vh;
-                                font-family: 'Outfit', sans-serif !important;
-                                overflow-x: clip; /* Usar clip en lugar de hidden para evitar problemas con sticky/fixed */
-                            }
-
-                            .dark body {
-                                background-image: 
-                                    radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 60%) 0, transparent 50%), 
-                                    radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 60%) 0, transparent 50%),
-                                    linear-gradient(180deg, 
-                                        #040609 0%, 
-                                        color-mix(in srgb, #040609, var(--p-1) 30%) 50%, 
-                                        color-mix(in srgb, #040609, var(--p-2) 90%) 100%
-                                    ) !important;
-                            }
-                            
-                            .fi-layout, .fi-main { background: transparent !important; }
-
-                            .fi-topbar, 
-                            .fi-topbar > nav,
-                            .fi-topbar-content {
-                                background: var(--main-gradient) !important;
-                                background-color: var(--p-1) !important; /* Fallback */
-                                border-bottom: none !important;
-                                box-shadow: none !important;
-                                color: #ffffff !important;
-                            }
-
-                            .fi-topbar {
-                                height: 4rem !important;
-                                position: sticky !important;
-                                top: 0 !important;
-                                z-index: 30 !important;
-                                background: var(--main-gradient) !important;
-                                border-bottom: none !important;
-                                box-shadow: none !important;
-                            }
-                            
-                            .fi-topbar > nav,
-                            .fi-topbar-content {
-                                background: transparent !important;
-                                height: 100% !important;
-                                color: #ffffff !important;
-                            }
-                            
-                            .fi-header {
-                                background: transparent !important;
-                                margin-top: 1rem !important;
-                            }
-
-                            .fi-header-heading {
-                                color: var(--text-primary) !important;
-                            }
-                            
-                            .fi-breadcrumbs {
-                                color: var(--text-muted) !important;
-                            }
-                            
-                            .fi-sidebar-item-active, .fi-btn-color-primary {
-                                background: var(--main-gradient) !important;
-                                color: #ffffff !important;
-                                border: none !important;
-                                box-shadow: 0 4px 15px -1px color-mix(in srgb, var(--p-1), transparent 60%) !important;
-                            }
-
-                            .fi-card, .fi-section, .fi-sidebar {
-                                border-radius: var(--border-radius) !important;
-                                border: 1px solid var(--border-color) !important;
-                                overflow: visible !important; /* Esencial para que los dropdowns no se corten */
-                            }
-
-                            .fi-sidebar {
-                                border-inline-end: none !important;
-                                border-top: none !important;
-                                box-shadow: none !important;
-                            }
-
-                            ".($isGlass ? '
-                            .fi-card, .fi-section {
-                                background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
-                                /* Retirado backdrop-filter aquí para evitar bugs de superposición de menú (z-index traps) */
-                            }
-                            .fi-sidebar {
-                                background-color: transparent !important;
-                                backdrop-filter: blur(10px) !important;
-                            }
-                            ' : '
-                            .fi-sidebar { background-color: var(--sidebar-bg) !important; }
-                            .fi-card, .fi-section { background-color: var(--card-bg) !important; }
-                            ')."
-
-                            .fi-card, .fi-section { box-shadow: var(--premium-shadow) !important; }
-
-                            @media (min-width: 1024px) {
-                                .fi-sidebar {
-                                    position: fixed !important;
-                                    width: var(--fi-sidebar-width) !important;
-                                }
-                                .fi-main-ctn {
-                                    margin-inline-start: var(--fi-sidebar-width) !important;
-                                    width: calc(100vw - var(--fi-sidebar-width)) !important;
-                                }
-                                .fi-main { width: 100% !important; padding: 2rem !important; }
-                                .fi-main > div { max-width: none !important; width: 100% !important; }
-                            }
-
-                            .fi-header-heading { font-weight: 800 !important; }
-                            .fi-sidebar-group-label { font-weight: 700 !important; color: var(--p-1) !important; }
-
-                    /* Optimización para el Logo en Sidebar */
-                    .fi-sidebar-header {
-                        height: 4rem !important;
-                        min-height: 4rem !important;
-                        max-height: 4rem !important;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center !important;
-                        padding: 0 0.75rem !important; 
-                        background: var(--main-gradient) !important;
-                        border-bottom: none !important;
-                        border-inline-end: none !important;
-                        margin: 0 !important;
-                    }
-
-                    .fi-sidebar-header > div, 
-                    .fi-sidebar-header > a {
-                        width: 100%;
-                        display: flex;
-                        align-items: center;
-                    }
-
-                    .fi-sidebar-header .fi-logo-container,
-                    .fi-sidebar-header a > div {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 100%;
-                        padding: 0.25rem;
-                        border-radius: var(--border-radius, 12px);
-                        transition: all 0.2s ease;
-                    }
-
-                    .fi-logo {
-                        height: 3rem !important; /* Smaller to fit in 4rem bar */
-                        width: auto !important;
-                        max-width: 100% !important;
-                        object-fit: contain;
-                        image-rendering: auto;
-                        -webkit-font-smoothing: antialiased;
-                        -moz-osx-font-smoothing: grayscale;
-                        transform: translateZ(0);
-                    }
-
-                    /* FIX CRITICO PARA DROPDOWNS */
-                    .fi-dropdown-panel, 
-                    .tippy-box, 
-                    [data-tippy-root] {
-                        z-index: 99999 !important;
-                    }
-
-                    .fi-main-ctn {
-                        overflow: visible !important;
-                    }
-                    
-                    .fi-main {
-                        overflow: visible !important;
-                    }
-                        
-                        /* MODO CLARO: Darken elimina el fondo gris claro permitiendo que el logo se funda con el sidebar */
-                        mix-blend-mode: darken;
-                        filter: none;
-                    }
-                    
-                    /* ESTILO PARA MODO OSCURO */
-                    html.dark .fi-logo {
-                        /* Inversión total: fondo gris pasa a negro, letras claras relucen en neón */
-                        mix-blend-mode: screen;
-                        filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
-                    }
-
-
-
-
-                            .group\/logo:hover svg {
-                                filter: drop-shadow(0 0 8px var(--p-1));
-                                transform: translateY(-2px);
-                            }
-
-                            /* Refinamiento de la página de Login */
-                            .fi-simple-layout {
-                                display: flex !important;
-                                align-items: center !important;
-                                justify-content: center !important;
-                                min-height: 100vh !important;
-                            }
-
-                            .fi-simple-main {
-                                background-color: color-mix(in srgb, var(--card-bg), transparent 10%) !important;
-                                backdrop-filter: blur(24px) !important;
-                                -webkit-backdrop-filter: blur(24px) !important;
-                                border: 1px solid var(--border-color) !important;
-                                border-radius: 2rem !important;
-                                box-shadow: var(--premium-shadow) !important;
-                                padding: 3rem !important;
-                                max-width: 28rem !important;
-                            }
-
-                            /* ═══ KPIs: 2 columnas en móvil ═══ */
-                            @media (max-width: 768px) {
-                                .fi-wi-stats-overview-stats-ctn {
-                                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                                    gap: 0.5rem !important;
-                                }
-                                .fi-wi-stats-overview-stats-ctn > * {
-                                    min-width: 0 !important;
-                                }
-                                /* Textos más compactos en KPIs móvil */
-                                .fi-wi-stats-overview-stat {
-                                    padding: 0.75rem !important;
-                                }
-                                .fi-wi-stats-overview-stat-value {
-                                    font-size: 1.25rem !important;
-                                }
-                                .fi-wi-stats-overview-stat-description {
-                                    font-size: 0.65rem !important;
-                                }
+                                --is-glass: ".($isGlass ? '1' : '0').";
                             }
                         </style>
                     ";
 
                     return new HtmlString("
                         <link rel=\"manifest\" href=\"/manifest.json\">
-                        <meta name=\"theme-color\" content=\"#6366f1\">
+                        <meta name=\"theme-color\" content=\"{$p1}\">
                         <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
                         <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
                         <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
@@ -405,7 +153,7 @@ class AdminPanelProvider extends PanelProvider
             )
 
             ->colors([
-                'primary' => Color::Indigo, // ✅ Color más profesional que el Lima
+                'primary' => Color::Indigo,
                 'success' => Color::Emerald,
                 'info' => Color::Blue,
                 'warning' => Color::Amber,
@@ -434,9 +182,6 @@ class AdminPanelProvider extends PanelProvider
 
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-
-                // ✅ OBLIGATORIO para que el plugin aplique el tema y aparezca bien
-                // SetTheme::class,
             ])
 
             ->authMiddleware([
