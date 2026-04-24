@@ -23,6 +23,7 @@ class Color extends Model
         'hex_code',
         'brightness',
         'contrast',
+        'image_url',
     ];
 
     protected $casts = [

@@ -58,6 +58,7 @@ class ImportCatalog extends Command
                         [
                             'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'])),
                             'hex_code' => $cData['hex'] ?? null,
+                            'image_url' => $cData['image'] ?? null,
                             'brightness' => isset($cData['lumina']['brightness']) ? (int)($cData['lumina']['brightness'] * 100) : 100,
                             'contrast' => isset($cData['lumina']['contrast']) ? (int)($cData['lumina']['contrast'] * 100) : 100,
                             'is_active' => true,
