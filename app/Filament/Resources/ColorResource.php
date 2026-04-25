@@ -132,6 +132,12 @@ class ColorResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withCount('products');
+    }
+
     public static function getPages(): array
     {
         return [

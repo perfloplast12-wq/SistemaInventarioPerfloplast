@@ -69,15 +69,17 @@ class ImportCatalog extends Command
                     $colorIdsWithPivot = [];
                     foreach ($colors as $index => $cData) {
                         $hex = $cData['hex'] ?? null;
+                        // Encontrar o crear el color base (solo por nombre para evitar duplicados)
                         $color = Color::updateOrCreate(
-                            ['name' => $cData['name'], 'hex_code' => $hex],
+                            ['name' => $cData['name']],
                             [
-                                'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'] . '-' . ($hex ? str_replace('#', '', $hex) : ''))),
+                                'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'])),
                                 'is_active' => true,
                             ]
                         );
                         
                         $colorIdsWithPivot[$color->id] = [
+                            'hex_code' => $hex, // Guardamos el tono específico aquí
                             'image_url' => $cData['image'] ?? null,
                             'brightness' => isset($cData['lumina']['brightness']) ? (int)($cData['lumina']['brightness'] * 100) : 100,
                             'contrast' => isset($cData['lumina']['contrast']) ? (int)($cData['lumina']['contrast'] * 100) : 100,

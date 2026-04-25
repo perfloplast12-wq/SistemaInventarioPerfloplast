@@ -57,6 +57,7 @@ class FinishedProductResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('type', 'finished_product')
+            ->with(['unitOfMeasure', 'presentationUnit'])
             ->withSum('stocks as stock_total', 'quantity');
     }
 

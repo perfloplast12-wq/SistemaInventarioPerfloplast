@@ -26,7 +26,7 @@ class CatalogController extends Controller
                 return [
                     'id' => $color->id,
                     'name' => $color->name,
-                    'hex' => $color->hex_code,
+                    'hex' => $color->pivot->hex_code ?? $color->hex_code,
                     'imageUrl' => $color->pivot->image_url, // Imagen específica para este producto
                     'lumina' => [
                         'brightness' => $color->pivot->brightness / 100,

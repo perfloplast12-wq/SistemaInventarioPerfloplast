@@ -122,6 +122,7 @@ class ProductionResource extends Resource
                             ->required()
                             ->searchable()
                             ->preload()
+                            ->optionsLimit(500)
                             ->columnSpanFull(),
                         
                         Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
