@@ -54,4 +54,11 @@ class Color extends Model
     {
         return $this->hasMany(Production::class);
     }
+
+    public function products(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Product::class)
+            ->withPivot(['hex_code', 'image_url', 'brightness', 'contrast'])
+            ->withTimestamps();
+    }
 }
