@@ -43,6 +43,7 @@ class ImportCatalog extends Command
                     'mask_url' => $pData['maskImage'] ?? null,
                     'base_hue' => $pData['baseHue'] ?? 0,
                     'image_transform' => $pData['imageTransform'] ?? null,
+                    'lumina' => $pData['lumina'] ?? null,
                     'is_active' => true,
                     'show_in_catalog' => true,
                 ]

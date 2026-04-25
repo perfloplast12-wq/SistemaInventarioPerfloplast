@@ -57,6 +57,7 @@ class CatalogController extends Controller
                 'types' => $types,
                 'baseHue' => (float)$product->base_hue,
                 'imageTransform' => $product->image_transform,
+                'lumina' => $product->lumina,
             ];
         });
 
