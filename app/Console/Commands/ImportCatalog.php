@@ -68,11 +68,11 @@ class ImportCatalog extends Command
                 $colors = $pData['colors'] ?? [];
                     $colorIdsWithPivot = [];
                     foreach ($colors as $index => $cData) {
+                        $hex = $cData['hex'] ?? null;
                         $color = Color::updateOrCreate(
-                            ['name' => $cData['name']],
+                            ['name' => $cData['name'], 'hex_code' => $hex],
                             [
-                                'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'])),
-                                'hex_code' => $cData['hex'] ?? null,
+                                'code' => strtoupper(\Illuminate\Support\Str::slug($cData['name'] . '-' . ($hex ? str_replace('#', '', $hex) : ''))),
                                 'is_active' => true,
                             ]
                         );
