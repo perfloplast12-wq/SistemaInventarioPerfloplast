@@ -94,6 +94,24 @@ class ImportCatalog extends Command
             // 3. Procesar Variantes (Types)
             if (isset($pData['types']) && is_array($pData['types'])) {
                 foreach ($pData['types'] as $vData) {
+                    // Crear también como producto real para el inventario del ERP
+                    $variantProduct = Product::updateOrCreate(
+                        ['name' => $vData['name']],
+                        [
+                            'sku' => strtoupper(substr(md5($vData['name']), 0, 8)),
+                            'unit_of_measure_id' => $unitId,
+                            'presentation_unit_id' => $unitId,
+                            'sale_price' => $vData['price'] ?? $product->sale_price,
+                            'catalog_description' => $vData['description'] ?? $product->catalog_description,
+                            'image_url' => $vData['image'] ?? $product->image_url,
+                            'mask_url' => $vData['maskImage'] ?? $product->mask_url,
+                            'image_transform' => $vData['imageTransform'] ?? $product->image_transform,
+                            'lumina' => $vData['lumina'] ?? $product->lumina,
+                            'is_active' => true,
+                            'show_in_catalog' => false, // No mostrar como tarjeta principal, solo dentro del modelo
+                        ]
+                    );
+
                     ProductVariant::updateOrCreate(
                         [
                             'product_id' => $product->id,
