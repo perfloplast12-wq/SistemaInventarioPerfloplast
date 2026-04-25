@@ -22,6 +22,7 @@ class DispatchResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Logística y Pedidos';
     protected static ?string $modelLabel = 'Despacho';
     protected static ?string $pluralModelLabel = 'Despachos';
 

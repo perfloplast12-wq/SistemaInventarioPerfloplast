@@ -22,7 +22,8 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Usuarios';
     protected static ?string $modelLabel = 'Usuario';
     protected static ?string $pluralModelLabel = 'Usuarios';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Catálogos / Maestros';
+    protected static ?int $navigationSort = 4;
 
     public static function roleOptions(): array
     {

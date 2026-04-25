@@ -29,7 +29,9 @@ class InventoryMovementResource extends Resource
         return auth()->user()?->can('inventory_movements.view') ?? false;
     }
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $navigationGroup = 'Producción e Inventario';
+    protected static ?int $navigationSort = 3;
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {

@@ -29,6 +29,8 @@ class ColorResource extends Resource
     protected static ?string $modelLabel = 'Color';
 
     protected static ?string $pluralModelLabel = 'Colores';
+    protected static ?string $navigationGroup = 'Catálogos / Maestros';
+    protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
     {

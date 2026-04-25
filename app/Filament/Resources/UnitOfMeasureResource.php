@@ -20,13 +20,12 @@ class UnitOfMeasureResource extends Resource
     protected static ?string $modelLabel = 'Unidad de medida';
     protected static ?string $pluralModelLabel = 'Unidades de medida';
 
-    /**
-     * ✅ Ocultar del menú lateral.
-     * El CRUD sigue funcionando, solo no se muestra en el sidebar.
-     */
+    protected static ?string $navigationGroup = 'Catálogos / Maestros';
+    protected static ?int $navigationSort = 3;
+
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return true;
     }
 
     public static function canViewAny(): bool

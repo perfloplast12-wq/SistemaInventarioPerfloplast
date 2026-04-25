@@ -21,9 +21,12 @@ class LocationResource extends Resource
     protected static ?string $pluralModelLabel = 'Ubicaciones';
 
     // ✅ NO mostrar en menú lateral (solo entrar desde Bodegas o Camiones)
+    protected static ?string $navigationGroup = 'Logística y Pedidos';
+    protected static ?int $navigationSort = 4;
+
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return true;
     }
 
     public static function form(Form $form): Form

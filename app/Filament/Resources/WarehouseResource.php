@@ -20,8 +20,9 @@ class WarehouseResource extends Resource
     protected static ?string $modelLabel = 'Bodega';
     protected static ?string $pluralModelLabel = 'Bodegas';
 
-    // ✅ NO en menú lateral (solo desde Catálogos)
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $navigationGroup = 'Catálogos / Maestros';
+    protected static ?int $navigationSort = 2;
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function canViewAny(): bool
     {
