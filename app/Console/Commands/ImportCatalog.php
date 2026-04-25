@@ -27,6 +27,20 @@ class ImportCatalog extends Command
 
         $this->info("Starting import of " . count($products) . " products...");
 
+        // Asegurar que existan las unidades de medida
+        $unit = DB::table('unit_of_measures')->where('name', 'Unidad')->first();
+        if (!$unit) {
+            $unitId = DB::table('unit_of_measures')->insertGetId([
+                'name' => 'Unidad',
+                'code' => 'UND',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $unitId = $unit->id;
+        }
+
         foreach ($products as $pData) {
             $this->line("Importing: " . $pData['name']);
 
@@ -35,8 +49,8 @@ class ImportCatalog extends Command
                 ['name' => $pData['name']],
                 [
                     'sku' => strtoupper(substr(md5($pData['name']), 0, 8)),
-                    'unit_of_measure_id' => 3, // Unidad
-                    'presentation_unit_id' => 3, // Unidad
+                    'unit_of_measure_id' => $unitId,
+                    'presentation_unit_id' => $unitId,
                     'sale_price' => $pData['price'] ?? 0,
                     'catalog_description' => $pData['description'] ?? null,
                     'image_url' => $pData['image'] ?? null,
