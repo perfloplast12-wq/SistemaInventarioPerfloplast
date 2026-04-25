@@ -15,6 +15,8 @@ class CatalogController extends Controller
     {
         $products = Product::where('is_active', true)
             ->where('show_in_catalog', true)
+            ->where('name', 'not like', '%Peletizado%')
+            ->where('name', 'not like', '%Pigmento%')
             ->with(['colors', 'variants'])
             ->get();
 
