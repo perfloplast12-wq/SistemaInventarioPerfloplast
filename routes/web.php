@@ -29,10 +29,7 @@ Route::get('/force-migrate', function () {
     }
 });
 Route::get('/debug-log', function () {
-    if (config('app.debug') || auth()->check()) {
-        $path = storage_path('logs/laravel.log');
-        if (!file_exists($path)) return "Log file not found at $path";
-        return nl2br(file_get_contents($path, false, null, -5000));
-    }
-    return "Unauthorized";
+    $path = storage_path('logs/laravel.log');
+    if (!file_exists($path)) return "Log file not found at $path";
+    return nl2br(file_get_contents($path, false, null, -10000));
 });
