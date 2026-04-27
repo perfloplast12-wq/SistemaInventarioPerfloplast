@@ -32,8 +32,38 @@ class Inventario extends Page
 
     public function mount(): void
     {
-        // $this->totalProducts = Product::query()->count();
-        // $this->rawMaterials = Product::query()->where('type', 'raw_material')->count();
+        try {
+            $this->totalProducts = Product::query()->count();
+            $this->rawMaterials = Product::query()->where('type', 'raw_material')->count();
+            $this->finishedProducts = Product::query()->where('type', 'finished_product')->count();
+
+            // Stock Crítico (Sincronizado <= 10 Presentaciones en Bodega)
+            try {
+                $this->criticalStockCount = DB::table('products')
+                    ->leftJoin('stocks', 'products.id', '=', 'stocks.product_id')
+                    ->where('products.is_active', true)
+                    ->whereNull('products.deleted_at')
+                    ->groupBy('products.id', 'products.units_per_presentation')
+                    ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
+                    ->get(['products.id'])
+                    ->count();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Error en conteo de stock crítico: " . $e->getMessage());
+                $this->criticalStockCount = 0;
+            }
+
+            $this->pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
+
+            $this->last24hMovements = \App\Models\InventoryMovement::query()
+                ->where('created_at', '>=', now()->subDay())
+                ->count();
+
+            if ($this->totalProducts > 0) {
+                $this->riskIndex = ($this->criticalStockCount / $this->totalProducts) * 100;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Error general en Inventario@mount: " . $e->getMessage());
+        }
     }
 
     public function getProductsData(string $type)
