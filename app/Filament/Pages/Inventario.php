@@ -46,7 +46,6 @@ class Inventario extends Page
             ->whereNull('products.deleted_at')
             ->groupBy('products.id', 'products.units_per_presentation')
             ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
-            ->get(['products.id'])
             ->count();
 
         // Pedidos Pendientes (Administrativo)
@@ -263,7 +262,7 @@ class Inventario extends Page
             ->groupBy('products.id', 'products.units_per_presentation')
             ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
             ->take(5)
-            ->pluck('id');
+            ->pluck('products.id');
 
         return Product::query()
             ->whereIn('id', $criticalIds)

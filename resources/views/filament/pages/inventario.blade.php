@@ -17,7 +17,7 @@
             </div>
         </div>
         <div style="display:flex;gap:10px;">
-            <a href="{{ \App\Filament\Resources\SaleResource::getUrl('quick') }}" class="pb-btn" style="background:#f59e0b;color:#fff;border:none;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:900;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,.2);">
+            <a href="{{ \App\Filament\Resources\SaleResource::getUrl('quick-sale') }}" class="pb-btn" style="background:#f59e0b;color:#fff;border:none;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:900;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,.2);">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
                 Venta Rápida
             </a>
