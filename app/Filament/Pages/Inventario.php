@@ -46,7 +46,7 @@ class Inventario extends Page
             ->whereNull('products.deleted_at')
             ->groupBy('products.id', 'products.units_per_presentation')
             ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
-            ->count();
+            ->count('products.id');
 
         // Pedidos Pendientes (Administrativo)
         $this->pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();

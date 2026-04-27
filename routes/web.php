@@ -60,12 +60,12 @@ Route::get('/diag-inventario', function () {
             ->groupBy('products.id', 'products.units_per_presentation')
             ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
             ->take(5)
-            ->pluck('id')
+            ->pluck('products.id')
             ->toArray();
     } catch (\Exception $e) { $results['8_critical_ids'] = 'ERROR: '.$e->getMessage(); }
 
     try {
-        $results['9_sale_quick_url'] = \App\Filament\Resources\SaleResource::getUrl('quick');
+        $results['9_sale_quick_url'] = \App\Filament\Resources\SaleResource::getUrl('quick-sale');
     } catch (\Exception $e) { $results['9_sale_quick_url'] = 'ERROR: '.$e->getMessage(); }
 
     try {
