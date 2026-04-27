@@ -280,18 +280,18 @@
             <div class="pb-grid" style="gap:16px;margin-bottom:16px;">
                 <div class="gc-6">
                     <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Rendimiento Operativo</div><div class="pb-tile-hdr-sub">Agrupado por turno</div></div></div>
-                    <div class="pb-widget">@livewire(\App\Filament\Widgets\ProductionByShiftChart::class)</div>
+                    <div class="pb-widget">{{-- @livewire(\App\Filament\Widgets\ProductionByShiftChart::class) --}}</div>
                 </div>
                 <div class="gc-6">
                     <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Materias Primas</div><div class="pb-tile-hdr-sub">Composición del stock</div></div></div>
-                    <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryDistributionChart::class)</div>
+                    <div class="pb-widget">{{-- @livewire(\App\Filament\Widgets\InventoryDistributionChart::class) --}}</div>
                 </div>
             </div>
             
             <div class="pb-grid">
                 <div class="gc-12">
                     <div class="pb-tile-hdr"><div><div class="pb-tile-hdr-title">Dinamismo (Entradas vs Salidas)</div><div class="pb-tile-hdr-sub">Movimientos históricos</div></div></div>
-                    <div class="pb-widget">@livewire(\App\Filament\Widgets\InventoryMovementsTrendChart::class)</div>
+                    <div class="pb-widget">{{-- @livewire(\App\Filament\Widgets\InventoryMovementsTrendChart::class) --}}</div>
                 </div>
             </div>
         </div>
