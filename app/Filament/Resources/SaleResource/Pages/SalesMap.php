@@ -18,28 +18,40 @@ class SalesMap extends Page
 
     public function getViewData(): array
     {
-        $salesUsers = \App\Models\User::role(['sales', 'vendedor'])->get();
-        
-        $locations = $salesUsers->map(function ($user) {
-            $lastLocation = \App\Models\UserLocation::where('user_id', $user->id)
-                ->latest()
-                ->first();
-                
-            if (!$lastLocation) return null;
+        try {
+            // Buscamos usuarios con roles de ventas de forma segura
+            $salesUsers = \App\Models\User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['sales', 'vendedor']);
+            })->get();
             
-            return [
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'lat' => $lastLocation->lat,
-                'lng' => $lastLocation->lng,
-                'speed' => $lastLocation->speed,
-                'updated_at' => $lastLocation->created_at->diffForHumans(),
-                'is_online' => $lastLocation->created_at->gt(now()->subMinutes(10)),
-            ];
-        })->filter()->values();
+            $locations = $salesUsers->map(function ($user) {
+                try {
+                    $lastLocation = \App\Models\UserLocation::where('user_id', $user->id)
+                        ->latest('id') // Usamos id para asegurar el orden cronológico real
+                        ->first();
+                        
+                    if (!$lastLocation || !$lastLocation->lat || !$lastLocation->lng) return null;
+                    
+                    return [
+                        'user_id' => $user->id,
+                        'name' => $user->name,
+                        'lat' => (float) $lastLocation->lat,
+                        'lng' => (float) $lastLocation->lng,
+                        'speed' => (float) ($lastLocation->speed ?? 0),
+                        'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->diffForHumans() : 'Desconocido',
+                        'is_online' => $lastLocation->created_at ? $lastLocation->created_at->gt(now()->subMinutes(15)) : false,
+                    ];
+                } catch (\Exception $e) {
+                    return null;
+                }
+            })->filter()->values();
 
-        return [
-            'locations' => $locations,
-        ];
+            return [
+                'locations' => $locations,
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error en SalesMap: " . $e->getMessage());
+            return ['locations' => []];
+        }
     }
 }
