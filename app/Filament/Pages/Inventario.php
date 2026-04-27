@@ -39,10 +39,10 @@ class Inventario extends Page
 
 
         // Stock Crítico (Sincronizado <= 10 Presentaciones en Bodega)
+        // Optimizamos para filtrar a nivel de SQL y no cargar miles de modelos
         $this->criticalStockCount = Product::query()
-            ->withSum(['stocks' => fn($q) => $q->whereNotNull('warehouse_id')], 'quantity')
-            ->get()
-            ->filter(fn($p) => $p->convertToPresentationUnit((float)($p->stocks_sum_quantity ?? 0)) <= 10)
+            ->isActive()
+            ->whereRaw('((SELECT COALESCE(SUM(quantity), 0) FROM stocks WHERE stocks.product_id = products.id AND stocks.warehouse_id IS NOT NULL) / COALESCE(NULLIF(units_per_presentation, 0), 1)) <= 10')
             ->count();
 
         // Pedidos Pendientes (Administrativo)
@@ -63,7 +63,8 @@ class Inventario extends Page
     {
         $products = Product::query()
             ->where('type', $type)
-            ->where('is_active', true)
+            ->isActive()
+            ->get() // Añadimos get() porque map() no existe en el Builder
             ->map(function ($product) {
                 return [
                     'name' => $product->name,
@@ -160,25 +161,21 @@ class Inventario extends Page
 
     public function getWarehouseSummaries(): array
     {
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
+        $warehouses = Warehouse::query()
+            ->where('is_active', true)
+            ->withSum(['stocks as raw_total' => fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', 'raw_material'))], 'quantity')
+            ->withSum(['stocks as finished_total' => fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', 'finished_product'))], 'quantity')
+            ->orderBy('name')
+            ->get();
+
         $result = [];
 
         foreach ($warehouses as $warehouse) {
-            // Totales
-            $rawTotal = Stock::where('warehouse_id', $warehouse->id)
-                ->where('quantity', '>', 0)
-                ->whereHas('product', fn ($q) => $q->where('type', 'raw_material'))
-                ->sum('quantity');
-
-            $finishedTotal = Stock::where('warehouse_id', $warehouse->id)
-                ->where('quantity', '>', 0)
-                ->whereHas('product', fn ($q) => $q->where('type', 'finished_product'))
-                ->sum('quantity');
-
             // Top Products for Quick View
+
             $topProducts = Stock::where('warehouse_id', $warehouse->id)
                 ->where('quantity', '>', 0)
-                ->whereHas('product') // Only active products
+                ->whereHas('product', fn($q) => $q->isActive()) // Solo productos activos
                 ->with(['product.unitOfMeasure'])
                 ->get()
                 ->sortByDesc('quantity')
@@ -193,8 +190,8 @@ class Inventario extends Page
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
                 'is_factory' => $warehouse->is_factory,
-                'raw_total' => (float) $rawTotal,
-                'finished_total' => (float) $finishedTotal,
+                'raw_total' => (float) ($warehouse->raw_total ?? 0),
+                'finished_total' => (float) ($warehouse->finished_total ?? 0),
                 'top_items' => $topProducts,
             ];
         }
@@ -246,13 +243,12 @@ class Inventario extends Page
     public function getCriticalStockProducts(): \Illuminate\Support\Collection
     {
         return Product::query()
-            ->with(['stocks' => fn($q) => $q->whereNotNull('warehouse_id'), 'unitOfMeasure'])
+            ->isActive()
+            ->with(['presentationUnit', 'unitOfMeasure'])
+            ->whereRaw('((SELECT COALESCE(SUM(quantity), 0) FROM stocks WHERE stocks.product_id = products.id AND stocks.warehouse_id IS NOT NULL) / COALESCE(NULLIF(units_per_presentation, 0), 1)) <= 10')
             ->withSum(['stocks' => fn($q) => $q->whereNotNull('warehouse_id')], 'quantity')
-            ->get()
-            ->filter(function($p) {
-                return $p->convertToPresentationUnit((float)($p->stocks_sum_quantity ?? 0)) <= 10;
-            })
             ->take(5)
+            ->get()
             ->map(function ($p) {
                 // Cantidad en presentaciones
                 $qty = $p->convertToPresentationUnit((float)($p->stocks_sum_quantity ?? 0));

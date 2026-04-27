@@ -12,12 +12,13 @@ class InventoryDistributionChart extends Widget
 
     public function getChartData(): array
     {
-        $data = Product::where('type', 'raw_material')
-            ->where('is_active', true)
+        $data = Product::query()
+            ->where('type', 'raw_material')
+            ->isActive()
             ->withSum('stocks', 'quantity')
-            ->get()
-            ->filter(fn($p) => (float)$p->stocks_sum_quantity > 0)
-            ->sortByDesc('stocks_sum_quantity');
+            ->having('stocks_sum_quantity', '>', 0)
+            ->orderByDesc('stocks_sum_quantity')
+            ->get();
 
         $labels = $data->pluck('name')->toArray();
         $series = $data->pluck('stocks_sum_quantity')->map(fn($v) => (float)$v)->toArray();
