@@ -525,12 +525,12 @@ class SaleResource extends Resource
 
     public static function getPages(): array
     {
-        return [
-            'quick' => SaleResource\Pages\QuickSale::route('/quick'),
             'index' => Pages\ListSales::route('/'),
             'create' => Pages\CreateSale::route('/create'),
             'edit' => Pages\EditSale::route('/{record}/edit'),
-            'view' => Pages\ViewSale::route('/{record}'),
+            'view' => Pages\ViewSale::route('/{record}/view'),
+            'quick-sale' => Pages\QuickSale::route('/quick'),
+            'map' => Pages\SalesMap::route('/map'),
         ];
     }
 
