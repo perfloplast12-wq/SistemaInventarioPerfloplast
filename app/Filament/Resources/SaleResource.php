@@ -525,6 +525,7 @@ class SaleResource extends Resource
 
     public static function getPages(): array
     {
+        return [
             'index' => Pages\ListSales::route('/'),
             'create' => Pages\CreateSale::route('/create'),
             'edit' => Pages\EditSale::route('/{record}/edit'),
