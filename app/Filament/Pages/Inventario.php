@@ -33,11 +33,14 @@ class Inventario extends Page
     public function mount(): void
     {
         try {
+            // Contamos la variedad (SKUs únicos)
             $this->totalProducts = Product::query()->count();
             $this->rawMaterials = Product::query()->where('type', 'raw_material')->count();
             $this->finishedProducts = Product::query()->where('type', 'finished_product')->count();
 
+
             // Stock Crítico (Sincronizado <= 10 Presentaciones en Bodega)
+            // Usamos una consulta directa a la DB para máxima eficiencia
             try {
                 $this->criticalStockCount = DB::table('products')
                     ->leftJoin('stocks', 'products.id', '=', 'stocks.product_id')
@@ -47,22 +50,24 @@ class Inventario extends Page
                     ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
                     ->get(['products.id'])
                     ->count();
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning("Error en conteo de stock crítico: " . $e->getMessage());
+            } catch (\Exception $e) {
                 $this->criticalStockCount = 0;
             }
 
+            // Pedidos Pendientes (Administrativo)
             $this->pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
 
+            // Actividad 24h
             $this->last24hMovements = \App\Models\InventoryMovement::query()
                 ->where('created_at', '>=', now()->subDay())
                 ->count();
 
+            // Índice de Riesgo (%)
             if ($this->totalProducts > 0) {
                 $this->riskIndex = ($this->criticalStockCount / $this->totalProducts) * 100;
             }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Error general en Inventario@mount: " . $e->getMessage());
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error en Inventario@mount: " . $e->getMessage());
         }
     }
 
@@ -91,35 +96,23 @@ class Inventario extends Page
 
     public static function canAccess(): bool
     {
-        try {
-            $user = auth()->user();
-            if (!$user) {
-                return false;
-            }
-
-            if ($user->hasRole('production')) {
-                return false;
-            }
-
-            return $user->can('inventory.view') ?? false;
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Error en Inventario@canAccess: " . $e->getMessage());
-            // En modo de emergencia, si es un admin (ID 1) permitimos acceso para ver el error
-            return auth()->id() === 1;
+        if (auth()->user()?->hasRole('production')) {
+            return false;
         }
+        return auth()->user()?->can('inventory.view') ?? false;
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            // \Filament\Actions\Action::make('export_excel')
-            //     ->label('Exportar Inventario Premium')
-            //     ->icon('heroicon-o-document-arrow-down')
-            //     ->color('success')
-            //     ->action(fn () => \Maatwebsite\Excel\Facades\Excel::download(
-            //         new \App\Exports\InventoryExport(\App\Models\Stock::with(['product', 'color', 'warehouse'])->get()), 
-            //         "Inventario_Perfloplast_" . now()->format('Ymd_His') . ".xlsx"
-            //     )),
+            \Filament\Actions\Action::make('export_excel')
+                ->label('Exportar Inventario Premium')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->action(fn () => \Maatwebsite\Excel\Facades\Excel::download(
+                    new \App\Exports\InventoryExport(\App\Models\Stock::with(['product', 'color', 'warehouse'])->get()), 
+                    "Inventario_Perfloplast_" . now()->format('Ymd_His') . ".xlsx"
+                )),
         ];
     }
 
