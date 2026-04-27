@@ -21,8 +21,18 @@ Route::get('/admin/injection-reports/{report}/pdf', [\App\Http\Controllers\Injec
     ->middleware(['auth']);
 
 Route::get('/diag-inventario', function () {
-    $results = [];
-    
+    // Force clear all caches
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $results['0_cache_status'] = 'CLEARED: ' . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) { $results['0_cache_status'] = 'ERROR: '.$e->getMessage(); }
+
+    $results['0_env'] = [
+        'app_debug' => config('app.debug'),
+        'app_env' => config('app.env'),
+        'php_version' => PHP_VERSION,
+    ];
+
     try { $results['1_product_count'] = \App\Models\Product::count(); } 
     catch (\Exception $e) { $results['1_product_count'] = 'ERROR: '.$e->getMessage(); }
     
@@ -67,22 +77,6 @@ Route::get('/diag-inventario', function () {
     try {
         $results['9_sale_quick_url'] = \App\Filament\Resources\SaleResource::getUrl('quick-sale');
     } catch (\Exception $e) { $results['9_sale_quick_url'] = 'ERROR: '.$e->getMessage(); }
-
-    try {
-        $results['10_inv_distribution'] = \App\Models\Product::where('type','raw_material')
-            ->where('is_active', true)
-            ->withSum('stocks', 'quantity')
-            ->get()
-            ->count();
-    } catch (\Exception $e) { $results['10_inv_distribution'] = 'ERROR: '.$e->getMessage(); }
-
-    try {
-        $results['11_prod_by_shift'] = \App\Models\Shift::count();
-    } catch (\Exception $e) { $results['11_prod_by_shift'] = 'ERROR: '.$e->getMessage(); }
-
-    try {
-        $results['12_settings_table'] = \App\Models\Setting::count();
-    } catch (\Exception $e) { $results['12_settings_table'] = 'ERROR: '.$e->getMessage(); }
 
     return response()->json($results, 200, [], JSON_PRETTY_PRINT);
 });
