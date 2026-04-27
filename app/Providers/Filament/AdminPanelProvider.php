@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            ->spa() 
+            // ->spa() 
             ->databaseNotifications() 
             ->databaseNotificationsPolling('60s')
             ->maxContentWidth(null) 
@@ -124,13 +124,7 @@ class AdminPanelProvider extends PanelProvider
                         <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
                         <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
                         <script>
-                            if ('serviceWorker' in navigator) {
-                                window.addEventListener('load', () => {
-                                    navigator.serviceWorker.register('/sw.js')
-                                        .then(reg => console.log('SW Registered', reg))
-                                        .catch(err => console.log('SW Error', err));
-                                });
-                            }
+                            // Service worker disabled for stability
                         </script>
                         {$styles}
                     ");
