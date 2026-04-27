@@ -39,10 +39,14 @@ class Inventario extends Page
 
 
         // Stock Crítico (Sincronizado <= 10 Presentaciones en Bodega)
-        // Optimizamos para filtrar a nivel de SQL y no cargar miles de modelos
-        $this->criticalStockCount = Product::query()
-            ->isActive()
-            ->whereRaw('((SELECT COALESCE(SUM(quantity), 0) FROM stocks WHERE stocks.product_id = products.id AND stocks.warehouse_id IS NOT NULL) / COALESCE(NULLIF(units_per_presentation, 0), 1)) <= 10')
+        // Usamos una consulta directa a la DB para máxima eficiencia
+        $this->criticalStockCount = DB::table('products')
+            ->leftJoin('stocks', 'products.id', '=', 'stocks.product_id')
+            ->where('products.is_active', true)
+            ->whereNull('products.deleted_at')
+            ->groupBy('products.id', 'products.units_per_presentation')
+            ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
+            ->get(['products.id'])
             ->count();
 
         // Pedidos Pendientes (Administrativo)
@@ -242,12 +246,19 @@ class Inventario extends Page
 
     public function getCriticalStockProducts(): \Illuminate\Support\Collection
     {
-        return Product::query()
-            ->isActive()
-            ->with(['presentationUnit', 'unitOfMeasure'])
-            ->whereRaw('((SELECT COALESCE(SUM(quantity), 0) FROM stocks WHERE stocks.product_id = products.id AND stocks.warehouse_id IS NOT NULL) / COALESCE(NULLIF(units_per_presentation, 0), 1)) <= 10')
-            ->withSum(['stocks' => fn($q) => $q->whereNotNull('warehouse_id')], 'quantity')
+        $criticalIds = DB::table('products')
+            ->leftJoin('stocks', 'products.id', '=', 'stocks.product_id')
+            ->where('products.is_active', true)
+            ->whereNull('products.deleted_at')
+            ->groupBy('products.id', 'products.units_per_presentation')
+            ->havingRaw('COALESCE(SUM(stocks.quantity), 0) / COALESCE(NULLIF(products.units_per_presentation, 0), 1) <= 10')
             ->take(5)
+            ->pluck('id');
+
+        return Product::query()
+            ->whereIn('id', $criticalIds)
+            ->with(['presentationUnit', 'unitOfMeasure'])
+            ->withSum(['stocks' => fn($q) => $q->whereNotNull('warehouse_id')], 'quantity')
             ->get()
             ->map(function ($p) {
                 // Cantidad en presentaciones

@@ -16,9 +16,9 @@ class InventoryDistributionChart extends Widget
             ->where('type', 'raw_material')
             ->isActive()
             ->withSum('stocks', 'quantity')
-            ->having('stocks_sum_quantity', '>', 0)
-            ->orderByDesc('stocks_sum_quantity')
-            ->get();
+            ->get()
+            ->filter(fn($p) => (float)($p->stocks_sum_quantity ?? 0) > 0)
+            ->sortByDesc('stocks_sum_quantity');
 
         $labels = $data->pluck('name')->toArray();
         $series = $data->pluck('stocks_sum_quantity')->map(fn($v) => (float)$v)->toArray();

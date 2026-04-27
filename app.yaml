@@ -18,7 +18,7 @@ services:
         value: production
       - key: APP_DEBUG
         scope: RUN_AND_BUILD_TIME
-        value: "true"
+        value: "false"
       - key: LOG_CHANNEL
         scope: RUN_TIME
         value: errorlog
