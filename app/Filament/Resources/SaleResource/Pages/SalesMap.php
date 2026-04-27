@@ -11,6 +11,8 @@ class SalesMap extends Page
     protected static ?string $navigationLabel = 'Mapa de Vendedores';
     protected static ?string $title = 'Mapa de Seguimiento (Vendedores)';
     protected static ?string $navigationIcon = 'heroicon-o-map';
+    protected static ?string $navigationGroup = 'Área Comercial';
+    protected static ?int $navigationSort = 2;
 
     protected static string $view = 'filament.resources.sale-resource.pages.sales-map';
 

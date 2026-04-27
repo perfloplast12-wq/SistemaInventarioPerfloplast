@@ -14,6 +14,12 @@ class ListSales extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('view_map')
+                ->label('Mapa de Vendedores')
+                ->icon('heroicon-o-map')
+                ->color('info')
+                ->url(fn () => static::$resource::getUrl('map')),
+
             Actions\CreateAction::make()
                 ->label('+ Nueva Venta')
                 ->icon('heroicon-o-document-plus'),
