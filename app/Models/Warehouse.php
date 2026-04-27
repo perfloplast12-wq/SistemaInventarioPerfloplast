@@ -36,4 +36,8 @@ class Warehouse extends Model
         return $this->hasMany(\App\Models\Location::class);
     }
 
+    public function stocks()
+    {
+        return $this->hasMany(\App\Models\Stock::class);
+    }
 }

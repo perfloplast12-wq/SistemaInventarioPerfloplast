@@ -167,23 +167,33 @@ class Inventario extends Page
     {
         $warehouses = Warehouse::query()
             ->where('is_active', true)
-            ->withSum(['stocks as raw_total' => fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', 'raw_material'))], 'quantity')
-            ->withSum(['stocks as finished_total' => fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', 'finished_product'))], 'quantity')
             ->orderBy('name')
             ->get();
 
         $result = [];
 
         foreach ($warehouses as $warehouse) {
-            // Top Products for Quick View
+            $rawTotal = DB::table('stocks')
+                ->join('products', 'stocks.product_id', '=', 'products.id')
+                ->where('stocks.warehouse_id', $warehouse->id)
+                ->where('stocks.quantity', '>', 0)
+                ->where('products.type', 'raw_material')
+                ->sum('stocks.quantity');
+
+            $finishedTotal = DB::table('stocks')
+                ->join('products', 'stocks.product_id', '=', 'products.id')
+                ->where('stocks.warehouse_id', $warehouse->id)
+                ->where('stocks.quantity', '>', 0)
+                ->where('products.type', 'finished_product')
+                ->sum('stocks.quantity');
 
             $topProducts = Stock::where('warehouse_id', $warehouse->id)
                 ->where('quantity', '>', 0)
-                ->whereHas('product', fn($q) => $q->isActive()) // Solo productos activos
+                ->whereHas('product', fn($q) => $q->isActive())
                 ->with(['product.unitOfMeasure'])
-                ->get()
-                ->sortByDesc('quantity')
+                ->orderByDesc('quantity')
                 ->take(3)
+                ->get()
                 ->map(fn($s) => [
                     'name' => $s->product?->name ?? 'N/A',
                     'qty' => $s->quantity,
@@ -194,8 +204,8 @@ class Inventario extends Page
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
                 'is_factory' => $warehouse->is_factory,
-                'raw_total' => (float) ($warehouse->raw_total ?? 0),
-                'finished_total' => (float) ($warehouse->finished_total ?? 0),
+                'raw_total' => (float) $rawTotal,
+                'finished_total' => (float) $finishedTotal,
                 'top_items' => $topProducts,
             ];
         }
