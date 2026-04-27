@@ -1,5 +1,6 @@
 @php
     $user = auth()->user();
+    $isVendedor = $user && ($user->hasRole('sales') || $user->hasRole('vendedor'));
     $isActiveConductor = $user && $user->hasRole('conductor');
     
     $activeDispatchId = null;
@@ -9,12 +10,15 @@
             ->orderBy('id', 'desc')
             ->value('id');
     }
+
+    // El rastreador se activa si hay un despacho activo O si es un vendedor
+    $shouldTrack = $activeDispatchId || $isVendedor;
 @endphp
 
-@if($activeDispatchId)
+@if($shouldTrack)
     <div 
         x-data="{
-            dispatchId: {{ $activeDispatchId }},
+            dispatchId: {{ $activeDispatchId ?? 'null' }},
             watchId: null,
             showLock: false,
             
@@ -71,7 +75,8 @@
                             lat: latitude,
                             lng: longitude,
                             speed: speed,
-                            heading: heading
+                            heading: heading,
+                            accuracy: accuracy
                         })
                     });
                 } catch (e) {}

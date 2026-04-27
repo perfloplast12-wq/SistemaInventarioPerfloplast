@@ -12,35 +12,44 @@ class TrackingController extends Controller
     public function store(Request $request)
     {
         try {
-            \Illuminate\Support\Facades\Log::info('GPS Tracking Request:', $request->all());
-
+            $user = auth()->user();
+            
             $validated = $request->validate([
-                'dispatch_id' => 'required|exists:dispatches,id',
+                'dispatch_id' => 'nullable|exists:dispatches,id',
                 'lat' => 'required|numeric',
                 'lng' => 'required|numeric',
                 'speed' => 'nullable|numeric',
                 'heading' => 'nullable|numeric',
+                'accuracy' => 'nullable|numeric',
             ]);
 
-            $location = DispatchLocation::create($validated);
-
-            // Disparar evento para tiempo real
-            try {
-                event(new \App\Events\LocationUpdated($location));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Real-time broadcast failed: ' . $e->getMessage());
+            if ($request->filled('dispatch_id')) {
+                $location = DispatchLocation::create($validated);
+                
+                // Disparar evento para tiempo real de despacho
+                try {
+                    event(new \App\Events\LocationUpdated($location));
+                } catch (\Exception $e) {}
+            } else if ($user) {
+                // Rastreo general de usuario (Vendedores)
+                $location = \App\Models\UserLocation::create([
+                    'user_id' => $user->id,
+                    'lat' => $validated['lat'],
+                    'lng' => $validated['lng'],
+                    'speed' => $validated['speed'],
+                    'heading' => $validated['heading'],
+                    'accuracy' => $validated['accuracy'] ?? null,
+                ]);
             }
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Location recorded',
-                'location' => $location
+                'message' => 'Location recorded'
             ], 201);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('GPS Store Error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'error' => 'Internal Server Error',
                 'message' => $e->getMessage()
             ], 500);
         }
