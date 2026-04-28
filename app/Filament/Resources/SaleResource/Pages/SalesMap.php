@@ -38,6 +38,8 @@ class SalesMap extends Page
                         'lng' => (float) $lastLocation->lng,
                         'speed' => (float) ($lastLocation->speed ?? 0),
                         'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->diffForHumans() : 'Desconocido',
+                        'last_seen_exact' => $lastLocation->created_at ? $lastLocation->created_at->format('d/m/Y h:i:s A') : 'Desconocido',
+                        'accuracy' => round((float) ($lastLocation->accuracy ?? 0), 1),
                         'is_online' => $lastLocation->created_at ? $lastLocation->created_at->gt(now()->subMinutes(15)) : false,
                     ];
                 } catch (\Exception $e) {

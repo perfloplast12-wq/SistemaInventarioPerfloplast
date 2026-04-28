@@ -55,19 +55,13 @@
                         }).addTo(this.map);
                         
                         this.renderMarkers();
-
-                        // Cuando se cierra un popup, regresar a la vista general
-                        this.map.on('popupclose', () => {
-                            if (this.isZoomedIn) {
-                                this.zoomToAll();
-                            }
-                        });
                     },
                     
                     renderMarkers() {
                         const self = this;
                         this.locations.forEach(loc => {
                             const iconColor = loc.is_online ? '#4f46e5' : '#9ca3af';
+                            const statusDot = loc.is_online ? '#22c55e' : '#9ca3af';
                             const icon = L.divIcon({
                                 className: 'custom-div-icon',
                                 html: `
@@ -85,24 +79,44 @@
                             const marker = L.marker([loc.lat, loc.lng], { icon: icon })
                                 .addTo(this.map)
                                 .bindPopup(`
-                                    <div class='p-2'>
-                                        <p class='font-bold text-gray-900'>${loc.name}</p>
-                                        <p class='text-xs text-gray-500'>Ultima conexión: ${loc.updated_at}</p>
-                                        <p class='text-xs text-gray-500'>Velocidad: ${loc.speed ? loc.speed.toFixed(1) + ' km/h' : '0 km/h'}</p>
-                                        <div class='mt-2'>
-                                            <span class='px-2 py-0.5 rounded-full text-[10px] ${loc.is_online ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}'>
-                                                ${loc.is_online ? 'EN LINEA' : 'DESCONECTADO'}
+                                    <div style='min-width: 220px; padding: 12px; font-family: sans-serif;'>
+                                        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 10px;'>
+                                            <div style='width: 10px; height: 10px; border-radius: 50%; background: ${statusDot};'></div>
+                                            <p style='font-weight: bold; font-size: 15px; color: #111827; margin: 0;'>${loc.name}</p>
+                                        </div>
+                                        <div style='border-top: 1px solid #e5e7eb; padding-top: 8px;'>
+                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
+                                                <strong>Última posición:</strong> ${loc.last_seen_exact || loc.updated_at}
+                                            </p>
+                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
+                                                <strong>Coordenadas:</strong> ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}
+                                            </p>
+                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
+                                                <strong>Velocidad:</strong> ${loc.speed ? loc.speed.toFixed(1) + ' km/h' : '0 km/h'}
+                                            </p>
+                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
+                                                <strong>Precisión GPS:</strong> ${loc.accuracy ? loc.accuracy + ' m' : 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div style='margin-top: 8px;'>
+                                            <span style='display: inline-block; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; ${loc.is_online ? "background: #dcfce7; color: #15803d;" : "background: #f3f4f6; color: #6b7280;"}'>
+                                                ${loc.is_online ? '● EN LÍNEA' : '○ DESCONECTADO'}
                                             </span>
                                         </div>
                                     </div>
-                                `);
+                                `, { autoClose: false, closeOnClick: false });
 
-                            // Al hacer clic en el marcador: zoom hacia el vendedor
-                            marker.on('click', function() {
-                                self.map.flyTo([loc.lat, loc.lng], 16, { duration: 1 });
-                                self.isZoomedIn = true;
-                                // Mostrar el botón "Ver todos"
-                                document.getElementById('btn-ver-todos').style.display = 'flex';
+                            // Al hacer clic: solo zoom, NO abrir popup automáticamente
+                            marker.on('click', function(e) {
+                                if (!self.isZoomedIn) {
+                                    // Primer clic: solo zoom
+                                    self.map.flyTo([loc.lat, loc.lng], 16, { duration: 1 });
+                                    self.isZoomedIn = true;
+                                    document.getElementById('btn-ver-todos').style.display = 'flex';
+                                    // Cerrar popup si se abrió automáticamente
+                                    setTimeout(() => marker.closePopup(), 10);
+                                }
+                                // Si ya está en zoom, el clic abre el popup normalmente
                             });
                             
                             this.markers[loc.user_id] = marker;
@@ -120,6 +134,7 @@
                             this.map.flyToBounds(this.defaultBounds, { duration: 1 });
                         }
                         this.isZoomedIn = false;
+                        this.map.closePopup();
                         document.getElementById('btn-ver-todos').style.display = 'none';
                     },
                     
