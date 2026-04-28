@@ -29,6 +29,39 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
     ->middleware(['web', 'auth'])
     ->name('web.tracking.store');
 
+// Ruta para obtener ubicaciones de vendedores (actualización silenciosa del mapa)
+Route::get('/api/sales-locations', function () {
+    try {
+        $userIdsWithLocation = \App\Models\UserLocation::select('user_id')->distinct()->pluck('user_id');
+        $salesUsers = \App\Models\User::whereIn('id', $userIdsWithLocation)->get();
+
+        $locations = $salesUsers->map(function ($user) {
+            try {
+                $lastLocation = \App\Models\UserLocation::where('user_id', $user->id)
+                    ->latest('id')
+                    ->first();
+                if (!$lastLocation || !$lastLocation->lat || !$lastLocation->lng) return null;
+
+                return [
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'lat' => (float) $lastLocation->lat,
+                    'lng' => (float) $lastLocation->lng,
+                    'speed' => (float) ($lastLocation->speed ?? 0),
+                    'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala')->diffForHumans() : 'Desconocido',
+                    'last_seen_exact' => $lastLocation->created_at ? $lastLocation->created_at->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala')->format('d/m/Y h:i:s A') : 'Desconocido',
+                    'accuracy' => round((float) ($lastLocation->accuracy ?? 0), 1),
+                    'is_online' => $lastLocation->created_at ? $lastLocation->created_at->gt(now()->subMinutes(15)) : false,
+                ];
+            } catch (\Exception $e) { return null; }
+        })->filter()->values();
+
+        return response()->json($locations);
+    } catch (\Exception $e) {
+        return response()->json([]);
+    }
+})->middleware(['web', 'auth'])->name('web.sales-locations');
+
 Route::get('/force-migrate', function () {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);

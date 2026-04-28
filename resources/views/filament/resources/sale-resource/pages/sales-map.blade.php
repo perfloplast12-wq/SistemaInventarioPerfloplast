@@ -16,7 +16,7 @@
                 </svg>
             </a>
 
-            <!-- Botón "Ver todos" (aparece al hacer zoom en un vendedor) -->
+            <!-- Botón "Ver todos" -->
             <button id="btn-ver-todos"
                     onclick="window._salesMapZoomToAll()"
                     class="absolute bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors border border-gray-200 dark:border-gray-700 cursor-pointer items-center gap-2 text-sm font-semibold"
@@ -34,6 +34,80 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         
+        <style>
+            /* Estilos para los marcadores personalizados */
+            .vendor-marker {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                transform: translateY(-50%);
+            }
+            .vendor-marker-pin {
+                width: 40px;
+                height: 40px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+                border: 3px solid white;
+            }
+            .vendor-marker-pin.online {
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            }
+            .vendor-marker-pin.offline {
+                background: linear-gradient(135deg, #9ca3af, #6b7280);
+            }
+            .vendor-marker-icon {
+                transform: rotate(45deg);
+                font-size: 18px;
+                line-height: 1;
+            }
+            .vendor-marker-pulse {
+                position: absolute;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                animation: pulse-ring 2s ease-out infinite;
+            }
+            .vendor-marker-pulse.online {
+                background: rgba(79, 70, 229, 0.3);
+            }
+            @keyframes pulse-ring {
+                0% { transform: scale(0.8); opacity: 1; }
+                100% { transform: scale(2.2); opacity: 0; }
+            }
+            .vendor-marker-label {
+                margin-top: 6px;
+                padding: 3px 8px;
+                background: rgba(0,0,0,0.75);
+                color: white;
+                font-size: 11px;
+                font-weight: 700;
+                border-radius: 10px;
+                white-space: nowrap;
+                letter-spacing: 0.3px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            }
+            .vendor-marker-status {
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                border: 2px solid white;
+                z-index: 10;
+            }
+            .vendor-marker-status.online {
+                background: #22c55e;
+            }
+            .vendor-marker-status.offline {
+                background: #9ca3af;
+            }
+        </style>
+
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('salesMapComponent', (initialLocations) => ({
@@ -42,92 +116,175 @@
                     markers: {},
                     defaultBounds: null,
                     isZoomedIn: false,
+                    refreshTimer: null,
                     
                     init() {
                         this.initMap();
-                        setInterval(() => this.refreshLocations(), 30000);
-                        // Exponer zoomToAll como función global para el botón HTML
+                        // Actualización silenciosa cada 20 segundos (sin recargar la página)
+                        this.refreshTimer = setInterval(() => this.silentRefresh(), 20000);
                         window._salesMapZoomToAll = () => this.zoomToAll();
                     },
                     
                     initMap() {
                         this.map = L.map('sales-map').setView([14.6349, -90.5069], 12);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                            attribution: '&copy; OpenStreetMap contributors'
+                        
+                        // Capa de Google Maps (muestra negocios, calles detalladas, etc.)
+                        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                            attribution: '&copy; Google Maps',
+                            maxZoom: 20
                         }).addTo(this.map);
                         
                         this.renderMarkers();
                     },
                     
+                    createMarkerIcon(loc) {
+                        const status = loc.is_online ? 'online' : 'offline';
+                        return L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `
+                                <div class="vendor-marker">
+                                    <div style="position: relative;">
+                                        ${loc.is_online ? '<div class="vendor-marker-pulse online"></div>' : ''}
+                                        <div class="vendor-marker-pin ${status}">
+                                            <span class="vendor-marker-icon">👤</span>
+                                        </div>
+                                        <div class="vendor-marker-status ${status}"></div>
+                                    </div>
+                                    <div class="vendor-marker-label">${loc.name}</div>
+                                </div>
+                            `,
+                            iconSize: [50, 65],
+                            iconAnchor: [25, 50],
+                            popupAnchor: [0, -50]
+                        });
+                    },
+
+                    createPopupContent(loc) {
+                        const statusDot = loc.is_online ? '#22c55e' : '#9ca3af';
+                        return `
+                            <div style='min-width: 240px; padding: 14px; font-family: -apple-system, sans-serif;'>
+                                <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 12px;'>
+                                    <div style='width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, ${loc.is_online ? "#4f46e5, #7c3aed" : "#9ca3af, #6b7280"}); display: flex; align-items: center; justify-content: center;'>
+                                        <span style='font-size: 18px;'>👤</span>
+                                    </div>
+                                    <div>
+                                        <p style='font-weight: 700; font-size: 15px; color: #111827; margin: 0;'>${loc.name}</p>
+                                        <span style='display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; ${loc.is_online ? "background: #dcfce7; color: #15803d;" : "background: #f3f4f6; color: #6b7280;"}'>
+                                            <span style='width: 6px; height: 6px; border-radius: 50%; background: ${statusDot};'></span>
+                                            ${loc.is_online ? 'EN LÍNEA' : 'DESCONECTADO'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div style='border-top: 1px solid #e5e7eb; padding-top: 10px; display: grid; gap: 6px;'>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
+                                        <span style='font-size: 14px;'>🕐</span>
+                                        <span><strong>Última posición:</strong> ${loc.last_seen_exact || loc.updated_at}</span>
+                                    </div>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
+                                        <span style='font-size: 14px;'>📍</span>
+                                        <span><strong>Coordenadas:</strong> ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}</span>
+                                    </div>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
+                                        <span style='font-size: 14px;'>🚗</span>
+                                        <span><strong>Velocidad:</strong> ${loc.speed ? loc.speed.toFixed(1) + ' km/h' : '0 km/h'}</span>
+                                    </div>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
+                                        <span style='font-size: 14px;'>📡</span>
+                                        <span><strong>Precisión GPS:</strong> ${loc.accuracy ? loc.accuracy + ' m' : 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    },
+                    
                     renderMarkers() {
                         const self = this;
                         this.locations.forEach(loc => {
-                            const iconColor = loc.is_online ? '#4f46e5' : '#9ca3af';
-                            const statusDot = loc.is_online ? '#22c55e' : '#9ca3af';
-                            const icon = L.divIcon({
-                                className: 'custom-div-icon',
-                                html: `
-                                    <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-50%);'>
-                                        <div style='background-color: ${iconColor}; width: 14px; height: 14px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 10;'></div>
-                                        <div style='margin-top: 4px; padding: 2px 6px; background-color: white; color: #1f2937; font-size: 11px; font-weight: bold; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; border: 1px solid #e5e7eb;'>
-                                            ${loc.name}
-                                        </div>
-                                    </div>
-                                `,
-                                iconSize: [100, 40],
-                                iconAnchor: [50, 14]
-                            });
+                            const icon = this.createMarkerIcon(loc);
 
                             const marker = L.marker([loc.lat, loc.lng], { icon: icon })
                                 .addTo(this.map)
-                                .bindPopup(`
-                                    <div style='min-width: 220px; padding: 12px; font-family: sans-serif;'>
-                                        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 10px;'>
-                                            <div style='width: 10px; height: 10px; border-radius: 50%; background: ${statusDot};'></div>
-                                            <p style='font-weight: bold; font-size: 15px; color: #111827; margin: 0;'>${loc.name}</p>
-                                        </div>
-                                        <div style='border-top: 1px solid #e5e7eb; padding-top: 8px;'>
-                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
-                                                <strong>Última posición:</strong> ${loc.last_seen_exact || loc.updated_at}
-                                            </p>
-                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
-                                                <strong>Coordenadas:</strong> ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}
-                                            </p>
-                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
-                                                <strong>Velocidad:</strong> ${loc.speed ? loc.speed.toFixed(1) + ' km/h' : '0 km/h'}
-                                            </p>
-                                            <p style='font-size: 12px; color: #6b7280; margin: 4px 0;'>
-                                                <strong>Precisión GPS:</strong> ${loc.accuracy ? loc.accuracy + ' m' : 'N/A'}
-                                            </p>
-                                        </div>
-                                        <div style='margin-top: 8px;'>
-                                            <span style='display: inline-block; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; ${loc.is_online ? "background: #dcfce7; color: #15803d;" : "background: #f3f4f6; color: #6b7280;"}'>
-                                                ${loc.is_online ? '● EN LÍNEA' : '○ DESCONECTADO'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                `, { autoClose: false, closeOnClick: false });
+                                .bindPopup(this.createPopupContent(loc), { 
+                                    autoClose: false, 
+                                    closeOnClick: false,
+                                    maxWidth: 300
+                                });
 
-                            // Al hacer clic: solo zoom, NO abrir popup automáticamente
+                            // Al hacer clic: solo zoom la primera vez
                             marker.on('click', function(e) {
                                 if (!self.isZoomedIn) {
-                                    // Primer clic: solo zoom
                                     self.map.flyTo([loc.lat, loc.lng], 16, { duration: 1 });
                                     self.isZoomedIn = true;
                                     document.getElementById('btn-ver-todos').style.display = 'flex';
-                                    // Cerrar popup si se abrió automáticamente
                                     setTimeout(() => marker.closePopup(), 10);
                                 }
-                                // Si ya está en zoom, el clic abre el popup normalmente
                             });
                             
-                            this.markers[loc.user_id] = marker;
+                            this.markers[loc.user_id] = { marker, loc };
                         });
 
                         if (this.locations.length > 0) {
-                            const group = new L.featureGroup(Object.values(this.markers));
+                            const group = new L.featureGroup(Object.values(this.markers).map(m => m.marker));
                             this.defaultBounds = group.getBounds().pad(0.1);
                             this.map.fitBounds(this.defaultBounds);
+                        }
+                    },
+
+                    // Actualización silenciosa: obtiene nuevas coordenadas y mueve los marcadores
+                    async silentRefresh() {
+                        try {
+                            const response = await fetch('/api/sales-locations', {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            if (!response.ok) return;
+                            
+                            const newLocations = await response.json();
+                            this.locations = newLocations;
+
+                            newLocations.forEach(loc => {
+                                if (this.markers[loc.user_id]) {
+                                    // Vendedor existente: actualizar posición suavemente
+                                    const existing = this.markers[loc.user_id];
+                                    const newLatLng = L.latLng(loc.lat, loc.lng);
+                                    existing.marker.setLatLng(newLatLng);
+                                    existing.marker.setIcon(this.createMarkerIcon(loc));
+                                    existing.marker.setPopupContent(this.createPopupContent(loc));
+                                    existing.loc = loc;
+                                } else {
+                                    // Nuevo vendedor: agregar marcador
+                                    const icon = this.createMarkerIcon(loc);
+                                    const marker = L.marker([loc.lat, loc.lng], { icon: icon })
+                                        .addTo(this.map)
+                                        .bindPopup(this.createPopupContent(loc), {
+                                            autoClose: false,
+                                            closeOnClick: false,
+                                            maxWidth: 300
+                                        });
+                                    
+                                    const self = this;
+                                    marker.on('click', function(e) {
+                                        if (!self.isZoomedIn) {
+                                            self.map.flyTo([loc.lat, loc.lng], 16, { duration: 1 });
+                                            self.isZoomedIn = true;
+                                            document.getElementById('btn-ver-todos').style.display = 'flex';
+                                            setTimeout(() => marker.closePopup(), 10);
+                                        }
+                                    });
+
+                                    this.markers[loc.user_id] = { marker, loc };
+                                }
+                            });
+
+                            // Actualizar bounds por si hay nuevos vendedores
+                            if (Object.keys(this.markers).length > 0) {
+                                const group = new L.featureGroup(Object.values(this.markers).map(m => m.marker));
+                                this.defaultBounds = group.getBounds().pad(0.1);
+                            }
+                        } catch (e) {
+                            console.log('Error actualizando ubicaciones:', e);
                         }
                     },
 
@@ -139,10 +296,6 @@
                         this.map.closePopup();
                         document.getElementById('btn-ver-todos').style.display = 'none';
                     },
-                    
-                    async refreshLocations() {
-                        window.location.reload();
-                    }
                 }));
             });
         </script>
