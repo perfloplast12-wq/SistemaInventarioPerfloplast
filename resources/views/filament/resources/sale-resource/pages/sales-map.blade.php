@@ -18,7 +18,7 @@
 
             <!-- Botón "Ver todos" (aparece al hacer zoom en un vendedor) -->
             <button id="btn-ver-todos"
-                    onclick="document.querySelector('[x-data]').__x.$data.zoomToAll()"
+                    onclick="window._salesMapZoomToAll()"
                     class="absolute bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors border border-gray-200 dark:border-gray-700 cursor-pointer items-center gap-2 text-sm font-semibold"
                     style="z-index: 9999; top: 1rem; right: 4rem; display: none;">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,6 +46,8 @@
                     init() {
                         this.initMap();
                         setInterval(() => this.refreshLocations(), 30000);
+                        // Exponer zoomToAll como función global para el botón HTML
+                        window._salesMapZoomToAll = () => this.zoomToAll();
                     },
                     
                     initMap() {
