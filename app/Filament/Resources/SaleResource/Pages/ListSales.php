@@ -18,7 +18,8 @@ class ListSales extends ListRecords
                 ->label('Mapa de Vendedores')
                 ->icon('heroicon-o-map')
                 ->color('info')
-                ->url(fn () => static::$resource::getUrl('map')),
+                ->url(fn () => static::$resource::getUrl('map'))
+                ->hidden(fn () => auth()->user()->hasAnyRole(['sales', 'vendedor', 'vendedores', 'ventas', 'Vendedor', 'Ventas', 'Sales'])),
 
             Actions\CreateAction::make()
                 ->label('+ Nueva Venta')
