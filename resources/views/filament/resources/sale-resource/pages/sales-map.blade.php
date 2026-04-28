@@ -26,9 +26,9 @@
                     const icon = L.divIcon({
                         className: 'custom-div-icon',
                         html: `
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-50%);">
+                            <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-50%);'>
                                 <div style='background-color: ${iconColor}; width: 14px; height: 14px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 10;'></div>
-                                <div style="margin-top: 4px; padding: 2px 6px; background-color: white; color: #1f2937; font-size: 11px; font-weight: bold; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; border: 1px solid #e5e7eb;">
+                                <div style='margin-top: 4px; padding: 2px 6px; background-color: white; color: #1f2937; font-size: 11px; font-weight: bold; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); white-space: nowrap; border: 1px solid #e5e7eb;'>
                                     ${loc.name}
                                 </div>
                             </div>
