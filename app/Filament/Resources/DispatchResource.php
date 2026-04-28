@@ -330,7 +330,12 @@ class DispatchResource extends Resource
                     ->modalWidth('6xl')
                     ->modalContent(fn (Dispatch $record) => view('components.leaflet-route-map', [
                         'locations' => $record->locations()->orderBy('created_at', 'asc')->get(),
-                        'dispatchId' => $record->id
+                        'dispatchId' => $record->id,
+                        'dispatchNumber' => $record->dispatch_number,
+                        'driverName' => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
+                        'truckName' => $record->truck?->name ?? 'Sin asignar',
+                        'routeName' => $record->route ?? 'Sin ruta',
+                        'dispatchStatus' => $record->status,
                     ])),
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->status === 'pending'),
