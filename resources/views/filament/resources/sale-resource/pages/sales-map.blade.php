@@ -15,6 +15,17 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </a>
+
+            <!-- Botón "Ver todos" (aparece al hacer zoom en un vendedor) -->
+            <button id="btn-ver-todos"
+                    onclick="document.querySelector('[x-data]').__x.$data.zoomToAll()"
+                    class="absolute bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors border border-gray-200 dark:border-gray-700 cursor-pointer items-center gap-2 text-sm font-semibold"
+                    style="z-index: 9999; top: 1rem; right: 4rem; display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                </svg>
+                Ver todos
+            </button>
         </div>
     </div>
 
@@ -29,6 +40,8 @@
                     locations: initialLocations,
                     map: null,
                     markers: {},
+                    defaultBounds: null,
+                    isZoomedIn: false,
                     
                     init() {
                         this.initMap();
@@ -42,9 +55,17 @@
                         }).addTo(this.map);
                         
                         this.renderMarkers();
+
+                        // Cuando se cierra un popup, regresar a la vista general
+                        this.map.on('popupclose', () => {
+                            if (this.isZoomedIn) {
+                                this.zoomToAll();
+                            }
+                        });
                     },
                     
                     renderMarkers() {
+                        const self = this;
                         this.locations.forEach(loc => {
                             const iconColor = loc.is_online ? '#4f46e5' : '#9ca3af';
                             const icon = L.divIcon({
@@ -75,14 +96,31 @@
                                         </div>
                                     </div>
                                 `);
+
+                            // Al hacer clic en el marcador: zoom hacia el vendedor
+                            marker.on('click', function() {
+                                self.map.flyTo([loc.lat, loc.lng], 16, { duration: 1 });
+                                self.isZoomedIn = true;
+                                // Mostrar el botón "Ver todos"
+                                document.getElementById('btn-ver-todos').style.display = 'flex';
+                            });
                             
                             this.markers[loc.user_id] = marker;
                         });
 
                         if (this.locations.length > 0) {
                             const group = new L.featureGroup(Object.values(this.markers));
-                            this.map.fitBounds(group.getBounds().pad(0.1));
+                            this.defaultBounds = group.getBounds().pad(0.1);
+                            this.map.fitBounds(this.defaultBounds);
                         }
+                    },
+
+                    zoomToAll() {
+                        if (this.defaultBounds) {
+                            this.map.flyToBounds(this.defaultBounds, { duration: 1 });
+                        }
+                        this.isZoomedIn = false;
+                        document.getElementById('btn-ver-todos').style.display = 'none';
                     },
                     
                     async refreshLocations() {
