@@ -37,8 +37,8 @@ class SalesMap extends Page
                         'lat' => (float) $lastLocation->lat,
                         'lng' => (float) $lastLocation->lng,
                         'speed' => (float) ($lastLocation->speed ?? 0),
-                        'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->setTimezone('America/Guatemala')->diffForHumans() : 'Desconocido',
-                        'last_seen_exact' => $lastLocation->created_at ? $lastLocation->created_at->setTimezone('America/Guatemala')->format('d/m/Y h:i:s A') : 'Desconocido',
+                        'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala')->diffForHumans() : 'Desconocido',
+                        'last_seen_exact' => $lastLocation->created_at ? $lastLocation->created_at->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala')->format('d/m/Y h:i:s A') : 'Desconocido',
                         'accuracy' => round((float) ($lastLocation->accuracy ?? 0), 1),
                         'is_online' => $lastLocation->created_at ? $lastLocation->created_at->gt(now()->subMinutes(15)) : false,
                     ];
