@@ -7,8 +7,7 @@ use App\Http\Controllers\Api\TrackingController;
 Route::get('/catalog', [CatalogController::class, 'index'])
     ->name('api.catalog.index');
 
-Route::post('/tracking', [TrackingController::class, 'store'])
-    ->name('api.tracking.store');
+// POST /api/tracking se movió a web.php para que auth()->user() funcione con la sesión
 
 Route::get('/tracking/{dispatch}', [TrackingController::class, 'show'])
     ->name('api.tracking.show');

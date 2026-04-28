@@ -24,6 +24,11 @@ Route::get('/diag-inventario', function () {
     return "OK - Diagnóstico Activo (v2 - " . now()->toDateTimeString() . ")";
 });
 
+// Ruta de tracking GPS con sesión web para que auth()->user() funcione
+Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::class, 'store'])
+    ->middleware(['web', 'auth'])
+    ->name('web.tracking.store');
+
 Route::get('/force-migrate', function () {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
