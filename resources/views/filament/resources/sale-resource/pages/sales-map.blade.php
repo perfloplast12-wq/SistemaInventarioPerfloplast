@@ -57,7 +57,7 @@
                 background: linear-gradient(135deg, #4f46e5, #7c3aed);
             }
             .vendor-marker-pin.offline {
-                background: linear-gradient(135deg, #9ca3af, #6b7280);
+                background: linear-gradient(135deg, #ef4444, #b91c1c);
             }
             .vendor-marker-icon {
                 transform: rotate(45deg);
@@ -104,7 +104,7 @@
                 background: #22c55e;
             }
             .vendor-marker-status.offline {
-                background: #9ca3af;
+                background: #ef4444;
             }
         </style>
 
@@ -160,7 +160,7 @@
                     },
 
                     createPopupContent(loc) {
-                        const statusDot = loc.is_online ? '#22c55e' : '#9ca3af';
+                        const statusDot = loc.is_online ? '#22c55e' : '#ef4444';
                         return `
                             <div style='min-width: 240px; padding: 14px; font-family: -apple-system, sans-serif;'>
                                 <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 12px;'>
@@ -169,9 +169,9 @@
                                     </div>
                                     <div>
                                         <p style='font-weight: 700; font-size: 15px; color: #111827; margin: 0;'>${loc.name}</p>
-                                        <span style='display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; ${loc.is_online ? "background: #dcfce7; color: #15803d;" : "background: #f3f4f6; color: #6b7280;"}'>
+                                        <span style='display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; ${loc.is_online ? "background: #dcfce7; color: #15803d;" : "background: #fef2f2; color: #dc2626;"}'>
                                             <span style='width: 6px; height: 6px; border-radius: 50%; background: ${statusDot};'></span>
-                                            ${loc.is_online ? 'EN LÍNEA' : 'DESCONECTADO'}
+                                            ${loc.is_online ? 'EN LÍNEA' : 'FUERA DE LÍNEA'}
                                         </span>
                                     </div>
                                 </div>
@@ -180,6 +180,11 @@
                                         <span style='font-size: 14px;'>🕐</span>
                                         <span><strong>Última posición:</strong> ${loc.last_seen_exact || loc.updated_at}</span>
                                     </div>
+                                    ${!loc.is_online ? `
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #ef4444;'>
+                                        <span style='font-size: 14px;'>⏱️</span>
+                                        <span><strong>Desconectado:</strong> ${loc.updated_at}</span>
+                                    </div>` : ''}
                                     <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
                                         <span style='font-size: 14px;'>📍</span>
                                         <span><strong>Coordenadas:</strong> ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}</span>
