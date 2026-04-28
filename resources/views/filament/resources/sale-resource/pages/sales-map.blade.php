@@ -161,10 +161,14 @@
 
                     createPopupContent(loc) {
                         const statusDot = loc.is_online ? '#22c55e' : '#ef4444';
+                        const timeLabel = loc.is_online 
+                            ? `<strong>Conectado ahora</strong>` 
+                            : `<strong>Última conexión:</strong> ${loc.updated_at}`;
+                        const timeColor = loc.is_online ? '#15803d' : '#ef4444';
                         return `
                             <div style='min-width: 240px; padding: 14px; font-family: -apple-system, sans-serif;'>
                                 <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 12px;'>
-                                    <div style='width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, ${loc.is_online ? "#4f46e5, #7c3aed" : "#9ca3af, #6b7280"}); display: flex; align-items: center; justify-content: center;'>
+                                    <div style='width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, ${loc.is_online ? "#4f46e5, #7c3aed" : "#ef4444, #b91c1c"}); display: flex; align-items: center; justify-content: center;'>
                                         <span style='font-size: 18px;'>👤</span>
                                     </div>
                                     <div>
@@ -176,14 +180,14 @@
                                     </div>
                                 </div>
                                 <div style='border-top: 1px solid #e5e7eb; padding-top: 10px; display: grid; gap: 6px;'>
-                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
-                                        <span style='font-size: 14px;'>🕐</span>
-                                        <span><strong>Última posición:</strong> ${loc.last_seen_exact || loc.updated_at}</span>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: ${timeColor};'>
+                                        <span style='font-size: 14px;'>${loc.is_online ? '🟢' : '🔴'}</span>
+                                        <span>${timeLabel}</span>
                                     </div>
                                     ${!loc.is_online ? `
-                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #ef4444;'>
-                                        <span style='font-size: 14px;'>⏱️</span>
-                                        <span><strong>Desconectado:</strong> ${loc.updated_at}</span>
+                                    <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
+                                        <span style='font-size: 14px;'>🕐</span>
+                                        <span><strong>Última posición registrada:</strong> ${loc.last_seen_exact}</span>
                                     </div>` : ''}
                                     <div style='display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;'>
                                         <span style='font-size: 14px;'>📍</span>

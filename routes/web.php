@@ -42,8 +42,10 @@ Route::get('/api/sales-locations', function () {
                     ->first();
                 if (!$lastLocation || !$lastLocation->lat || !$lastLocation->lng) return null;
 
-                $isOnline = $lastLocation->created_at ? $lastLocation->created_at->gt(now()->subMinutes(5)) : false;
-                $lastSeenLocal = $lastLocation->created_at ? $lastLocation->created_at->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala') : null;
+                $minutesAgo = $lastLocation->created_at 
+                    ? (int) now()->diffInMinutes($lastLocation->created_at) 
+                    : 9999;
+                $isOnline = $minutesAgo <= 5;
 
                 return [
                     'user_id' => $user->id,
@@ -51,8 +53,8 @@ Route::get('/api/sales-locations', function () {
                     'lat' => (float) $lastLocation->lat,
                     'lng' => (float) $lastLocation->lng,
                     'speed' => (float) ($lastLocation->speed ?? 0),
-                    'updated_at' => $lastSeenLocal ? $lastSeenLocal->diffForHumans() : 'Desconocido',
-                    'last_seen_exact' => $lastSeenLocal ? $lastSeenLocal->format('d/m/Y h:i:s A') : 'Desconocido',
+                    'updated_at' => $lastLocation->created_at ? $lastLocation->created_at->diffForHumans() : 'Desconocido',
+                    'last_seen_exact' => $lastLocation->created_at ? $lastLocation->created_at->format('d/m/Y h:i:s A') : 'Desconocido',
                     'accuracy' => round((float) ($lastLocation->accuracy ?? 0), 1),
                     'is_online' => $isOnline,
                 ];
