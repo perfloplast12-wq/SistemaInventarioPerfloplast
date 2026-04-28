@@ -61,7 +61,8 @@
             
             async sendLocation(position) {
                 const { latitude, longitude, speed, heading, accuracy } = position.coords;
-                if (accuracy > 1000) return;
+                // Eliminamos la restricción de accuracy temporalmente para asegurar que lleguen los datos
+                // if (accuracy > 1000) return;
                 try {
                     await fetch('/api/tracking', {
                         method: 'POST',
