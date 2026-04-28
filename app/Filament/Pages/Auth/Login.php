@@ -16,6 +16,17 @@ class Login extends BaseLogin
         ];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        $user = auth()->user();
+
+        if ($user && $user->hasRole('sales')) {
+            return route('filament.admin.resources.sales.index');
+        }
+
+        return parent::getRedirectUrl();
+    }
+
     public function getHeading(): string
     {
         return '';

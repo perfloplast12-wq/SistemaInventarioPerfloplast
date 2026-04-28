@@ -26,10 +26,20 @@ class Dashboard extends Page
 
     public static function canAccess(): bool
     {
+        // Permitimos el acceso técnico para evitar el error 403, 
+        // pero redirigimos en el mount() y lo ocultamos del menú.
+        if (auth()->user()?->hasAnyRole(['production', 'sales'])) {
+            return true;
+        }
+        return auth()->user()?->can('dashboard.view') ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
         if (auth()->user()?->hasAnyRole(['production', 'sales'])) {
             return false;
         }
-        return auth()->user()?->can('dashboard.view') ?? false;
+        return true;
     }
 
     public function getHeading(): string | \Illuminate\Contracts\Support\Htmlable
@@ -45,6 +55,20 @@ class Dashboard extends Page
 
     public function mount(): void
     {
+        $user = auth()->user();
+
+        if ($user) {
+            if ($user->hasRole('sales')) {
+                $this->redirect(route('filament.admin.resources.sales.index'));
+                return;
+            }
+
+            if ($user->hasRole('production')) {
+                $this->redirect(route('filament.admin.resources.productions.index'));
+                return;
+            }
+        }
+
         $this->setPeriod('this_week');
         $this->customStart = $this->filters['startDate'];
         $this->customEnd   = $this->filters['endDate'];
