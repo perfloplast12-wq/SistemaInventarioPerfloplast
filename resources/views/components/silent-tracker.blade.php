@@ -1,6 +1,6 @@
 @php
     $user = auth()->user();
-    $isVendedor = $user && ($user->hasRole('sales') || $user->hasRole('vendedor'));
+    $isVendedor = $user && $user->hasAnyRole(['sales', 'vendedor', 'vendedores', 'ventas', 'Vendedor', 'Ventas', 'Sales']);
     $isActiveConductor = $user && $user->hasRole('conductor');
     
     $activeDispatchId = null;
