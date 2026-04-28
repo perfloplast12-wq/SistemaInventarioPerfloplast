@@ -25,6 +25,18 @@ class Warehouse extends Model
         'is_active' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($warehouse) {
+            if ($warehouse->is_factory) {
+                // Si esta bodega se marca como fábrica, quitamos el flag a todas las demás
+                static::where('id', '!=', $warehouse->id)
+                    ->where('is_factory', true)
+                    ->update(['is_factory' => false]);
+            }
+        });
+    }
+
     public function scopeIsActive($query)
     {
         return $query->where('is_active', true);
