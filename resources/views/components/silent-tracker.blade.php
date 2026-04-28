@@ -21,48 +21,72 @@
             dispatchId: {{ $activeDispatchId ?? 'null' }},
             watchId: null,
             showLock: false,
+            heartbeatTimer: null,
+            lastSuccessTime: Date.now(),
             
             init() {
                 this.startTracking();
+                // Verificación continua cada 10 segundos: si no hay GPS, bloquear rápido
+                this.heartbeatTimer = setInterval(() => this.checkGpsStatus(), 10000);
             },
             
             startTracking() {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) {
+                    this.showLock = true;
+                    this.sendOfflineSignal();
+                    return;
+                }
                 
-                // Solo escuchamos. Si falla por permisos, mostramos el bloqueo.
+                // Limpiamos watch anterior si existe
+                if (this.watchId !== null) {
+                    navigator.geolocation.clearWatch(this.watchId);
+                }
+                
                 this.watchId = navigator.geolocation.watchPosition(
                     (pos) => { 
                         this.sendLocation(pos); 
-                        this.showLock = false; 
+                        this.showLock = false;
+                        this.lastSuccessTime = Date.now();
                     },
                     (err) => {
-                        if (err.code === 1) { // PERMISSION_DENIED
-                            this.showLock = true;
-                        }
+                        // Cualquier error de GPS: bloquear inmediatamente
+                        this.showLock = true;
+                        this.sendOfflineSignal();
                     },
-                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
                 );
             },
             
+            // Verificación periódica: si hace más de 30s sin posición exitosa, bloquear
+            checkGpsStatus() {
+                const secondsSinceLastSuccess = (Date.now() - this.lastSuccessTime) / 1000;
+                if (secondsSinceLastSuccess > 30) {
+                    this.showLock = true;
+                    this.sendOfflineSignal();
+                    // Reintentar el watch por si se restauró el GPS
+                    this.startTracking();
+                }
+            },
+            
             requestPermission() {
-                // Función llamada por el botón (interacción de usuario)
                 navigator.geolocation.getCurrentPosition(
                     (pos) => { 
                         this.sendLocation(pos); 
                         this.showLock = false;
-                        // ABSOLUTAMENTE NINGUNA RECARGA AQUÍ
+                        this.lastSuccessTime = Date.now();
+                        // Reiniciar el watch para que siga enviando
+                        this.startTracking();
                     },
                     (err) => { 
-                        if (err.code === 1) this.showLock = true; 
+                        this.showLock = true;
+                        this.sendOfflineSignal();
                     },
-                    { enableHighAccuracy: true }
+                    { enableHighAccuracy: true, timeout: 8000 }
                 );
             },
             
             async sendLocation(position) {
                 const { latitude, longitude, speed, heading, accuracy } = position.coords;
-                // Eliminamos la restricción de accuracy temporalmente para asegurar que lleguen los datos
-                // if (accuracy > 1000) return;
                 try {
                     await fetch('/api/tracking', {
                         method: 'POST',
@@ -77,7 +101,30 @@
                             lng: longitude,
                             speed: speed,
                             heading: heading,
-                            accuracy: accuracy
+                            accuracy: accuracy,
+                            status: 'online'
+                        })
+                    });
+                } catch (e) {}
+            },
+            
+            async sendOfflineSignal() {
+                try {
+                    await fetch('/api/tracking', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            dispatch_id: this.dispatchId,
+                            lat: 0,
+                            lng: 0,
+                            speed: 0,
+                            heading: 0,
+                            accuracy: 0,
+                            status: 'offline'
                         })
                     });
                 } catch (e) {}

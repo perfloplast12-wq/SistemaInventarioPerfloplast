@@ -42,11 +42,23 @@ Route::get('/api/sales-locations', function () {
                     ->first();
                 if (!$lastLocation || !$lastLocation->lat || !$lastLocation->lng) return null;
 
-                $createdAt = $lastLocation->created_at;
+                $isOfflineSignal = ($lastLocation->accuracy == -1);
+                
+                if ($isOfflineSignal) {
+                    $realLocation = \App\Models\UserLocation::where('user_id', $user->id)
+                        ->where('accuracy', '!=', -1)
+                        ->latest('id')
+                        ->first();
+                    $displayLocation = $realLocation ?? $lastLocation;
+                } else {
+                    $displayLocation = $lastLocation;
+                }
+
+                $createdAt = $displayLocation->created_at;
                 if ($createdAt) {
                     $localTime = $createdAt->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala');
                     $minutesAgo = (int) $localTime->diffInMinutes(now('America/Guatemala'));
-                    $isOnline = $minutesAgo <= 2;
+                    $isOnline = !$isOfflineSignal && $minutesAgo <= 2;
                 } else {
                     $localTime = null;
                     $isOnline = false;
@@ -55,12 +67,12 @@ Route::get('/api/sales-locations', function () {
                 return [
                     'user_id' => $user->id,
                     'name' => $user->name,
-                    'lat' => (float) $lastLocation->lat,
-                    'lng' => (float) $lastLocation->lng,
-                    'speed' => (float) ($lastLocation->speed ?? 0),
+                    'lat' => (float) $displayLocation->lat,
+                    'lng' => (float) $displayLocation->lng,
+                    'speed' => (float) ($displayLocation->speed ?? 0),
                     'updated_at' => $localTime ? $localTime->diffForHumans() : 'Desconocido',
                     'last_seen_exact' => $localTime ? $localTime->format('d/m/Y h:i:s A') : 'Desconocido',
-                    'accuracy' => round((float) ($lastLocation->accuracy ?? 0), 1),
+                    'accuracy' => $isOfflineSignal ? 0 : round((float) ($displayLocation->accuracy ?? 0), 1),
                     'is_online' => $isOnline,
                 ];
             } catch (\Exception $e) { return null; }

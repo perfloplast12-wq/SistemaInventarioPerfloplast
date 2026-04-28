@@ -32,14 +32,34 @@ class TrackingController extends Controller
                 } catch (\Exception $e) {}
             } else if ($user) {
                 // Rastreo general de usuario (Vendedores)
-                $location = \App\Models\UserLocation::create([
-                    'user_id' => $user->id,
-                    'lat' => $validated['lat'],
-                    'lng' => $validated['lng'],
-                    'speed' => $validated['speed'],
-                    'heading' => $validated['heading'],
-                    'accuracy' => $validated['accuracy'] ?? null,
-                ]);
+                $status = $request->input('status', 'online');
+                
+                if ($status === 'offline') {
+                    // Señal de desconexión: marcar última ubicación con accuracy = -1
+                    $lastLoc = \App\Models\UserLocation::where('user_id', $user->id)
+                        ->latest('id')
+                        ->first();
+                    if ($lastLoc) {
+                        // Guardar señal de desconexión con las mismas coordenadas pero accuracy -1
+                        \App\Models\UserLocation::create([
+                            'user_id' => $user->id,
+                            'lat' => $lastLoc->lat,
+                            'lng' => $lastLoc->lng,
+                            'speed' => 0,
+                            'heading' => 0,
+                            'accuracy' => -1, // Marcador especial: usuario desconectado
+                        ]);
+                    }
+                } else {
+                    $location = \App\Models\UserLocation::create([
+                        'user_id' => $user->id,
+                        'lat' => $validated['lat'],
+                        'lng' => $validated['lng'],
+                        'speed' => $validated['speed'],
+                        'heading' => $validated['heading'],
+                        'accuracy' => $validated['accuracy'] ?? null,
+                    ]);
+                }
             }
 
             return response()->json([
