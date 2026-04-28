@@ -50,10 +50,7 @@ class RolesSeeder extends Seeder
 
         // ── 5. Vendedor (Sales) ────────────────────────────
         $sales->syncPermissions([
-            'dashboard.view',
-            'catalogs.view',
             'products.view',
-            'inventory.view',
             'sales.view', 'sales.create', 'sales.edit', 'sales.confirm',
             'orders.view', 'orders.create', 'orders.edit',
             'order_returns.view', 'order_returns.create',

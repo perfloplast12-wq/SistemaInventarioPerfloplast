@@ -34,7 +34,7 @@ class ColorResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('colors.view') ?? false;
+        return (auth()->user()?->can('colors.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     public static function form(Form $form): Form

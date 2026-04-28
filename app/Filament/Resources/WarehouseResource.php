@@ -26,7 +26,7 @@ class WarehouseResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('warehouses.view') ?? false;
+        return (auth()->user()?->can('warehouses.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     public static function canCreate(): bool

@@ -26,7 +26,7 @@ class InventoryMovementResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('inventory_movements.view') ?? false;
+        return (auth()->user()?->can('inventory_movements.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     protected static ?string $navigationGroup = 'Producción e Inventario';

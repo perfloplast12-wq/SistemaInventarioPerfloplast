@@ -24,6 +24,11 @@ class LocationResource extends Resource
     protected static ?string $navigationGroup = 'Logística y Pedidos';
     protected static ?int $navigationSort = 4;
 
+    public static function canViewAny(): bool
+    {
+        return !auth()->user()?->hasRole('sales');
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         return true;

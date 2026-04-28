@@ -39,7 +39,7 @@ class RawMaterialProductResource extends Resource
     // ✅ PERMISOS (usa los mismos que ProductResource)
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('products.view') ?? false;
+        return (auth()->user()?->can('products.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     public static function canCreate(): bool

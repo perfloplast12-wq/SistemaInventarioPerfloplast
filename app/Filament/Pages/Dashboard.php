@@ -26,7 +26,7 @@ class Dashboard extends Page
 
     public static function canAccess(): bool
     {
-        if (auth()->user()?->hasRole('production')) {
+        if (auth()->user()?->hasAnyRole(['production', 'sales'])) {
             return false;
         }
         return auth()->user()?->can('dashboard.view') ?? false;

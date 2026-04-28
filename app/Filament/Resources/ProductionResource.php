@@ -30,7 +30,7 @@ class ProductionResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('production.view') ?? false;
+        return (auth()->user()?->can('production.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     public static function canCreate(): bool

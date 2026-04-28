@@ -30,7 +30,7 @@ class TruckResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('trucks.view') ?? false;
+        return (auth()->user()?->can('trucks.view') ?? false) && !auth()->user()?->hasRole('sales');
     }
 
     public static function canCreate(): bool
