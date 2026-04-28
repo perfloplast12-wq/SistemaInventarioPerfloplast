@@ -46,7 +46,7 @@ Route::get('/api/sales-locations', function () {
                 if ($createdAt) {
                     $localTime = $createdAt->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala');
                     $minutesAgo = (int) $localTime->diffInMinutes(now('America/Guatemala'));
-                    $isOnline = $minutesAgo <= 5;
+                    $isOnline = $minutesAgo <= 2;
                 } else {
                     $localTime = null;
                     $isOnline = false;

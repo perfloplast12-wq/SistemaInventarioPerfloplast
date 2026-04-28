@@ -39,7 +39,7 @@ class SalesMap extends Page
                         // setTimezone('America/Guatemala') = "conviértelo a hora local"
                         $localTime = $createdAt->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala');
                         $minutesAgo = (int) $localTime->diffInMinutes(now('America/Guatemala'));
-                        $isOnline = $minutesAgo <= 5;
+                        $isOnline = $minutesAgo <= 2;
                     } else {
                         $localTime = null;
                         $isOnline = false;

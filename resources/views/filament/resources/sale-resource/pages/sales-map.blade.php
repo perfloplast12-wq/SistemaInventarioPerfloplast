@@ -120,8 +120,8 @@
                     
                     init() {
                         this.initMap();
-                        // Actualización silenciosa cada 20 segundos (sin recargar la página)
-                        this.refreshTimer = setInterval(() => this.silentRefresh(), 20000);
+                        // Actualización silenciosa cada 15 segundos (sin recargar la página)
+                        this.refreshTimer = setInterval(() => this.silentRefresh(), 15000);
                         window._salesMapZoomToAll = () => this.zoomToAll();
                     },
                     
