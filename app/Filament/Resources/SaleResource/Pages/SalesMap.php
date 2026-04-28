@@ -21,7 +21,7 @@ class SalesMap extends Page
         try {
             // Buscamos usuarios con roles de ventas de forma segura
             $salesUsers = \App\Models\User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['sales', 'vendedor']);
+                $q->whereIn('name', ['sales', 'vendedor', 'vendedores', 'ventas', 'Vendedor', 'Ventas', 'Sales']);
             })->get();
             
             $locations = $salesUsers->map(function ($user) {
