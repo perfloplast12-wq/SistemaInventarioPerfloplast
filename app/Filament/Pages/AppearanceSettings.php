@@ -35,7 +35,6 @@ class AppearanceSettings extends Page
         $settings = Setting::whereIn('key', [
             'primary_color_1',
             'primary_color_2',
-            'border_radius',
             'glass_effect',
             'mesh_background',
             'button_layout',
@@ -50,7 +49,6 @@ class AppearanceSettings extends Page
         $this->form->fill([
             'primary_color_1' => $settings['primary_color_1'] ?? '#6366f1',
             'primary_color_2' => $settings['primary_color_2'] ?? '#3b82f6',
-            'border_radius' => $settings['border_radius'] ?? 12,
             'glass_effect' => (bool)($settings['glass_effect'] ?? false),
             'mesh_background' => (bool)($settings['mesh_background'] ?? true),
             'button_layout' => $settings['button_layout'] ?? 'pill',
@@ -160,9 +158,8 @@ class AppearanceSettings extends Page
                                             ->options(['none' => 'Plano','soft' => 'Suave','medium' => 'Moderno','deep' => 'Elevado']),
                                     ]),
                                 Section::make('Geometría y Forma')
-                                    ->columns(3)
+                                    ->columns(2)
                                     ->schema([
-                                        TextInput::make('border_radius')->label('Rounding (px)')->numeric()->extraAttributes(['min' => 0, 'max' => 24]),
                                         \Filament\Forms\Components\Select::make('button_layout')
                                             ->label('Botones')
                                             ->options(['square' => 'Rectos','rounded' => 'Redondeados','pill' => 'Cápsula']),
