@@ -558,25 +558,15 @@ body,
 /* PREMIUM STYLES */
 body {
     background-color: var(--bg-color) !important;
-    background-image: 
-        radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 70%) 0, transparent 60%), 
-        radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 70%) 0, transparent 60%),
-        linear-gradient(180deg, 
-            var(--bg-color) 0%, 
-            color-mix(in srgb, var(--bg-color), var(--p-1) 25%) 40%, 
-            color-mix(in srgb, var(--bg-color), var(--p-2) 80%) 100%
-        ) !important;
     background-attachment: fixed !important;
     color: var(--text-primary) !important;
     transition: background-color 0.8s ease;
     min-height: 100vh;
-    overflow-x: clip;
+    background-size: cover !important;
 }
 
 .dark body {
     background-image: 
-        radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 60%) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 60%) 0, transparent 50%),
         linear-gradient(180deg, 
             #040609 0%, 
             color-mix(in srgb, #040609, var(--p-1) 30%) 50%, 
