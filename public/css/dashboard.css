@@ -559,12 +559,13 @@ body,
 body {
     background-color: var(--bg-color) !important;
     background-image: 
-        radial-gradient(at 0% 0%, color-mix(in srgb, var(--p-1), transparent 85%) 0, transparent 60%), 
-        radial-gradient(at 100% 0%, color-mix(in srgb, var(--p-2), transparent 85%) 0, transparent 60%),
+        radial-gradient(at 0% 0%, #ffffff 0, transparent 40%), 
+        radial-gradient(at 100% 0%, #ffffff 0, transparent 40%),
         linear-gradient(180deg, 
-            var(--bg-color) 0%, 
-            color-mix(in srgb, var(--bg-color), var(--p-1) 10%) 50%, 
-            color-mix(in srgb, var(--bg-color), var(--p-2) 20%) 100%
+            #ffffff 0%, 
+            var(--bg-color) 25%, 
+            color-mix(in srgb, var(--bg-color), #000000 30%) 70%,
+            color-mix(in srgb, var(--bg-color), #000000 60%) 100%
         ) !important;
     background-attachment: fixed !important;
     color: var(--text-primary) !important;
