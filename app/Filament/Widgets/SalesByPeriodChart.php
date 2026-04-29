@@ -35,10 +35,14 @@ class SalesByPeriodChart extends Widget
             ->select(DB::raw("DATE_FORMAT(sale_date, '$format') as period"), DB::raw('SUM(total) as val'))
             ->groupBy('period')->pluck('val', 'period');
 
-        $prod = Production::with('toWarehouse')->where('status', 'confirmed')
-            ->whereBetween('production_date', [$start, $end])
-            ->when($this->warehouse_id, fn($q) => $q->where('to_warehouse_id', $this->warehouse_id))
-            ->select(DB::raw("DATE_FORMAT(production_date, '$format') as period"), DB::raw('SUM(quantity) as val'))
+        $prod = \App\Models\ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($start, $end) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$start, $end]);
+            })
+            ->join('productions', 'production_items.production_id', '=', 'productions.id')
+            ->when($this->warehouse_id, fn($q) => $q->where('productions.to_warehouse_id', $this->warehouse_id))
+            ->select(DB::raw("DATE_FORMAT(productions.production_date, '$format') as period"), DB::raw('SUM(production_items.quantity) as val'))
             ->groupBy('period')->pluck('val', 'period');
 
         $labels = $salesData = $prodData = [];
