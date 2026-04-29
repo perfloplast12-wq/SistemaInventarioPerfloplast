@@ -107,6 +107,15 @@ Route::get('/sync-db-productions', function () {
 
         // 2. Limpiar la tabla principal
         \Illuminate\Support\Facades\Schema::table('productions', function (\Illuminate\Database\Schema\Blueprint $table) {
+            // Primero quitamos las llaves foráneas
+            if (\Illuminate\Support\Facades\Schema::hasColumn('productions', 'product_id')) {
+                $table->dropForeign(['product_id']);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('productions', 'color_id')) {
+                $table->dropForeign(['color_id']);
+            }
+            
+            // Ahora sí borramos las columnas
             $columns = ['product_id', 'color_id', 'quantity'];
             foreach ($columns as $col) {
                 if (\Illuminate\Support\Facades\Schema::hasColumn('productions', $col)) {
@@ -114,6 +123,7 @@ Route::get('/sync-db-productions', function () {
                 }
             }
         });
+
 
         return "✅ Base de datos de Producción sincronizada con éxito. Ya puedes cerrar esta pestaña.";
     } catch (\Exception $e) {
