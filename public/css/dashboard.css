@@ -637,11 +637,13 @@ html:not(.dark) body {
 }
 
 .fi-sidebar {
-    border-inline-end: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-inline-end: 1px solid rgba(0, 0, 0, 0.06) !important;
     border-top: none !important;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.02) !important;
-    background-color: #ffffff !important;
-    backdrop-filter: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    background: transparent !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
 }
 
 .dark .fi-sidebar {
