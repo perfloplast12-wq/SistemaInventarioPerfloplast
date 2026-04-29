@@ -752,20 +752,35 @@ html.dark .fi-logo {
     }
 }
 
-/* Fix: Select/dropdown panels must appear above other sections */
-.fi-fo-select .choices__list--dropdown,
-.fi-fo-select .choices__list[aria-expanded],
-[x-float-contents],
-.fi-fo-select [role="listbox"],
-div[wire\\:id] .fi-fo-select .fi-select-dropdown {
-    z-index: 9999 !important;
-    position: absolute !important;
-}
-
+/* Fix: Dropdown z-index stacking context issue */
+/* Each section creates a stacking context - earlier sections must stack above later ones */
 .fi-section, .fi-card {
+    position: relative !important;
     overflow: visible !important;
 }
 
 .fi-fo-repeater-item {
     overflow: visible !important;
+    position: relative !important;
+}
+
+/* Reverse stacking: sections earlier in the DOM get higher z-index */
+.fi-form > .fi-section:nth-child(1) { z-index: 50 !important; }
+.fi-form > .fi-section:nth-child(2) { z-index: 40 !important; }
+.fi-form > .fi-section:nth-child(3) { z-index: 30 !important; }
+.fi-form > .fi-section:nth-child(4) { z-index: 20 !important; }
+.fi-form > .fi-section:nth-child(5) { z-index: 10 !important; }
+.fi-form > .fi-section:nth-child(n+6) { z-index: 5 !important; }
+
+/* Also handle sections inside the main form container */
+.fi-form-component-ctn > .fi-section:nth-child(1) { z-index: 50 !important; }
+.fi-form-component-ctn > .fi-section:nth-child(2) { z-index: 40 !important; }
+.fi-form-component-ctn > .fi-section:nth-child(3) { z-index: 30 !important; }
+.fi-form-component-ctn > .fi-section:nth-child(4) { z-index: 20 !important; }
+.fi-form-component-ctn > .fi-section:nth-child(5) { z-index: 10 !important; }
+.fi-form-component-ctn > .fi-section:nth-child(n+6) { z-index: 5 !important; }
+
+/* Ensure the floating dropdown itself has the highest z-index within its context */
+[x-float-contents] {
+    z-index: 999 !important;
 }
