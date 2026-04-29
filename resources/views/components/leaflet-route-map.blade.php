@@ -78,13 +78,13 @@
                 html: `
                     <div style='display: flex; flex-direction: column; align-items: center; transform: translateY(-50%);'>
                         <div style='position: relative;'>
-                            ${this.dispatchStatus === 'in_progress' ? `<div style='position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(16, 185, 129, 0.3); animation: truck-pulse 2s ease-out infinite;'></div>` : ''}
+                            ${this.dispatchStatus === 'in_progress' ? "<div style='position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(16, 185, 129, 0.3); animation: truck-pulse 2s ease-out infinite;'></div>" : ''}
                             <div style='width: 44px; height: 44px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 3px solid white; background: linear-gradient(135deg, ${color}, ${color}dd);'>
                                 <svg style='width: 22px; height: 22px; color: white; transform: rotate(45deg);' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                     <path d='M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1' stroke-width='2'/>
                                 </svg>
                             </div>
-                            <div style='position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; z-index: 10; background: ${this.dispatchStatus === "in_progress" ? "#22c55e" : color};'></div>
+                            <div style='position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; z-index: 10; background: ${this.dispatchStatus === 'in_progress' ? '#22c55e' : color};'></div>
                         </div>
                         <div style='margin-top: 6px; padding: 3px 8px; background: rgba(0,0,0,0.75); color: white; font-size: 10px; font-weight: 700; border-radius: 10px; white-space: nowrap; letter-spacing: 0.3px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);'>${this.truckName}</div>
                     </div>
@@ -110,7 +110,7 @@
                         </div>
                         <div>
                             <p style='font-weight: 700; font-size: 15px; color: #111827; margin: 0;'>${this.dispatchNumber}</p>
-                            <span style='display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; background: ${isActive ? "#dcfce7" : "#f3f4f6"}; color: ${isActive ? "#15803d" : "#6b7280"};'>
+                            <span style='display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; background: ${isActive ? '#dcfce7' : '#f3f4f6'}; color: ${isActive ? '#15803d' : '#6b7280'};'>
                                 <span style='width: 6px; height: 6px; border-radius: 50%; background: ${statusColor};'></span>
                                 ${statusLabel}
                             </span>
