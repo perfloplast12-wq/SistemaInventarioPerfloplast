@@ -8,16 +8,35 @@
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
     
+    wakeLock: null,
+    
     init() {
         if (this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
             this.startTracking();
+            this.requestWakeLock();
         }
+
+        // Reiniciar rastreo si la pestaña vuelve a estar visible (evita suspensión del navegador)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
+                this.startTracking();
+                this.requestWakeLock();
+            }
+        });
 
         setInterval(() => {
             if (this.buffer.length > 0) this.syncBuffer();
-        }, 20000);
+        }, 15000); // Sincronización cada 15s
 
         this.setupEcho();
+    },
+
+    async requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                this.wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {}
+        }
     },
 
     setupEcho() {

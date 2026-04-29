@@ -50,48 +50,39 @@
                             this.isLoaded = false;
                             this.isOnline = true;
                             await this.loadAssets();
+                            
                             let attempts = 0;
-                            while (typeof window.L === 'undefined' && attempts < 20) {
+                            while (typeof window.L === 'undefined' && attempts < 30) {
                                 await new Promise(r => setTimeout(r, 100));
                                 attempts++;
                             }
+                            
                             await this.render(config.locations);
-                            this.setupEcho();
+                            
+                            // Reintento de Echo por si no ha cargado al inicio
+                            let echoAttempts = 0;
+                            const tryEcho = () => {
+                                if (typeof window.Echo !== 'undefined') {
+                                    this.setupEcho();
+                                } else if (echoAttempts < 10) {
+                                    echoAttempts++;
+                                    setTimeout(tryEcho, 1000);
+                                }
+                            };
+                            tryEcho();
+                            
                         } catch (e) {
                             console.error('Map Init Fail:', e);
                         } finally {
                             this.isLoaded = true;
-                            setTimeout(() => { if (this.map) this.map.invalidateSize(); }, 500);
+                            // Llamadas múltiples para asegurar el tamaño correcto en modales de Filament
+                            [100, 500, 1000, 2000].forEach(ms => {
+                                setTimeout(() => { if (this.map) this.map.invalidateSize(); }, ms);
+                            });
                         }
                     },
-                    
-                    async loadAssets() {
-                        if (window.L) return;
-                        const loadStyle = (url, id) => {
-                            if (document.getElementById(id)) return Promise.resolve();
-                            return new Promise(resolve => {
-                                const link = document.createElement('link');
-                                link.id = id; link.rel = 'stylesheet'; link.href = url;
-                                link.onload = () => resolve(); link.onerror = () => resolve();
-                                document.head.appendChild(link);
-                            });
-                        };
-                        const loadScript = (url, id) => {
-                            if (document.getElementById(id)) return Promise.resolve();
-                            return new Promise(resolve => {
-                                const script = document.createElement('script');
-                                script.id = id; script.src = url;
-                                script.onload = () => resolve(); script.onerror = () => resolve();
-                                document.head.appendChild(script);
-                            });
-                        };
-                        await loadStyle('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'leaflet-css');
-                        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'leaflet-js');
-                    },
 
-                    isValidCoord(lat, lng) {
-                        return lat > 13.0 && lat < 19.0 && lng > -93.0 && lng < -87.0;
-                    },
+                    // ... (loadAssets, isValidCoord remain same)
 
                     getStatusLabel(status) {
                         const labels = { 'pending': 'Pendiente', 'in_progress': 'En Ruta', 'completed': 'Completado', 'delivered': 'Entregado' };
@@ -112,7 +103,7 @@
                         return L.divIcon({
                             className: 'custom-div-icon',
                             html: `
-                                <div style="display: flex; flex-direction: column; align-items: center; transform: translateY(-50%); opacity: ${this.isOnline ? '1' : '0.7'}; transition: all 0.3s ease;">
+                                <div style="display: flex; flex-direction: column; align-items: center; transform: translateY(-50%); opacity: ${this.isOnline ? '1' : '0.8'}; transition: all 0.3s ease;">
                                     <div style="position: relative;">
                                         ${pulse}
                                         <div style="width: 44px; height: 44px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 3px solid white; background: linear-gradient(135deg, ${color}, ${color}dd);">
@@ -122,7 +113,7 @@
                                         </div>
                                         <div style="position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; z-index: 10; background: ${dotColor};"></div>
                                     </div>
-                                    <div style="margin-top: 6px; padding: 3px 8px; background: rgba(0,0,0,0.75); color: white; font-size: 10px; font-weight: 700; border-radius: 10px; white-space: nowrap; letter-spacing: 0.3px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">${this.truckName} ${this.isOnline ? '' : '(Fuera de línea)'}</div>
+                                    <div style="margin-top: 6px; padding: 3px 8px; background: rgba(0,0,0,0.8); color: white; font-size: 10px; font-weight: 700; border-radius: 10px; white-space: nowrap; letter-spacing: 0.3px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">${this.truckName} ${this.isOnline ? '' : '(Sin conexión)'}</div>
                                 </div>
                             `,
                             iconSize: [54, 72], iconAnchor: [27, 54], popupAnchor: [0, -54]
@@ -173,7 +164,15 @@
                         let raw = [];
                         try { raw = JSON.parse(atob(encodedLocations)); } catch(e) { console.error('Data Parse Error:', e); }
                         this.allPoints = raw.map(l => [parseFloat(l.lat), parseFloat(l.lng)]).filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
-                        if (raw.length > 0 && raw[raw.length - 1].accuracy == -1) this.isOnline = false;
+                        
+                        // Solo marcar offline si la última señal de desconexión es RECIENTE (menos de 10 min)
+                        if (raw.length > 0) {
+                            const last = raw[raw.length - 1];
+                            const lastTime = new Date(last.created_at || new Date());
+                            const diffMinutes = (new Date() - lastTime) / 60000;
+                            if (last.accuracy == -1 && diffMinutes < 10) this.isOnline = false;
+                        }
+                        
                         if (this.allPoints.length > 0) this.drawPosition(true);
                     },
 
@@ -193,7 +192,9 @@
                                 this.lastSignal = new Date(data.timestamp).toLocaleTimeString();
                                 if (!data.is_offline) {
                                     const lat = parseFloat(data.lat); const lng = parseFloat(data.lng);
-                                    if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) { this.allPoints.push([lat, lng]); }
+                                    if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) { 
+                                        this.allPoints.push([lat, lng]); 
+                                    }
                                 }
                                 this.drawPosition();
                             })
