@@ -23,7 +23,17 @@
         justify-content: center !important;
         position: relative !important;
         overflow: hidden !important;
-        background: #0a0f1a !important;
+        background: 
+            radial-gradient(ellipse at 20% 50%, rgba(0, 210, 190, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(0, 150, 255, 0.1) 0%, transparent 40%),
+            radial-gradient(ellipse at 60% 80%, rgba(0, 180, 216, 0.08) 0%, transparent 45%),
+            linear-gradient(160deg, 
+                #020617 0%, 
+                #0a1628 25%, 
+                #0d2137 50%, 
+                #041825 75%, 
+                #020617 100%
+            ) !important;
     }
 
     /* Animated mesh gradient background - Dark Mode */
@@ -59,20 +69,29 @@
 
     /* ===== LIGHT MODE BACKGROUND ===== */
     html:not(.dark) .fi-simple-layout {
-        background: #f0f4f8 !important;
+        background: 
+            radial-gradient(circle at top left, rgba(0, 180, 180, 0.15), transparent 40%),
+            radial-gradient(ellipse at 80% 20%, rgba(0, 150, 200, 0.08) 0%, transparent 50%),
+            linear-gradient(160deg,
+                #f8fafc 0%,
+                #e2e8f0 30%,
+                #b0c4d8 55%,
+                #1e3a5f 80%,
+                #020617 100%
+            ) !important;
     }
 
     html:not(.dark) .fi-simple-layout::before {
         background: 
-            radial-gradient(ellipse at 10% 20%, rgba(0, 180, 180, 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse at 90% 10%, rgba(0, 150, 200, 0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 90%, rgba(0, 200, 180, 0.04) 0%, transparent 60%);
+            radial-gradient(ellipse at 10% 20%, rgba(0, 180, 180, 0.06) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 10%, rgba(0, 150, 200, 0.04) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 90%, rgba(0, 200, 180, 0.03) 0%, transparent 60%);
     }
 
     html:not(.dark) .fi-simple-layout::after {
         background-image: 
-            linear-gradient(rgba(0, 150, 136, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 150, 136, 0.04) 1px, transparent 1px);
+            linear-gradient(rgba(0, 80, 100, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 80, 100, 0.03) 1px, transparent 1px);
     }
 
     /* ===== ACCENT LINES (top-right / bottom-left) ===== */
