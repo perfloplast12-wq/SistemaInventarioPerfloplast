@@ -753,34 +753,39 @@ html.dark .fi-logo {
 }
 
 /* Fix: Dropdown z-index stacking context issue */
-/* Each section creates a stacking context - earlier sections must stack above later ones */
+/* Prevent sections from creating stacking contexts that trap dropdowns */
 .fi-section, .fi-card {
-    position: relative !important;
     overflow: visible !important;
+    isolation: auto !important;
+    transform: none !important;
 }
 
 .fi-fo-repeater-item {
     overflow: visible !important;
-    position: relative !important;
 }
 
-/* Reverse stacking: sections earlier in the DOM get higher z-index */
-.fi-form > .fi-section:nth-child(1) { z-index: 50 !important; }
-.fi-form > .fi-section:nth-child(2) { z-index: 40 !important; }
-.fi-form > .fi-section:nth-child(3) { z-index: 30 !important; }
-.fi-form > .fi-section:nth-child(4) { z-index: 20 !important; }
-.fi-form > .fi-section:nth-child(5) { z-index: 10 !important; }
-.fi-form > .fi-section:nth-child(n+6) { z-index: 5 !important; }
+.fi-fo-repeater-item-content {
+    overflow: visible !important;
+}
 
-/* Also handle sections inside the main form container */
-.fi-form-component-ctn > .fi-section:nth-child(1) { z-index: 50 !important; }
-.fi-form-component-ctn > .fi-section:nth-child(2) { z-index: 40 !important; }
-.fi-form-component-ctn > .fi-section:nth-child(3) { z-index: 30 !important; }
-.fi-form-component-ctn > .fi-section:nth-child(4) { z-index: 20 !important; }
-.fi-form-component-ctn > .fi-section:nth-child(5) { z-index: 10 !important; }
-.fi-form-component-ctn > .fi-section:nth-child(n+6) { z-index: 5 !important; }
+/* Remove hover transform that creates stacking contexts */
+.fi-card:hover, .fi-section:hover {
+    transform: none !important;
+}
 
-/* Ensure the floating dropdown itself has the highest z-index within its context */
+/* Target Choices.js dropdown (used by Filament Select) */
+.choices__list--dropdown, 
+.choices__list[aria-expanded] {
+    z-index: 9999 !important;
+}
+
+/* Target Alpine float contents */
 [x-float-contents] {
-    z-index: 999 !important;
+    z-index: 9999 !important;
 }
+
+/* Ensure the choices dropdown container doesn't get clipped */
+.choices {
+    overflow: visible !important;
+}
+
