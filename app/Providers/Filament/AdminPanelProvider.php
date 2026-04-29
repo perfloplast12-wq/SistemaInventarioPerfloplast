@@ -110,12 +110,11 @@ class AdminPanelProvider extends PanelProvider
                                 --is-mesh: ".((bool)($settings['mesh_background'] ?? true) ? '1' : '0').";
                             }
 
-                            .fi-layout,
-                            .fi-main-ctn,
-                            .fi-main,
-                            .fi-panels-main-ctn {
+                            html:not(.dark) .fi-layout,
+                            html:not(.dark) .fi-main-ctn,
+                            html:not(.dark) .fi-main,
+                            html:not(.dark) .fi-panels-main-ctn {
                                 background-color: var(--bg-color) !important;
-                                background: var(--bg-color) !important;
                             }
 
                             .fi-topbar, 

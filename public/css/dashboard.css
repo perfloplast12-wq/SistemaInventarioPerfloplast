@@ -643,6 +643,21 @@ body {
     box-shadow: var(--premium-shadow) !important;
 }
 
+.dark .fi-card, .dark .fi-section {
+    background-color: rgba(13, 17, 23, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .fi-section-header-title {
+    color: #ffffff !important;
+}
+
+.dark .fi-fo-field-wrp-label label {
+    color: #e2e8f0 !important;
+}
+
 @media (min-width: 1024px) {
     .fi-sidebar {
         position: fixed !important;
