@@ -113,6 +113,21 @@ class AdminPanelProvider extends PanelProvider
                                 --main-gradient: linear-gradient(135deg, var(--p-1), var(--p-2));
                                 --is-glass: ".($isGlass ? '1' : '0').";
                             }
+
+                            .fi-topbar, 
+                            .fi-topbar > nav, 
+                            .fi-topbar-content,
+                            .fi-sidebar-header,
+                            .fi-topbar-content-ctn {
+                                background: transparent !important;
+                                background-color: transparent !important;
+                                border: none !important;
+                                box-shadow: none !important;
+                            }
+
+                            .fi-main-ctn {
+                                background: transparent !important;
+                            }
                         </style>
                     ";
 
