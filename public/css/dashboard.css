@@ -639,8 +639,21 @@ body {
 }
 
 .fi-card, .fi-section {
-    background-color: color-mix(in srgb, var(--card-bg), transparent 15%) !important;
-    box-shadow: var(--premium-shadow) !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+        0 10px 15px -3px rgba(0, 0, 0, 0.05),
+        0 20px 25px -5px rgba(0, 0, 0, 0.03) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.fi-card:hover, .fi-section:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.08), 
+        0 25px 30px -5px rgba(0, 0, 0, 0.05) !important;
 }
 
 .dark .fi-card, .dark .fi-section {
