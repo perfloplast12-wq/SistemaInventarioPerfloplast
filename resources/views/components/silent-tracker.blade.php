@@ -30,6 +30,11 @@
                 this.heartbeatTimer = setInterval(() => this.checkGpsStatus(), 10000);
             },
             
+            destroy() {
+                if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+                if (this.watchId !== null) navigator.geolocation.clearWatch(this.watchId);
+            },
+            
             startTracking() {
                 if (!navigator.geolocation) {
                     this.showLock = true;

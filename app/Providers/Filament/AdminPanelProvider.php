@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            // ->spa() 
+            ->spa() 
             ->databaseNotifications() 
             ->databaseNotificationsPolling('60s')
             ->maxContentWidth(null) 
