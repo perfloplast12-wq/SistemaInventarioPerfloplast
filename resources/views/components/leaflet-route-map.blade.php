@@ -27,7 +27,6 @@
             const registerMap = () => {
                 if (typeof Alpine === 'undefined') return;
                 
-                // Evitar registro doble si el componente se carga varias veces
                 try {
                     if (Alpine.data('leafletRouteMap')) return;
                 } catch (e) {}
@@ -49,9 +48,8 @@
                     async init() {
                         try {
                             this.isLoaded = false;
-                            this.isOnline = true; // Asumir online al inicio si está en progreso
+                            this.isOnline = true;
                             await this.loadAssets();
-                            // Pequeña espera para asegurar que L esté en el scope global
                             let attempts = 0;
                             while (typeof window.L === 'undefined' && attempts < 20) {
                                 await new Promise(r => setTimeout(r, 100));
@@ -63,16 +61,47 @@
                             console.error('Map Init Fail:', e);
                         } finally {
                             this.isLoaded = true;
-                            // Forzar re-calculo de tamaño tras la carga
-                            setTimeout(() => { 
-                                if (this.map) {
-                                    this.map.invalidateSize();
-                                }
-                            }, 500);
+                            setTimeout(() => { if (this.map) this.map.invalidateSize(); }, 500);
                         }
                     },
+                    
+                    async loadAssets() {
+                        if (window.L) return;
+                        const loadStyle = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const link = document.createElement('link');
+                                link.id = id; link.rel = 'stylesheet'; link.href = url;
+                                link.onload = () => resolve(); link.onerror = () => resolve();
+                                document.head.appendChild(link);
+                            });
+                        };
+                        const loadScript = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const script = document.createElement('script');
+                                script.id = id; script.src = url;
+                                script.onload = () => resolve(); script.onerror = () => resolve();
+                                document.head.appendChild(script);
+                            });
+                        };
+                        await loadStyle('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'leaflet-css');
+                        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'leaflet-js');
+                    },
 
-                    // ... (loadAssets, isValidCoord, getStatusLabel, getStatusColor remain same)
+                    isValidCoord(lat, lng) {
+                        return lat > 13.0 && lat < 19.0 && lng > -93.0 && lng < -87.0;
+                    },
+
+                    getStatusLabel(status) {
+                        const labels = { 'pending': 'Pendiente', 'in_progress': 'En Ruta', 'completed': 'Completado', 'delivered': 'Entregado' };
+                        return labels[status] || status;
+                    },
+
+                    getStatusColor(status) {
+                        const colors = { 'pending': '#9ca3af', 'in_progress': '#10b981', 'completed': '#3b82f6', 'delivered': '#8b5cf6' };
+                        return colors[status] || '#6b7280';
+                    },
 
                     createTruckIcon() {
                         const baseColor = this.getStatusColor(this.dispatchStatus);
@@ -96,19 +125,16 @@
                                     <div style="margin-top: 6px; padding: 3px 8px; background: rgba(0,0,0,0.75); color: white; font-size: 10px; font-weight: 700; border-radius: 10px; white-space: nowrap; letter-spacing: 0.3px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">${this.truckName} ${this.isOnline ? '' : '(Fuera de línea)'}</div>
                                 </div>
                             `,
-                            iconSize: [54, 72],
-                            iconAnchor: [27, 54],
-                            popupAnchor: [0, -54]
+                            iconSize: [54, 72], iconAnchor: [27, 54], popupAnchor: [0, -54]
                         });
                     },
 
                     createPopupContent(lat, lng) {
                         const statusColor = this.getStatusColor(this.dispatchStatus);
-                        const statusLabel = this.getStatusLabel(this.dispatchStatus);
                         const isActive = this.dispatchStatus === 'in_progress';
                         const badgeBg = this.isOnline ? (isActive ? '#dcfce7' : '#f3f4f6') : '#fee2e2';
                         const badgeText = this.isOnline ? (isActive ? '#15803d' : '#6b7280') : '#991b1b';
-                        const connectionLabel = this.isOnline ? statusLabel : 'Desconectado / GPS Off';
+                        const connectionLabel = this.isOnline ? this.getStatusLabel(this.dispatchStatus) : 'Desconectado / GPS Off';
                         
                         return `
                             <div style="min-width: 250px; padding: 14px; font-family: -apple-system, sans-serif;">
@@ -127,22 +153,10 @@
                                     </div>
                                 </div>
                                 <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; display: grid; gap: 6px;">
-                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">
-                                        <span style="font-size: 14px;">👤</span>
-                                        <span><strong>Piloto:</strong> ${this.driverName}</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">
-                                        <span style="font-size: 14px;">🚛</span>
-                                        <span><strong>Camión:</strong> ${this.truckName}</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">
-                                        <span style="font-size: 14px;">⏲️</span>
-                                        <span><strong>Última señal:</strong> ${this.lastSignal || 'Hace un momento'}</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">
-                                        <span style="font-size: 14px;">📍</span>
-                                        <span><strong>Posición:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
-                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">👤 <span><strong>Piloto:</strong> ${this.driverName}</span></div>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">🚛 <span><strong>Camión:</strong> ${this.truckName}</span></div>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">⏲️ <span><strong>Última señal:</strong> ${this.lastSignal || 'Hace un momento'}</span></div>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280;">📍 <span><strong>Posición:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</span></div>
                                 </div>
                             </div>
                         `;
@@ -151,80 +165,36 @@
                     async render(encodedLocations) {
                         const el = this.$refs.mapContainer;
                         if (!el || typeof window.L === 'undefined') return;
-
-                        if (this.map) {
-                            this.map.remove();
-                            this.map = null;
-                        }
-
+                        if (this.map) { this.map.remove(); this.map = null; }
                         this.map = L.map(el, { zoomControl: false }).setView([15.47, -90.37], 7);
                         L.control.zoom({ position: 'bottomright' }).addTo(this.map);
-
-                        // Intento 1: Google Maps
-                        const googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { 
-                            attribution: '&copy; Google Maps',
-                            maxZoom: 20
-                        });
-                        
-                        googleLayer.addTo(this.map);
+                        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { attribution: '&copy; Google Maps', maxZoom: 20 }).addTo(this.map);
 
                         let raw = [];
-                        try { 
-                            raw = JSON.parse(atob(encodedLocations)); 
-                        } catch(e) { console.error('Data Parse Error:', e); }
-
-                        this.allPoints = raw.map(l => [parseFloat(l.lat), parseFloat(l.lng)])
-                                            .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
-
-                        // Si la última ubicación tiene accuracy -1, está offline
-                        if (raw.length > 0) {
-                            const last = raw[raw.length - 1];
-                            if (last.accuracy == -1) this.isOnline = false;
-                        }
-
-                        if (this.allPoints.length > 0) {
-                            this.drawPosition(true);
-                        }
+                        try { raw = JSON.parse(atob(encodedLocations)); } catch(e) { console.error('Data Parse Error:', e); }
+                        this.allPoints = raw.map(l => [parseFloat(l.lat), parseFloat(l.lng)]).filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
+                        if (raw.length > 0 && raw[raw.length - 1].accuracy == -1) this.isOnline = false;
+                        if (this.allPoints.length > 0) this.drawPosition(true);
                     },
 
                     drawPosition(forceFocus = false) {
                         if (!this.map || this.allPoints.length === 0) return;
-
                         const lastPoint = this.allPoints[this.allPoints.length - 1];
-
                         if (this.truckMarker) this.map.removeLayer(this.truckMarker);
-                        
-                        this.truckMarker = L.marker(lastPoint, { icon: this.createTruckIcon() })
-                            .addTo(this.map)
-                            .bindPopup(this.createPopupContent(lastPoint[0], lastPoint[1]), {
-                                maxWidth: 320,
-                                closeOnClick: false,
-                                autoClose: false
-                            });
-
-                        if (forceFocus) {
-                            this.map.setView(lastPoint, 17); 
-                        } else {
-                            this.map.panTo(lastPoint);
-                        }
+                        this.truckMarker = L.marker(lastPoint, { icon: this.createTruckIcon() }).addTo(this.map).bindPopup(this.createPopupContent(lastPoint[0], lastPoint[1]), { maxWidth: 320, closeOnClick: false, autoClose: false });
+                        if (forceFocus) this.map.setView(lastPoint, 17); else this.map.panTo(lastPoint);
                     },
 
                     setupEcho() {
                         if (typeof window.Echo === 'undefined') return;
                         window.Echo.channel('dispatch.' + this.dispatchId)
                             .listen('.location.updated', (data) => {
-                                // Actualizar estado de conexión
                                 this.isOnline = !data.is_offline;
                                 this.lastSignal = new Date(data.timestamp).toLocaleTimeString();
-
                                 if (!data.is_offline) {
-                                    const lat = parseFloat(data.lat);
-                                    const lng = parseFloat(data.lng);
-                                    if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) {
-                                        this.allPoints.push([lat, lng]);
-                                    }
+                                    const lat = parseFloat(data.lat); const lng = parseFloat(data.lng);
+                                    if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) { this.allPoints.push([lat, lng]); }
                                 }
-                                
                                 this.drawPosition();
                             })
                             .listen('.status.updated', (data) => {
@@ -234,22 +204,12 @@
                     },
                     
                     destroy() {
-                        if (typeof window.Echo !== 'undefined') {
-                            window.Echo.leave('dispatch.' + this.dispatchId);
-                        }
-                        if (this.map) {
-                            this.map.remove();
-                            this.map = null;
-                        }
+                        if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
+                        if (this.map) { this.map.remove(); this.map = null; }
                     }
                 }));
             };
-
-            if (window.Alpine) {
-                registerMap();
-            } else {
-                document.addEventListener('alpine:init', registerMap);
-            }
+            if (window.Alpine) registerMap(); else document.addEventListener('alpine:init', registerMap);
         })();
     </script>
 </div>
