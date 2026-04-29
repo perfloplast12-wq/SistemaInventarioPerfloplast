@@ -138,7 +138,7 @@ class ProductionResource extends Resource
                                         
                                         Forms\Components\Select::make('color_id')
                                             ->label('Color / Variante')
-                                            ->relationship('color', 'display_name', fn ($query) => $query->where('is_active', true))
+                                            ->relationship('color', 'name', fn ($query) => $query->where('is_active', true))
                                             ->searchable(['name', 'code'])
                                             ->preload()
                                             ->required()
