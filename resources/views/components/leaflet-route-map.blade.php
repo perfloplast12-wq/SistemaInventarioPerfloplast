@@ -26,10 +26,7 @@
         (function() {
             const registerMap = () => {
                 if (typeof Alpine === 'undefined') return;
-                
-                try {
-                    if (Alpine.data('leafletRouteMap')) return;
-                } catch (e) {}
+                try { if (Alpine.data('leafletRouteMap')) return; } catch (e) {}
 
                 Alpine.data('leafletRouteMap', (config) => ({
                     map: null,
@@ -44,48 +41,83 @@
                     allPoints: [],
                     isOnline: true,
                     lastSignal: null,
+                    lastSignalTime: null,
+                    heartbeatTimer: null,
                     
                     async init() {
                         try {
                             this.isLoaded = false;
                             this.isOnline = true;
+
+                            // 1. Cargar Leaflet CSS+JS
                             await this.loadAssets();
+
+                            // 2. Esperar a que el contenedor sea visible (modales de Filament)
+                            await this.waitForContainer();
+
+                            // 3. Renderizar mapa
                             await this.render(config.locations);
+
+                            // 4. Conectar Echo
                             this.startEcho();
+
+                            // 5. Heartbeat: cada 10s revisar si la última señal es vieja
+                            this.heartbeatTimer = setInterval(() => {
+                                if (this.lastSignalTime) {
+                                    const secsSinceLastSignal = (Date.now() - this.lastSignalTime) / 1000;
+                                    const wasOnline = this.isOnline;
+                                    this.isOnline = secsSinceLastSignal < 45; // 45 seg sin señal = offline
+                                    if (wasOnline !== this.isOnline) this.drawPosition();
+                                }
+                            }, 10000);
+
                         } catch (e) {
                             console.error('Map Init Fail:', e);
                         } finally {
                             this.isLoaded = true;
-                            [100, 300, 600, 1200].forEach(ms => {
+                            [200, 600, 1200].forEach(ms => {
                                 setTimeout(() => { if (this.map) this.map.invalidateSize(); }, ms);
                             });
+                        }
+                    },
+
+                    async waitForContainer() {
+                        const el = this.$refs.mapContainer;
+                        if (!el) return;
+                        let tries = 0;
+                        while ((el.offsetWidth === 0 || el.offsetHeight === 0) && tries < 30) {
+                            await new Promise(r => setTimeout(r, 100));
+                            tries++;
                         }
                     },
                     
                     async loadAssets() {
                         if (window.L) return;
-                        
-                        await new Promise((resolve) => {
+
+                        // CSS
+                        if (!document.getElementById('leaflet-css')) {
                             const css = document.createElement('link');
-                            css.rel = 'stylesheet';
+                            css.id = 'leaflet-css'; css.rel = 'stylesheet';
                             css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                            css.onload = resolve;
-                            css.onerror = resolve;
                             document.head.appendChild(css);
-                        });
+                        }
 
-                        await new Promise((resolve) => {
-                            const js = document.createElement('script');
-                            js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                            js.onload = resolve;
-                            js.onerror = resolve;
-                            document.head.appendChild(js);
-                        });
+                        // JS
+                        if (!document.getElementById('leaflet-js')) {
+                            await new Promise((resolve) => {
+                                const js = document.createElement('script');
+                                js.id = 'leaflet-js';
+                                js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                                js.onload = resolve;
+                                js.onerror = resolve;
+                                document.head.appendChild(js);
+                            });
+                        }
 
-                        // Esperar a que L esté disponible
+                        // Esperar a que L exista
                         let wait = 0;
-                        while (typeof window.L === 'undefined' && wait < 50) {
-                            await new Promise(r => setTimeout(r, 60));
+                        while (typeof window.L === 'undefined' && wait < 40) {
+                            await new Promise(r => setTimeout(r, 80));
                             wait++;
                         }
                     },
@@ -94,25 +126,27 @@
                         return lat > 13.0 && lat < 19.0 && lng > -93.0 && lng < -87.0;
                     },
 
-                    getStatusLabel(status) {
-                        return {'pending':'Pendiente','in_progress':'En Ruta','completed':'Completado','delivered':'Entregado'}[status] || status;
+                    getStatusLabel(s) {
+                        return {'pending':'Pendiente','in_progress':'En Ruta','completed':'Completado','delivered':'Entregado'}[s] || s;
                     },
 
-                    getStatusColor(status) {
-                        return {'pending':'#9ca3af','in_progress':'#10b981','completed':'#3b82f6','delivered':'#8b5cf6'}[status] || '#6b7280';
+                    getStatusColor(s) {
+                        return {'pending':'#9ca3af','in_progress':'#10b981','completed':'#3b82f6','delivered':'#8b5cf6'}[s] || '#6b7280';
                     },
 
                     createTruckIcon() {
                         const baseColor = this.getStatusColor(this.dispatchStatus);
-                        const color = this.isOnline ? baseColor : '#6b7280';
+                        const color = this.isOnline ? baseColor : '#ef4444';
                         const showPulse = this.dispatchStatus === 'in_progress' && this.isOnline;
-                        const pulse = showPulse ? '<div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(16,185,129,0.3);animation:truck-pulse 2s ease-out infinite;"></div>' : '';
-                        const dotColor = showPulse ? '#22c55e' : '#9ca3af';
-                        const label = this.isOnline ? this.truckName : this.truckName + ' (Sin señal)';
+                        const pulse = showPulse
+                            ? '<div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(16,185,129,0.3);animation:truck-pulse 2s ease-out infinite;"></div>'
+                            : '';
+                        const dotColor = showPulse ? '#22c55e' : (this.isOnline ? '#9ca3af' : '#ef4444');
+                        const label = this.isOnline ? this.truckName : this.truckName + ' ⚠ Sin señal';
                         
                         return L.divIcon({
                             className: 'custom-div-icon',
-                            html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-50%);opacity:${this.isOnline?'1':'0.7'};">
+                            html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-50%);">
                                 <div style="position:relative;">
                                     ${pulse}
                                     <div style="width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);border:3px solid white;background:linear-gradient(135deg,${color},${color}dd);">
@@ -122,7 +156,7 @@
                                     </div>
                                     <div style="position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;border:2px solid white;z-index:10;background:${dotColor};"></div>
                                 </div>
-                                <div style="margin-top:6px;padding:3px 8px;background:rgba(0,0,0,0.8);color:white;font-size:10px;font-weight:700;border-radius:10px;white-space:nowrap;">${label}</div>
+                                <div style="margin-top:6px;padding:3px 8px;background:${this.isOnline ? 'rgba(0,0,0,0.8)' : 'rgba(239,68,68,0.9)'};color:white;font-size:10px;font-weight:700;border-radius:10px;white-space:nowrap;">${label}</div>
                             </div>`,
                             iconSize: [54, 72], iconAnchor: [27, 54], popupAnchor: [0, -54]
                         });
@@ -133,9 +167,9 @@
                         const isActive = this.dispatchStatus === 'in_progress';
                         const badgeBg = this.isOnline ? (isActive ? '#dcfce7' : '#f3f4f6') : '#fee2e2';
                         const badgeTxt = this.isOnline ? (isActive ? '#15803d' : '#6b7280') : '#991b1b';
-                        const label = this.isOnline ? this.getStatusLabel(this.dispatchStatus) : 'Sin señal GPS';
+                        const label = this.isOnline ? this.getStatusLabel(this.dispatchStatus) : '⚠ Sin señal GPS';
                         const dotC = this.isOnline ? sc : '#ef4444';
-                        const iconBg = this.isOnline ? sc : '#6b7280';
+                        const iconBg = this.isOnline ? sc : '#ef4444';
                         
                         return `<div style="min-width:240px;padding:12px;font-family:-apple-system,sans-serif;">
                             <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
@@ -153,6 +187,7 @@
                             <div style="border-top:1px solid #e5e7eb;padding-top:8px;display:grid;gap:4px;font-size:12px;color:#6b7280;">
                                 <div>👤 <strong>Piloto:</strong> ${this.driverName}</div>
                                 <div>🚛 <strong>Camión:</strong> ${this.truckName}</div>
+                                <div>🗺️ <strong>Ruta:</strong> ${this.routeName}</div>
                                 <div>⏲️ <strong>Última señal:</strong> ${this.lastSignal || 'Reciente'}</div>
                                 <div>📍 <strong>Posición:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
                             </div>
@@ -174,24 +209,22 @@
                         let raw = [];
                         try { raw = JSON.parse(atob(encodedLocations)); } catch(e) {}
 
-                        // Filtrar coordenadas válidas (excluir las señales de desconexión con accuracy=-1)
                         this.allPoints = raw
-                            .filter(l => l.accuracy != -1)
                             .map(l => [parseFloat(l.lat), parseFloat(l.lng)])
                             .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
                         
-                        // Detectar si la última señal fue de desconexión
+                        // Determinar estado online basado en la última señal
                         if (raw.length > 0) {
                             const last = raw[raw.length - 1];
-                            if (last.accuracy == -1) {
-                                this.isOnline = false;
+                            if (last.created_at) {
+                                this.lastSignalTime = new Date(last.created_at).getTime();
+                                this.lastSignal = new Date(last.created_at).toLocaleTimeString();
+                                const secsSince = (Date.now() - this.lastSignalTime) / 1000;
+                                this.isOnline = secsSince < 45;
                             }
                         }
                         
-                        // SIEMPRE mostrar el marcador en la última posición válida
-                        if (this.allPoints.length > 0) {
-                            this.drawPosition(true);
-                        }
+                        if (this.allPoints.length > 0) this.drawPosition(true);
                     },
 
                     drawPosition(forceFocus = false) {
@@ -208,30 +241,29 @@
                     },
 
                     startEcho() {
-                        if (typeof window.Echo === 'undefined') {
-                            // Reintentar hasta que Echo esté disponible
+                        const connect = () => {
+                            if (typeof window.Echo === 'undefined') return false;
+                            this.connectEcho();
+                            return true;
+                        };
+                        if (!connect()) {
                             let tries = 0;
                             const retry = setInterval(() => {
-                                tries++;
-                                if (typeof window.Echo !== 'undefined') {
-                                    clearInterval(retry);
-                                    this.connectEcho();
-                                }
-                                if (tries > 15) clearInterval(retry);
+                                if (connect() || ++tries > 15) clearInterval(retry);
                             }, 1000);
-                            return;
                         }
-                        this.connectEcho();
                     },
 
                     connectEcho() {
                         window.Echo.channel('dispatch.' + this.dispatchId)
                             .listen('.location.updated', (data) => {
-                                this.isOnline = !data.is_offline;
-                                if (data.timestamp) {
-                                    this.lastSignal = new Date(data.timestamp).toLocaleTimeString();
-                                }
-                                if (!data.is_offline) {
+                                this.lastSignalTime = Date.now();
+                                this.lastSignal = new Date().toLocaleTimeString();
+                                
+                                if (data.is_offline) {
+                                    this.isOnline = false;
+                                } else {
+                                    this.isOnline = true;
                                     const lat = parseFloat(data.lat);
                                     const lng = parseFloat(data.lng);
                                     if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) {
@@ -247,19 +279,15 @@
                     },
                     
                     destroy() {
-                        if (typeof window.Echo !== 'undefined') {
-                            window.Echo.leave('dispatch.' + this.dispatchId);
-                        }
+                        if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+                        if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
                         if (this.map) { this.map.remove(); this.map = null; }
                     }
                 }));
             };
 
-            if (window.Alpine) {
-                registerMap();
-            } else {
-                document.addEventListener('alpine:init', registerMap);
-            }
+            if (window.Alpine) registerMap();
+            else document.addEventListener('alpine:init', registerMap);
         })();
     </script>
 </div>

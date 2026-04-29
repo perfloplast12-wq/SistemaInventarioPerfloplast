@@ -26,25 +26,24 @@ class TrackingController extends Controller
             $isOffline = $request->input('status') === 'offline';
             
             if ($request->filled('dispatch_id')) {
-                // Si es señal de desconexión, usamos la última ubicación conocida
                 if ($isOffline) {
+                    // Señal de desconexión: solo broadcast, NO guardar en DB (accuracy no existe en dispatch_locations)
                     $lastLoc = DispatchLocation::where('dispatch_id', $validated['dispatch_id'])
                         ->latest('id')
                         ->first();
                     
                     if ($lastLoc) {
-                        $location = DispatchLocation::create([
-                            'dispatch_id' => $validated['dispatch_id'],
-                            'lat' => $lastLoc->lat,
-                            'lng' => $lastLoc->lng,
-                            'speed' => 0,
-                            'heading' => 0,
-                            'accuracy' => -1, // Señal especial
-                        ]);
-                        event(new \App\Events\LocationUpdated($location, true));
+                        // Broadcast offline usando la última ubicación real
+                        event(new \App\Events\LocationUpdated($lastLoc, true));
                     }
                 } else {
-                    $location = DispatchLocation::create($validated);
+                    $location = DispatchLocation::create([
+                        'dispatch_id' => $validated['dispatch_id'],
+                        'lat' => $validated['lat'],
+                        'lng' => $validated['lng'],
+                        'speed' => $validated['speed'] ?? null,
+                        'heading' => $validated['heading'] ?? null,
+                    ]);
                     try {
                         event(new \App\Events\LocationUpdated($location));
                     } catch (\Exception $e) {}

@@ -7,26 +7,37 @@
     lastUpdate: null,
     accuracy: null,
     buffer: JSON.parse(localStorage.getItem('gps_buffer_' + {{ $getRecord()->id }}) || '[]'),
-    
     wakeLock: null,
+    lastGpsTime: Date.now(),
+    heartbeatTimer: null,
     
     init() {
         if (this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
             this.startTracking();
             this.requestWakeLock();
+
+            // Heartbeat: cada 10s verificar si se perdió el GPS
+            this.heartbeatTimer = setInterval(() => {
+                const secsSinceGps = (Date.now() - this.lastGpsTime) / 1000;
+                if (secsSinceGps > 30 && !this.showLock) {
+                    // GPS perdido por más de 30 seg — notificar al servidor
+                    this.sendOfflineSignal();
+                }
+            }, 10000);
         }
 
-        // Reiniciar rastreo si la pestaña vuelve a estar visible (evita suspensión del navegador)
+        // Reiniciar rastreo si la pestaña vuelve a estar visible
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && this.isConductor && (this.status === 'in_progress' || this.status === 'pending')) {
-                this.startTracking();
+                // Reactivar watchPosition si se perdió
+                if (!this.watchId) this.startTracking();
                 this.requestWakeLock();
             }
         });
 
         setInterval(() => {
             if (this.buffer.length > 0) this.syncBuffer();
-        }, 15000); // Sincronización cada 15s
+        }, 15000);
 
         this.setupEcho();
     },
@@ -46,6 +57,8 @@
                 this.lastUpdate = new Date(data.timestamp).toLocaleTimeString();
                 if (data.is_offline) {
                     this.status = 'offline';
+                } else {
+                    if (this.status === 'offline') this.status = 'in_progress';
                 }
             })
             .listen('.status.updated', (data) => {
@@ -66,18 +79,26 @@
     },
     
     startTracking() {
-        if (this.watchId) return;
+        if (this.watchId) {
+            navigator.geolocation.clearWatch(this.watchId);
+            this.watchId = null;
+        }
         
         this.watchId = navigator.geolocation.watchPosition(
             (pos) => { 
+                this.lastGpsTime = Date.now();
                 this.handleNewPosition(pos); 
                 this.showLock = false; 
             },
             (err) => { 
                 if (err.code === 1) this.showLock = true;
+                // GPS timeout o error — enviar señal offline
                 this.sendOfflineSignal();
+                // Reintentar watchPosition
+                this.watchId = null;
+                setTimeout(() => this.startTracking(), 5000);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
 
         // Intento silencioso para ocultar el bloqueo si ya hay permiso
@@ -151,11 +172,19 @@
                 <template x-if="status === 'in_progress'">
                     <div class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 </template>
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Sincronización Activa</span>
+                <template x-if="status === 'offline'">
+                    <div class="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                </template>
+                <span class="text-xs font-bold uppercase tracking-widest"
+                      :class="status === 'offline' ? 'text-red-500' : 'text-gray-500'"
+                      x-text="status === 'offline' ? '⚠ Señal GPS Perdida' : 'Sincronización Activa'">
+                </span>
             </div>
             <div class="text-right">
                 <span class="text-[10px] text-gray-400 block uppercase font-bold">Última Señal</span>
-                <span class="text-xs font-black text-primary-600 dark:text-primary-400" x-text="lastUpdate || '--:--:--'"></span>
+                <span class="text-xs font-black" 
+                      :class="status === 'offline' ? 'text-red-500' : 'text-primary-600 dark:text-primary-400'" 
+                      x-text="lastUpdate || '--:--:--'"></span>
             </div>
         </div>
     </div>
