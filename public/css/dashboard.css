@@ -557,29 +557,18 @@ body,
 }
 /* PREMIUM STYLES */
 html:not(.dark) body {
-    background-color: #0a0e17 !important;
-    background-image: 
-        radial-gradient(ellipse at 0% 0%, 
-            color-mix(in srgb, var(--p-1), #ffffff 85%) 0%, 
-            transparent 55%),
-        radial-gradient(ellipse at 30% 0%, 
-            color-mix(in srgb, var(--p-2), #ffffff 75%) 0%, 
-            transparent 45%),
-        radial-gradient(ellipse at 70% 30%, 
-            color-mix(in srgb, var(--p-1), transparent 50%) 0%, 
-            transparent 50%),
-        linear-gradient(160deg, 
-            color-mix(in srgb, var(--p-1), #ffffff 80%) 0%,
-            color-mix(in srgb, var(--p-1), #ffffff 55%) 15%,
-            color-mix(in srgb, var(--p-2), #ffffff 30%) 35%,
-            color-mix(in srgb, var(--p-2), #000000 20%) 60%,
-            color-mix(in srgb, var(--p-1), #000000 60%) 80%,
-            color-mix(in srgb, var(--p-2), #000000 80%) 100%
+    background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--p-1), transparent 85%), transparent 40%),
+        linear-gradient(160deg,
+            #f8fafc 0%,
+            #e2e8f0 30%,
+            color-mix(in srgb, var(--p-1), #e2e8f0 40%) 55%,
+            color-mix(in srgb, var(--p-2), #000000 50%) 80%,
+            #020617 100%
         ) !important;
     background-attachment: fixed !important;
-    color: var(--text-primary) !important;
     min-height: 100vh;
-    background-size: cover !important;
+    color: var(--text-primary) !important;
 }
 
 .dark body {
