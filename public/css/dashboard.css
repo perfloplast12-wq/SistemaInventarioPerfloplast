@@ -751,3 +751,21 @@ html.dark .fi-logo {
         gap: 1.25rem !important;
     }
 }
+
+/* Fix: Select/dropdown panels must appear above other sections */
+.fi-fo-select .choices__list--dropdown,
+.fi-fo-select .choices__list[aria-expanded],
+[x-float-contents],
+.fi-fo-select [role="listbox"],
+div[wire\\:id] .fi-fo-select .fi-select-dropdown {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+.fi-section, .fi-card {
+    overflow: visible !important;
+}
+
+.fi-fo-repeater-item {
+    overflow: visible !important;
+}
