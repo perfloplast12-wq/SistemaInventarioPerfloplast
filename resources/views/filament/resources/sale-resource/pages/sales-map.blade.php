@@ -29,11 +29,8 @@
         </div>
     </div>
 
-    {{-- Assets de Leaflet --}}
+    {{-- Assets de Leaflet cargados asíncronamente en Alpine --}}
     @push('scripts')
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        
         <style>
             /* Estilos para los marcadores personalizados */
             .vendor-marker {
@@ -119,14 +116,37 @@
                     isZoomedIn: false,
                     refreshTimer: null,
                     
-                    init() {
+                    async init() {
+                        await this.loadAssets();
                         this.initMap();
-                        // Actualización silenciosa cada 15 segundos (sin recargar la página)
                         this.refreshTimer = setInterval(() => this.silentRefresh(), 15000);
                         window._salesMapZoomToAll = () => this.zoomToAll();
                     },
                     
+                    async loadAssets() {
+                        if (window.L) return;
+                        const loadStyle = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const link = document.createElement('link');
+                                link.id = id; link.rel = 'stylesheet'; link.href = url; link.onload = resolve; link.onerror = resolve;
+                                document.head.appendChild(link);
+                            });
+                        };
+                        const loadScript = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const script = document.createElement('script');
+                                script.id = id; script.src = url; script.onload = resolve; script.onerror = resolve;
+                                document.head.appendChild(script);
+                            });
+                        };
+                        await loadStyle('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'leaflet-css');
+                        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'leaflet-js');
+                    },
+                    
                     initMap() {
+                        if (this.map) return;
                         this.map = L.map('sales-map').setView([14.6349, -90.5069], 12);
                         
                         // Capa de Google Maps (muestra negocios, calles detalladas, etc.)
