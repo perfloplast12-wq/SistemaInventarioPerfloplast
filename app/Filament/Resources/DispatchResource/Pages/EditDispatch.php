@@ -34,6 +34,15 @@ class EditDispatch extends EditRecord
         $data['total_value'] = round($totalValue, 2);
         $data['total_products'] = (float) $totalProducts;
         $data['product_types'] = count($items);
+        
+        // Asegurar que driver_name no sea nulo (columna NOT NULL en DB)
+        if (empty($data['driver_name']) && !empty($data['driver_id'])) {
+            $data['driver_name'] = \App\Models\User::find($data['driver_id'])?->name ?? 'Piloto';
+        }
+        
+        if (empty($data['driver_name'])) {
+            $data['driver_name'] = 'Sin asignar';
+        }
 
         return $data;
     }

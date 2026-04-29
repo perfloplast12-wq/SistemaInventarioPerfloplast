@@ -97,8 +97,12 @@ class DispatchResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('selected_orders')
                             ->label('Seleccionar Pedidos Pendientes')
-                            ->options(function () {
-                                return Order::where('status', 'pending')->pluck('order_number', 'id');
+                            ->options(function ($livewire) {
+                                $query = Order::where('status', 'pending');
+                                if (method_exists($livewire, 'getRecord') && $livewire->getRecord()) {
+                                    $query->orWhere('dispatch_id', $livewire->getRecord()->id);
+                                }
+                                return $query->pluck('order_number', 'id');
                             })
                             ->dehydrated(false)
                             ->multiple()
@@ -143,10 +147,7 @@ class DispatchResource extends Resource
                                     }
                                 }
 
-                                $set('items', $currentItems);
-                                
-                                // Forzar el recalculo de los placeholders de totales
-                                $set('total_value_display', 'Q ' . number_format(collect($currentItems)->sum('subtotal'), 2, '.', ','));
+                                 $set('items', $currentItems);
                             }),
                     ]),
 

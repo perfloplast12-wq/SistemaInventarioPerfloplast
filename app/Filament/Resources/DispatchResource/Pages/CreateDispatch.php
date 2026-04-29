@@ -26,6 +26,15 @@ class CreateDispatch extends CreateRecord
         $data['total_products'] = $totalProducts;
         $data['product_types'] = count($items);
         $data['created_by'] = auth()->id();
+        
+        // Asegurar que driver_name no sea nulo (columna NOT NULL en DB)
+        if (empty($data['driver_name']) && !empty($data['driver_id'])) {
+            $data['driver_name'] = \App\Models\User::find($data['driver_id'])?->name ?? 'Piloto';
+        }
+        
+        if (empty($data['driver_name'])) {
+            $data['driver_name'] = 'Sin asignar';
+        }
 
         return $data;
     }
