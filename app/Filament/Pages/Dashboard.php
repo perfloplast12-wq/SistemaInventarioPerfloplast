@@ -126,20 +126,22 @@ class Dashboard extends Page
                   ->whereBetween('production_date', [$prevStart, $prevEnd]);
             })->sum('quantity');
 
-        $inventoryVal = (float) DB::table('stocks')
+        $stocksQuery = DB::table('stocks')
             ->join('products', 'stocks.product_id', '=', 'products.id')
-            ->sum(DB::raw('stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)'));
+            ->select('stocks.quantity', 'products.cost_price', 'products.purchase_cost')
+            ->get();
+        $inventoryVal = (float) $stocksQuery->sum(fn($s) => $s->quantity * ($s->cost_price ?: $s->purchase_cost ?: 0));
 
         $pendingSalesVal = (float) DB::table('orders')
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.payment_status', 'pending')
             ->sum('order_items.subtotal');
 
-        $lowStockCount = DB::table('products')
-            ->join('stocks', 'products.id', '=', 'stocks.product_id')
-            ->whereNotNull('stocks.warehouse_id')
-            ->groupBy('products.id')
-            ->havingRaw('SUM(stocks.quantity) <= 10')
+        $lowStockCount = DB::table('stocks')
+            ->whereNotNull('warehouse_id')
+            ->selectRaw('product_id, SUM(quantity) as total_qty')
+            ->groupBy('product_id')
+            ->havingRaw('SUM(quantity) <= 10')
             ->get()
             ->count();
 
