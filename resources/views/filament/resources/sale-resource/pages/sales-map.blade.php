@@ -109,8 +109,9 @@
         </style>
 
         <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('salesMapComponent', (initialLocations) => ({
+            // Usar función global evita problemas de timing con alpine:init en modo SPA
+            window.salesMapComponent = function(initialLocations) {
+                return {
                     locations: initialLocations,
                     map: null,
                     markers: {},
@@ -305,8 +306,16 @@
                         this.map.closePopup();
                         document.getElementById('btn-ver-todos').style.display = 'none';
                     },
-                }));
-            });
+                    
+                    destroy() {
+                        if (this.refreshTimer) clearInterval(this.refreshTimer);
+                        if (this.map) {
+                            this.map.remove();
+                            this.map = null;
+                        }
+                    }
+                };
+            };
         </script>
     @endpush
 </x-filament-panels::page>

@@ -203,6 +203,16 @@
                         this.drawPosition();
                     }
                 });
+        },
+        
+        destroy() {
+            if (typeof window.Echo !== 'undefined') {
+                window.Echo.leave('dispatch.' + this.dispatchId);
+            }
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
         }
     }"
 >
