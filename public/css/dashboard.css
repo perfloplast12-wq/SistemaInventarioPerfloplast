@@ -559,13 +559,12 @@ body,
 body {
     background-color: var(--bg-color) !important;
     background-image: 
-        radial-gradient(at 0% 0%, #ffffff 0, transparent 40%), 
-        radial-gradient(at 100% 0%, #ffffff 0, transparent 40%),
-        linear-gradient(180deg, 
+        radial-gradient(at 0% 0%, #ffffff 0, transparent 50%),
+        linear-gradient(135deg, 
             #ffffff 0%, 
-            var(--bg-color) 25%, 
-            color-mix(in srgb, var(--bg-color), #000000 30%) 70%,
-            color-mix(in srgb, var(--bg-color), #000000 60%) 100%
+            color-mix(in srgb, var(--bg-color), #ffffff 50%) 20%, 
+            var(--bg-color) 50%, 
+            color-mix(in srgb, var(--bg-color), #000000 70%) 100%
         ) !important;
     background-attachment: fixed !important;
     color: var(--text-primary) !important;
@@ -635,16 +634,17 @@ body {
 }
 
 .fi-sidebar {
-    border-inline-end: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-inline-end: 1px solid rgba(0, 0, 0, 0.05) !important;
     border-top: none !important;
-    box-shadow: none !important;
-    background-color: transparent !important;
-    backdrop-filter: blur(10px) !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.02) !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
 }
 
 .dark .fi-sidebar {
     background-color: transparent !important;
     border-inline-end: 1px solid rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 .fi-card, .fi-section {
