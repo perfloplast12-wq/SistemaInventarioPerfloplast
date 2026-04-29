@@ -104,7 +104,12 @@ class ViewDispatch extends ViewRecord
                             ->view('components.leaflet-route-map')
                             ->viewData([
                                 'locations' => $this->record->locations()->orderBy('created_at', 'asc')->get(),
-                                'dispatchId' => $this->record->id
+                                'dispatchId' => $this->record->id,
+                                'dispatchNumber' => $this->record->dispatch_number,
+                                'driverName' => $this->record->driver?->name ?? $this->record->driver_name ?? 'Sin asignar',
+                                'truckName' => $this->record->truck?->name ?? 'Sin asignar',
+                                'routeName' => $this->record->route ?? 'Sin ruta',
+                                'dispatchStatus' => $this->record->status,
                             ])
                             ->columnSpanFull(),
                     ]),
