@@ -87,12 +87,7 @@ class AdminPanelProvider extends PanelProvider
                         default => $br,
                     };
 
-                    $v = Cache::remember('css_version', 3600, function() {
-                        try {
-                            $path = public_path('css/dashboard.css');
-                            return file_exists($path) ? filemtime($path) : '1.0.0';
-                        } catch (\Exception $e) { return '1.0.0'; }
-                    });
+                    $v = time(); // Force refresh for this update
 
                     $styles = "
                         <style>
@@ -112,6 +107,15 @@ class AdminPanelProvider extends PanelProvider
                                 --border-color: rgba(0,0,0,0.08);
                                 --main-gradient: linear-gradient(135deg, var(--p-1), var(--p-2));
                                 --is-glass: ".($isGlass ? '1' : '0').";
+                                --is-mesh: ".((bool)($settings['mesh_background'] ?? true) ? '1' : '0').";
+                            }
+
+                            .fi-layout,
+                            .fi-main-ctn,
+                            .fi-main,
+                            .fi-panels-main-ctn {
+                                background-color: var(--bg-color) !important;
+                                background: var(--bg-color) !important;
                             }
 
                             .fi-topbar, 
