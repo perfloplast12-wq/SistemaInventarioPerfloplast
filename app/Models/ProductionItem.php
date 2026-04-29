@@ -13,12 +13,15 @@ class ProductionItem extends Model
     protected $fillable = [
         'production_id',
         'product_id',
+        'color_id',
+        'type',
         'quantity',
         'waste_quantity',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:3',
+        'waste_quantity' => 'decimal:3',
     ];
 
     public function production(): BelongsTo
@@ -29,5 +32,10 @@ class ProductionItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(Color::class);
     }
 }

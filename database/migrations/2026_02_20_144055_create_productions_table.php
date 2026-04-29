@@ -16,12 +16,7 @@ return new class extends Migration {
             $table->foreignId('shift_id')->constrained('shifts')->restrictOnDelete();
             $table->foreignId('to_warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             
-            // Main Product
-            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
-            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
-            
             $table->string('status')->default('pending'); // pending, confirmed, cancelled, draft
-            $table->decimal('quantity', 14, 3)->default(0);
             
             $table->text('note')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
@@ -31,18 +26,21 @@ return new class extends Migration {
 
             // Indices
             $table->index(['production_date', 'status']);
-            $table->index(['shift_id', 'color_id']);
+            $table->index(['shift_id']);
         });
 
         Schema::create('production_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('production_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->foreignId('color_id')->nullable()->constrained('colors')->nullOnDelete();
+            
+            $table->string('type')->default('consumable'); // consumable (raw material), output (finished product)
             $table->decimal('quantity', 14, 3);
             $table->decimal('waste_quantity', 14, 3)->default(0);
             $table->timestamps();
 
-            $table->index(['production_id', 'product_id']);
+            $table->index(['production_id', 'product_id', 'type']);
         });
     }
 

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductionResource\Pages;
-use App\Filament\Resources\ProductionResource\RelationManagers;
 use App\Models\Production;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,8 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 class ProductionResource extends Resource
@@ -104,46 +101,12 @@ class ProductionResource extends Resource
                                     }),
                             ]),
 
-                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
-                            ->schema([
-                                Forms\Components\Select::make('color_id')
-                                    ->label('Color / Variante')
-                                    ->relationship('color', 'name', fn ($query) => $query->where('is_active', true))
-                                    ->searchable(['name', 'code'])
-                                    ->preload()
-                                    ->required()
-                                    ->live(),
-                            ]),
-
-                        Forms\Components\Select::make('product_id')
-                            ->label('Producto Terminado a Producir')
-                            ->options(fn () => \App\Models\Product::where('type', 'finished_product')
-                                ->where('is_active', true)
-                                ->pluck('name', 'id'))
+                        Forms\Components\Select::make('to_warehouse_id')
+                            ->label('Bodega de Destino (Para Ingreso de Stock)')
+                            ->options(fn () => \App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
                             ->required()
                             ->searchable()
-                            ->preload()
-                            ->optionsLimit(500)
-                            ->columnSpanFull(),
-                        
-                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
-                            ->schema([
-                                Forms\Components\Select::make('to_warehouse_id')
-                                    ->label('Bodega de Destino')
-                                    ->options(fn () => \App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
-                                    ->required()
-                                    ->searchable()
-                                    ->preload(),
-
-                                Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad Producida')
-                                    ->numeric()
-                                    ->step(0.01)
-                                    ->required()
-                                    ->minValue(0.01)
-                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
-                                    ->live(onBlur: true),
-                            ]),
+                            ->preload(),
 
                         Forms\Components\Placeholder::make('status_display')
                             ->label('Estado Actual')
@@ -155,29 +118,82 @@ class ProductionResource extends Resource
                             ->extraAttributes(['class' => 'text-sm font-medium']),
                     ])->columns(1),
 
-                Forms\Components\Section::make('Materias Primas Consumidas')
+                Forms\Components\Section::make('Productos Finalizados (Lo que se fabricó)')
                     ->schema([
-                        Forms\Components\Repeater::make('items')
-                            ->relationship()
+                        Forms\Components\Repeater::make('outputs')
+                            ->label('Ingreso de Producto Terminado')
+                            ->relationship('outputs')
                             ->schema([
-                                Forms\Components\Select::make('product_id')
-                                    ->label('Materia Prima')
-                                    ->options(fn () => \App\Models\Product::where('type', 'raw_material')
-                                        ->where('is_active', true)
-                                        ->pluck('name', 'id'))
-                                    ->required()
-                                    ->searchable()
-                                    ->preload(),
-                                
-                                Forms\Components\TextInput::make('quantity')
-                                    ->label('Cantidad Consumo')
-                                    ->numeric()
-                                    ->step(0.01)
-                                    ->required()
-                                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
-                                    ->minValue(0.01),
+                                Forms\Components\Grid::make(12)
+                                    ->schema([
+                                        Forms\Components\Select::make('product_id')
+                                            ->label('Producto Terminado')
+                                            ->options(fn () => \App\Models\Product::where('type', 'finished_product')
+                                                ->where('is_active', true)
+                                                ->pluck('name', 'id'))
+                                            ->required()
+                                            ->searchable()
+                                            ->preload()
+                                            ->columnSpan(['default' => 12, 'md' => 5]),
+                                        
+                                        Forms\Components\Select::make('color_id')
+                                            ->label('Color / Variante')
+                                            ->relationship('color', 'display_name', fn ($query) => $query->where('is_active', true))
+                                            ->searchable(['name', 'code'])
+                                            ->preload()
+                                            ->required()
+                                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                                        Forms\Components\TextInput::make('quantity')
+                                            ->label('Cant. Producida')
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->required()
+                                            ->minValue(0.01)
+                                            ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
+                                            ->columnSpan(['default' => 12, 'md' => 3]),
+
+                                        Forms\Components\Hidden::make('type')->default('output'),
+                                    ]),
                             ])
-                            ->columns(2)
+                            ->addActionLabel('Añadir OTRO Producto Producido')
+                            ->itemLabel(fn (array $state): ?string => 
+                                \App\Models\Product::find($state['product_id'] ?? null)?->name ?? 'Nuevo Producto'
+                            )
+                            ->collapsible()
+                            ->minItems(1),
+                    ]),
+
+                Forms\Components\Section::make('Materias Primas Consumidas (Consumibles)')
+                    ->schema([
+                        Forms\Components\Repeater::make('consumables')
+                            ->label('Salida de Materia Prima')
+                            ->relationship('consumables')
+                            ->schema([
+                                Forms\Components\Grid::make(12)
+                                    ->schema([
+                                        Forms\Components\Select::make('product_id')
+                                            ->label('Materia Prima')
+                                            ->options(fn () => \App\Models\Product::where('type', 'raw_material')
+                                                ->where('is_active', true)
+                                                ->pluck('name', 'id'))
+                                            ->required()
+                                            ->searchable()
+                                            ->preload()
+                                            ->columnSpan(['default' => 12, 'md' => 7]),
+                                        
+                                        Forms\Components\TextInput::make('quantity')
+                                            ->label('Cantidad Consumo')
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->required()
+                                            ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
+                                            ->minValue(0.01)
+                                            ->columnSpan(['default' => 12, 'md' => 5]),
+
+                                        Forms\Components\Hidden::make('type')->default('consumable'),
+                                    ]),
+                            ])
                             ->addActionLabel('Añadir Materia Prima')
                             ->itemLabel(fn (array $state): ?string => 
                                 \App\Models\Product::find($state['product_id'] ?? null)?->name ?? 'Nuevo Item'
@@ -216,26 +232,21 @@ class ProductionResource extends Resource
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
                 
-                Tables\Columns\TextColumn::make('product.name')
-                    ->label('Producto Producido')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('outputs_count')
+                    ->label('Productos Fabricados')
+                    ->counts('outputs')
+                    ->badge()
+                    ->color('success'),
 
-                Tables\Columns\TextColumn::make('color.display_name')
-                    ->label('Color')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('color.name')
-                    ->label('Nombre Color')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('outputs.product.name')
+                    ->label('Listado de Productos')
+                    ->listWithLineBreaks()
+                    ->bulleted()
+                    ->limitList(2)
+                    ->expandableLimitedList(),
 
                 Tables\Columns\TextColumn::make('shift.name')
                     ->label('Turno')
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cantidad')
-                    ->formatStateUsing(fn ($state) => number_format((float)$state, 2, '.', ','))
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('status')
@@ -255,8 +266,8 @@ class ProductionResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('toWarehouse.name')
-                    ->label('Bodega')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Bodega Destino')
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -291,7 +302,7 @@ class ProductionResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('¿Confirmar producción?')
-                    ->modalDescription('Esto descontará materias primas e ingresará producto terminado.')
+                    ->modalDescription('Esto descontará materias primas e ingresará TODOS los productos terminados.')
                     ->visible(fn ($record) => $record->status === 'draft')
                     ->action(function (Production $record) {
                         $record->confirm();
@@ -308,7 +319,7 @@ class ProductionResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading('¿Cancelar producción?')
-                    ->modalDescription('Esto revertirá el stock (devolverá materias primas y descontará el producto terminado).')
+                    ->modalDescription('Esto revertirá el stock (devolverá materias primas y descontará los productos terminados).')
                     ->visible(fn ($record) => $record->status === 'confirmed')
                     ->action(function (Production $record) {
                         $record->cancel();
@@ -360,6 +371,6 @@ class ProductionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['product', 'color', 'shift', 'toWarehouse']);
+            ->with(['outputs.product', 'outputs.color', 'consumables.product', 'shift', 'toWarehouse']);
     }
 }

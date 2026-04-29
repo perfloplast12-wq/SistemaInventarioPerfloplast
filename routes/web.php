@@ -92,3 +92,32 @@ Route::get('/force-migrate', function () {
         return "Error en migración: " . $e->getMessage();
     }
 });
+
+Route::get('/sync-db-productions', function () {
+    try {
+        // 1. Agregar columnas a la tabla de items
+        \Illuminate\Support\Facades\Schema::table('production_items', function (\Illuminate\Database\Schema\Blueprint $table) {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('production_items', 'type')) {
+                $table->string('type')->default('consumable')->after('product_id');
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('production_items', 'color_id')) {
+                $table->foreignId('color_id')->nullable()->after('product_id')->constrained('colors')->nullOnDelete();
+            }
+        });
+
+        // 2. Limpiar la tabla principal
+        \Illuminate\Support\Facades\Schema::table('productions', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $columns = ['product_id', 'color_id', 'quantity'];
+            foreach ($columns as $col) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('productions', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
+        });
+
+        return "✅ Base de datos de Producción sincronizada con éxito. Ya puedes cerrar esta pestaña.";
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
+});
+
