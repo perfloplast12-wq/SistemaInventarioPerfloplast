@@ -23,18 +23,35 @@ class TrackingController extends Controller
                 'accuracy' => 'nullable|numeric',
             ]);
 
+            $isOffline = $request->input('status') === 'offline';
+            
             if ($request->filled('dispatch_id')) {
-                $location = DispatchLocation::create($validated);
-                
-                // Disparar evento para tiempo real de despacho
-                try {
-                    event(new \App\Events\LocationUpdated($location));
-                } catch (\Exception $e) {}
+                // Si es señal de desconexión, usamos la última ubicación conocida
+                if ($isOffline) {
+                    $lastLoc = DispatchLocation::where('dispatch_id', $validated['dispatch_id'])
+                        ->latest('id')
+                        ->first();
+                    
+                    if ($lastLoc) {
+                        $location = DispatchLocation::create([
+                            'dispatch_id' => $validated['dispatch_id'],
+                            'lat' => $lastLoc->lat,
+                            'lng' => $lastLoc->lng,
+                            'speed' => 0,
+                            'heading' => 0,
+                            'accuracy' => -1, // Señal especial
+                        ]);
+                        event(new \App\Events\LocationUpdated($location, true));
+                    }
+                } else {
+                    $location = DispatchLocation::create($validated);
+                    try {
+                        event(new \App\Events\LocationUpdated($location));
+                    } catch (\Exception $e) {}
+                }
             } else if ($user) {
                 // Rastreo general de usuario (Vendedores)
-                $status = $request->input('status', 'online');
-                
-                if ($status === 'offline') {
+                if ($isOffline) {
                     // Señal de desconexión: marcar última ubicación con accuracy = -1
                     $lastLoc = \App\Models\UserLocation::where('user_id', $user->id)
                         ->latest('id')

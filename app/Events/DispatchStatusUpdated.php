@@ -1,0 +1,48 @@
+<?php
++
++namespace App\Events;
++
++use App\Models\Dispatch;
++use Illuminate\Broadcasting\Channel;
++use Illuminate\Broadcasting\InteractsWithSockets;
++use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
++use Illuminate\Foundation\Events\Dispatchable;
++use Illuminate\Queue\SerializesModels;
++
++class DispatchStatusUpdated implements ShouldBroadcast
++{
++    use Dispatchable, InteractsWithSockets, SerializesModels;
++
++    public $dispatchId;
++    public $status;
++
++    /**
++     * Create a new event instance.
++     */
++    public function __construct(Dispatch $dispatch)
++    {
++        $this->dispatchId = $dispatch->id;
++        $this->status = $dispatch->status;
++    }
++
++    /**
++     * Get the channels the event should broadcast on.
++     *
++     * @return array<int, \Illuminate\Broadcasting\Channel>
++     */
++    public function broadcastOn(): array
++    {
++        return [
++            new Channel('dispatch.' . $this->dispatchId),
++        ];
++    }
++
++    /**
++     * The event's broadcast name.
++     */
++    public function broadcastAs(): string
++    {
++        return 'status.updated';
++    }
++}
++

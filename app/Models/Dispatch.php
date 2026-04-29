@@ -90,5 +90,11 @@ class Dispatch extends Model
                 $dispatch->dispatch_number = 'D-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
             }
         });
+
+        static::updated(function ($dispatch) {
+            if ($dispatch->wasChanged('status')) {
+                event(new \App\Events\DispatchStatusUpdated($dispatch));
+            }
+        });
     }
 }

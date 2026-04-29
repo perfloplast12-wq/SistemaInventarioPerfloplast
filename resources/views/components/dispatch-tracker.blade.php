@@ -16,6 +16,22 @@
         setInterval(() => {
             if (this.buffer.length > 0) this.syncBuffer();
         }, 20000);
+
+        this.setupEcho();
+    },
+
+    setupEcho() {
+        if (typeof window.Echo === 'undefined') return;
+        window.Echo.channel('dispatch.' + this.dispatchId)
+            .listen('.location.updated', (data) => {
+                this.lastUpdate = new Date(data.timestamp).toLocaleTimeString();
+                if (data.is_offline) {
+                    this.status = 'offline';
+                }
+            })
+            .listen('.status.updated', (data) => {
+                this.status = data.status;
+            });
     },
     
     requestPermission() {
@@ -39,9 +55,10 @@
                 this.showLock = false; 
             },
             (err) => { 
-                if (err.code === 1) this.showLock = true; 
+                if (err.code === 1) this.showLock = true;
+                this.sendOfflineSignal();
             },
-            { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
 
         // Intento silencioso para ocultar el bloqueo si ya hay permiso
@@ -49,6 +66,23 @@
             (pos) => { this.showLock = false; },
             (err) => { if (err.code === 1) this.showLock = true; }
         );
+    },
+
+    async sendOfflineSignal() {
+        try {
+            await fetch('/api/tracking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    dispatch_id: this.dispatchId,
+                    lat: 0, lng: 0,
+                    status: 'offline'
+                })
+            });
+        } catch(e) {}
     },
     
     async handleNewPosition(position) {

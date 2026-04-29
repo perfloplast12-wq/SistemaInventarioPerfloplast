@@ -16,13 +16,15 @@ class LocationUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $location;
+    public $isOffline;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(DispatchLocation $location)
+    public function __construct(DispatchLocation $location, bool $isOffline = false)
     {
         $this->location = $location;
+        $this->isOffline = $isOffline;
     }
 
     /**
@@ -56,6 +58,7 @@ class LocationUpdated implements ShouldBroadcast
             'speed' => $this->location->speed,
             'heading' => $this->location->heading,
             'timestamp' => $this->location->created_at->toIso8601String(),
+            'is_offline' => $this->isOffline,
         ];
     }
 }
