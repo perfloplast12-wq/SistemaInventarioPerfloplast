@@ -41,7 +41,7 @@ class EditDispatch extends EditRecord
     protected function afterSave(): void
     {
         $record = $this->getRecord();
-        $orderIds = $this->data['orders'] ?? [];
+        $orderIds = $this->data['selected_orders'] ?? [];
         
         // Desvincular pedidos que ya no están en la lista
         Order::where('dispatch_id', $record->id)

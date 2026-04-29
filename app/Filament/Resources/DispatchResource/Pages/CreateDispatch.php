@@ -33,7 +33,7 @@ class CreateDispatch extends CreateRecord
     protected function afterCreate(): void
     {
         $record = $this->getRecord();
-        $orderIds = $this->data['orders'] ?? [];
+        $orderIds = $this->data['selected_orders'] ?? [];
         
         if (!empty($orderIds)) {
             Order::whereIn('id', $orderIds)->update(['dispatch_id' => $record->id]);

@@ -95,22 +95,17 @@ class DispatchResource extends Resource
 
                 Forms\Components\Section::make('Pedidos Asociados')
                     ->schema([
-                        Forms\Components\Select::make('orders')
+                        Forms\Components\Select::make('selected_orders')
                             ->label('Seleccionar Pedidos Pendientes')
-                            ->options(function () use ($form) {
-                                $query = Order::where('status', 'pending');
-                                $recordId = $form->getRecord()?->id;
-                                if ($recordId) {
-                                    $query->orWhere('dispatch_id', $recordId);
-                                }
-                                return $query->pluck('order_number', 'id');
+                            ->options(function () {
+                                return Order::where('status', 'pending')->pluck('order_number', 'id');
                             })
                             ->dehydrated(false)
                             ->multiple()
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->afterStateUpdated(function ($state, $old, Forms\Set $set, Forms\Get $get) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 if (empty($state)) {
                                     $set('items', []);
                                     return;
