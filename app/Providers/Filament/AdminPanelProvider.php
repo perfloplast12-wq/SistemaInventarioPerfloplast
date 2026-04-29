@@ -114,7 +114,8 @@ class AdminPanelProvider extends PanelProvider
                             html:not(.dark) .fi-main-ctn,
                             html:not(.dark) .fi-main,
                             html:not(.dark) .fi-panels-main-ctn {
-                                background-color: var(--bg-color) !important;
+                                background: transparent !important;
+                                background-color: transparent !important;
                             }
 
                             .fi-topbar, 
