@@ -556,30 +556,44 @@ body,
     }
 }
 /* PREMIUM STYLES */
-body {
-    background-color: var(--bg-color) !important;
+html:not(.dark) body {
+    background-color: #0a0e17 !important;
     background-image: 
-        radial-gradient(at 0% 0%, #ffffff 0, transparent 50%),
-        linear-gradient(135deg, 
-            #ffffff 0%, 
-            color-mix(in srgb, var(--bg-color), #ffffff 50%) 20%, 
-            var(--bg-color) 50%, 
-            color-mix(in srgb, var(--bg-color), #000000 70%) 100%
+        radial-gradient(ellipse at 0% 0%, 
+            color-mix(in srgb, var(--p-1), #ffffff 85%) 0%, 
+            transparent 55%),
+        radial-gradient(ellipse at 30% 0%, 
+            color-mix(in srgb, var(--p-2), #ffffff 75%) 0%, 
+            transparent 45%),
+        radial-gradient(ellipse at 70% 30%, 
+            color-mix(in srgb, var(--p-1), transparent 50%) 0%, 
+            transparent 50%),
+        linear-gradient(160deg, 
+            color-mix(in srgb, var(--p-1), #ffffff 80%) 0%,
+            color-mix(in srgb, var(--p-1), #ffffff 55%) 15%,
+            color-mix(in srgb, var(--p-2), #ffffff 30%) 35%,
+            color-mix(in srgb, var(--p-2), #000000 20%) 60%,
+            color-mix(in srgb, var(--p-1), #000000 60%) 80%,
+            color-mix(in srgb, var(--p-2), #000000 80%) 100%
         ) !important;
     background-attachment: fixed !important;
     color: var(--text-primary) !important;
-    transition: background-color 0.8s ease;
     min-height: 100vh;
     background-size: cover !important;
 }
 
 .dark body {
+    background-color: #040609 !important;
     background-image: 
         linear-gradient(180deg, 
             #040609 0%, 
             color-mix(in srgb, #040609, var(--p-1) 30%) 50%, 
             color-mix(in srgb, #040609, var(--p-2) 90%) 100%
         ) !important;
+    background-attachment: fixed !important;
+    color: var(--text-primary) !important;
+    min-height: 100vh;
+    background-size: cover !important;
 }
 
 .fi-layout, .fi-main { background: transparent !important; }
