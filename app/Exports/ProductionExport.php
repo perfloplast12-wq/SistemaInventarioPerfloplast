@@ -33,10 +33,8 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
         return [
             'Nro. Producción',
             'Fecha',
-            'Producto',
-            'Color',
+            'Productos Fabricados',
             'Turno',
-            'Cantidad',
             'Bodega Destino',
             'Estado'
         ];
@@ -44,13 +42,15 @@ class ProductionExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function map($prod): array
     {
+        $productList = $prod->outputs->map(function ($item) {
+            return ($item->product?->name ?? 'Desconocido') . " (" . number_format($item->quantity, 2) . ")";
+        })->implode(", ");
+
         return [
             $prod->production_number,
             $prod->production_date->format('d/m/Y H:i'),
-            $prod->product?->name,
-            $prod->color?->name ?? 'N/A',
+            $productList,
             $prod->shift?->name,
-            number_format($prod->quantity, 2),
             $prod->toWarehouse?->name,
             strtoupper($prod->status),
         ];

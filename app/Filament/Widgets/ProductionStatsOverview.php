@@ -3,6 +3,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Production;
 use App\Models\Shift;
+use App\Models\ProductionItem;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -23,9 +24,12 @@ class ProductionStatsOverview extends BaseWidget
         $todayEnd = Carbon::today()->endOfDay();
         $monthStart = Carbon::now()->startOfMonth();
 
-        // 1. Producido Hoy
-        $todayProduced = Production::where('status', 'confirmed')
-            ->whereBetween('production_date', [$todayStart, $todayEnd])
+        // 1. Producido Hoy (Suma de cantidades de items tipo 'output' en producciones confirmadas)
+        $todayProduced = ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($todayStart, $todayEnd) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$todayStart, $todayEnd]);
+            })
             ->sum('quantity');
 
         // 2. Producciones en Borrador (Pendientes)
@@ -55,8 +59,11 @@ class ProductionStatsOverview extends BaseWidget
                 ->chart([$pct/2, $pct/1.5, $pct]);
         } else {
             // Si no hay turno activo o meta, mostrar total del mes
-            $monthlyProduced = Production::where('status', 'confirmed')
-                ->whereBetween('production_date', [$monthStart, now()])
+            $monthlyProduced = ProductionItem::where('type', 'output')
+                ->whereHas('production', function($q) use ($monthStart) {
+                    $q->where('status', 'confirmed')
+                      ->whereBetween('production_date', [$monthStart, now()]);
+                })
                 ->sum('quantity');
 
             $efficiencyStat = Stat::make('Producción Mensual', number_format($monthlyProduced, 2, '.', ','))

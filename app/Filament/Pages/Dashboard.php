@@ -8,13 +8,12 @@ use App\Models\Production;
 use App\Models\Stock;
 use App\Models\Order;
 use App\Models\Dispatch;
+use App\Models\ProductionItem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Custom Dashboard Page
- * We avoided InteractsWithPageFilters to prevent "Cannot mutate reactive prop" error in Livewire 3
- * while maintaining manual filter management for Power BI style slicers.
  */
 class Dashboard extends Page
 {
@@ -26,8 +25,6 @@ class Dashboard extends Page
 
     public static function canAccess(): bool
     {
-        // Permitimos el acceso técnico para evitar el error 403, 
-        // pero redirigimos en el mount() y lo ocultamos del menú.
         if (auth()->user()?->hasAnyRole(['production', 'sales'])) {
             return true;
         }
@@ -94,7 +91,6 @@ class Dashboard extends Page
         $this->filters['startDate'] = $start->format('Y-m-d');
         $this->filters['endDate']   = $end->format('Y-m-d');
         
-        // Use Livewire dispatch to notify child widgets to refresh
         $this->dispatch('refreshCharts');
     }
 
@@ -117,8 +113,18 @@ class Dashboard extends Page
         $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
         $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
         
-        $prod  = (float) Production::where('status', 'confirmed')->whereBetween('production_date', [$start, $end])->sum('quantity');
-        $prevProd  = (float) Production::where('status', 'confirmed')->whereBetween('production_date', [$prevStart, $prevEnd])->sum('quantity');
+        // Fix: Use production_items for quantity sum
+        $prod = (float) ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($start, $end) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$start, $end]);
+            })->sum('quantity');
+
+        $prevProd = (float) ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($prevStart, $prevEnd) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$prevStart, $prevEnd]);
+            })->sum('quantity');
 
         $stocks = Stock::with('product')->get();
         $inventoryVal = $stocks->sum(fn($s) => $s->quantity * ($s->product->cost_price ?? $s->product->purchase_cost ?? 0));

@@ -6,6 +6,7 @@ use Filament\Widgets\Widget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use App\Models\Production;
 use App\Models\Shift;
+use App\Models\ProductionItem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -38,12 +39,16 @@ class ProductionByShiftChart extends Widget
             $shifts = Shift::all();
             $palette = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6'];
 
-            // ── Comparison data (Agrupado en una sola consulta) ─────────────
-            $compData = Production::where('status', 'confirmed')
-                ->whereBetween('production_date', [$start, $end])
+            // ── Comparison data (Joins production_items for output quantity) ─────────────
+            $compData = ProductionItem::where('type', 'output')
+                ->whereHas('production', function($q) use ($start, $end) {
+                    $q->where('status', 'confirmed')
+                      ->whereBetween('production_date', [$start, $end]);
+                })
                 ->when($productId, fn($q) => $q->where('product_id', $productId))
-                ->select('shift_id', DB::raw('SUM(quantity) as total'))
-                ->groupBy('shift_id')
+                ->join('productions', 'production_items.production_id', '=', 'productions.id')
+                ->select('productions.shift_id', DB::raw('SUM(production_items.quantity) as total'))
+                ->groupBy('productions.shift_id')
                 ->pluck('total', 'shift_id');
 
             $compNames = $compValues = [];
@@ -65,11 +70,15 @@ class ProductionByShiftChart extends Widget
             }
 
             // Traer todos los datos del trend en una sola consulta
-            $trendRaw = Production::where('status', 'confirmed')
-                ->whereBetween('production_date', [$start, $end])
+            $trendRaw = ProductionItem::where('type', 'output')
+                ->whereHas('production', function($q) use ($start, $end) {
+                    $q->where('status', 'confirmed')
+                      ->whereBetween('production_date', [$start, $end]);
+                })
                 ->when($productId, fn($q) => $q->where('product_id', $productId))
-                ->select('shift_id', DB::raw("DATE_FORMAT(production_date, '$format') as d"), DB::raw('SUM(quantity) as q'))
-                ->groupBy('shift_id', 'd')
+                ->join('productions', 'production_items.production_id', '=', 'productions.id')
+                ->select('productions.shift_id', DB::raw("DATE_FORMAT(productions.production_date, '$format') as d"), DB::raw('SUM(production_items.quantity) as q'))
+                ->groupBy('productions.shift_id', 'd')
                 ->get()
                 ->groupBy('shift_id');
 
