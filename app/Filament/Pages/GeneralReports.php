@@ -167,16 +167,19 @@ class GeneralReports extends Page
             });
 
         // 6. Producción
-        $productionDetailed = DB::table('productions')
+        $productionDetailed = DB::table('production_items')
+            ->join('productions', 'production_items.production_id', '=', 'productions.id')
             ->join('shifts', 'productions.shift_id', '=', 'shifts.id')
-            ->join('products', 'productions.product_id', '=', 'products.id')
+            ->join('products', 'production_items.product_id', '=', 'products.id')
+            ->where('production_items.type', 'output')
+            ->where('productions.status', 'confirmed')
             ->whereBetween('productions.production_date', [$start, $end])
             ->select(
                 'shifts.name as shift_name',
                 'shifts.daily_goal',
                 'products.name as product_name',
-                DB::raw('SUM(productions.quantity) as total_qty'),
-                DB::raw('COUNT(productions.id) as operations')
+                DB::raw('SUM(production_items.quantity) as total_qty'),
+                DB::raw('COUNT(DISTINCT productions.id) as operations')
             )
             ->groupBy('shifts.name', 'shifts.daily_goal', 'products.name')
             ->get()
@@ -188,9 +191,12 @@ class GeneralReports extends Page
             });
 
         // 7. Gráfica - Producción Diaria
-        $dailyProduction = DB::table('productions')
-            ->whereBetween('production_date', [$start, $end])
-            ->select(DB::raw('DATE(production_date) as date'), DB::raw('SUM(quantity) as total'))
+        $dailyProduction = DB::table('production_items')
+            ->join('productions', 'production_items.production_id', '=', 'productions.id')
+            ->where('production_items.type', 'output')
+            ->where('productions.status', 'confirmed')
+            ->whereBetween('productions.production_date', [$start, $end])
+            ->select(DB::raw('DATE(productions.production_date) as date'), DB::raw('SUM(production_items.quantity) as total'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();

@@ -126,8 +126,9 @@ class Dashboard extends Page
                   ->whereBetween('production_date', [$prevStart, $prevEnd]);
             })->sum('quantity');
 
-        $stocks = Stock::with('product')->get();
-        $inventoryVal = $stocks->sum(fn($s) => $s->quantity * ($s->product->cost_price ?? $s->product->purchase_cost ?? 0));
+        $inventoryVal = (float) DB::table('stocks')
+            ->join('products', 'stocks.product_id', '=', 'products.id')
+            ->sum(DB::raw('stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)'));
 
         $pendingSalesVal = (float) DB::table('orders')
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
@@ -139,7 +140,7 @@ class Dashboard extends Page
             ->whereNotNull('stocks.warehouse_id')
             ->groupBy('products.id')
             ->havingRaw('SUM(stocks.quantity) <= 10')
-            ->get(['products.id'])
+            ->get()
             ->count();
 
         $pendOrders = Order::where('status', 'pending')->count();

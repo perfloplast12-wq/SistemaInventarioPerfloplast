@@ -269,18 +269,17 @@ class DispatchResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('order_returns_count')
                     ->label('Alertas/Dev.')
-                    ->counts('orderReturns')
                     ->badge()
                     ->color(fn ($record) => 
-                        $record->orderReturns()->where('status', 'pending')->exists() 
-                            ? 'danger' 
-                            : ($record->orderReturns()->exists() ? 'success' : 'gray')
+                        $record->order_returns_count > 0 
+                            ? ($record->orderReturns->where('status', 'pending')->count() > 0 ? 'danger' : 'success')
+                            : 'gray'
                     )
-                    ->formatStateUsing(fn ($state, $record) => $state > 0 ? "{$state} Devolución(es)" : 'Ninguna')
+                    ->formatStateUsing(fn ($state, $record) => $record->order_returns_count > 0 ? "{$record->order_returns_count} Devolución(es)" : 'Ninguna')
                     ->description(fn ($record) => 
-                        $record->orderReturns()->where('status', 'pending')->exists() 
-                            ? 'Pendiente revisión' 
-                            : ($record->orderReturns()->exists() ? 'Resueltas' : '')
+                        $record->order_returns_count > 0 
+                            ? ($record->orderReturns->where('status', 'pending')->count() > 0 ? 'Pendiente revisión' : 'Resueltas') 
+                            : ''
                     ),
             ])
             ->filters([
@@ -495,7 +494,9 @@ class DispatchResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['truck', 'driver']);
+        $query = parent::getEloquentQuery()
+            ->with(['truck', 'driver', 'orderReturns'])
+            ->withCount('orderReturns');
 
         if (auth()->user()?->hasRole('conductor')) {
             $query->where('driver_id', auth()->id());
