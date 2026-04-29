@@ -47,7 +47,6 @@ class AdminPanelProvider extends PanelProvider
                         return Setting::whereIn('key', [
                             'primary_color_1',
                             'primary_color_2',
-                            'sidebar_width',
                             'border_radius',
                             'glass_effect',
                             'mesh_background',
@@ -62,7 +61,7 @@ class AdminPanelProvider extends PanelProvider
 
                     $p1 = $settings['primary_color_1'] ?? '#6366f1';
                     $p2 = $settings['primary_color_2'] ?? '#3b82f6';
-                    $sw = ($settings['sidebar_width'] ?? 14).'rem';
+                    $sw = '16rem';
                     $br = ($settings['border_radius'] ?? 12).'px';
 
                     $isGlass = (bool) ($settings['glass_effect'] ?? true);

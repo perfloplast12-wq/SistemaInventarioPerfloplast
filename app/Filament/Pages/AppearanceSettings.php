@@ -35,7 +35,6 @@ class AppearanceSettings extends Page
         $settings = Setting::whereIn('key', [
             'primary_color_1',
             'primary_color_2',
-            'sidebar_width',
             'border_radius',
             'glass_effect',
             'mesh_background',
@@ -51,7 +50,6 @@ class AppearanceSettings extends Page
         $this->form->fill([
             'primary_color_1' => $settings['primary_color_1'] ?? '#6366f1',
             'primary_color_2' => $settings['primary_color_2'] ?? '#3b82f6',
-            'sidebar_width' => $settings['sidebar_width'] ?? 17,
             'border_radius' => $settings['border_radius'] ?? 12,
             'glass_effect' => (bool)($settings['glass_effect'] ?? false),
             'mesh_background' => (bool)($settings['mesh_background'] ?? true),
@@ -71,8 +69,7 @@ class AppearanceSettings extends Page
             ->schema([
                 \Filament\Forms\Components\Tabs::make('Appearance Settings')
                     ->tabs([
-                        \Filament\Forms\Components\Tabs\Tab::make('🚀 Estilos Exquisitos')
-                            ->icon('heroicon-o-rocket-launch')
+                        \Filament\Forms\Components\Tabs\Tab::make('Estilos Exquisitos')
                             ->schema([
                                 Section::make('🎭 Galería de Temas Maestro')
                                     ->description('Selecciona una de nuestras paletas exclusivas. El sistema equilibrará automáticamente los contrastes en modo luz y sombra.')
@@ -151,8 +148,7 @@ class AppearanceSettings extends Page
                                     ]),
                             ]),
 
-                        \Filament\Forms\Components\Tabs\Tab::make('✨ Acabados e Interfaz')
-                            ->icon('heroicon-o-sparkles')
+                        \Filament\Forms\Components\Tabs\Tab::make('Acabados e Interfaz')
                             ->schema([
                                 Section::make('Efectos Premium')
                                     ->columns(3)
@@ -166,7 +162,6 @@ class AppearanceSettings extends Page
                                 Section::make('Geometría y Forma')
                                     ->columns(3)
                                     ->schema([
-                                        TextInput::make('sidebar_width')->label('Ancho Side (rem)')->numeric()->extraAttributes(['min' => 12, 'max' => 20]),
                                         TextInput::make('border_radius')->label('Rounding (px)')->numeric()->extraAttributes(['min' => 0, 'max' => 24]),
                                         \Filament\Forms\Components\Select::make('button_layout')
                                             ->label('Botones')

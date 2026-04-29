@@ -601,6 +601,11 @@ body {
     background: transparent !important;
     height: 100% !important;
     color: #ffffff !important;
+    border: none !important;
+}
+
+.fi-topbar {
+    border-bottom: none !important;
 }
 
 .fi-header {
@@ -631,11 +636,16 @@ body {
 }
 
 .fi-sidebar {
-    border-inline-end: none !important;
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.05) !important;
     border-top: none !important;
     box-shadow: none !important;
-    background-color: transparent !important;
+    background-color: var(--bg-color) !important;
     backdrop-filter: blur(10px) !important;
+}
+
+.dark .fi-sidebar {
+    background-color: rgba(13, 17, 23, 0.8) !important;
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.03) !important;
 }
 
 .fi-card, .fi-section {
@@ -646,11 +656,15 @@ body {
 @media (min-width: 1024px) {
     .fi-sidebar {
         position: fixed !important;
-        width: var(--fi-sidebar-width) !important;
+        width: 16rem !important;
+        height: 100vh !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 40 !important;
     }
     .fi-main-ctn {
-        margin-inline-start: var(--fi-sidebar-width) !important;
-        width: calc(100vw - var(--fi-sidebar-width)) !important;
+        margin-inline-start: 16rem !important;
+        width: calc(100vw - 16rem) !important;
     }
     .fi-main { width: 100% !important; padding: 2rem !important; }
 }
@@ -659,6 +673,9 @@ body {
     background: var(--main-gradient) !important;
     height: 4rem !important;
     border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .fi-logo {
