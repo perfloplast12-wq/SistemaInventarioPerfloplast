@@ -52,17 +52,6 @@ class Catalogos extends Page
         return WarehouseResource::getUrl('create');
     }
 
-    // -------------------- CAMIONES --------------------
-    public function getTrucksUrl(): string
-    {
-        return TruckResource::getUrl('index');
-    }
-
-    public function getTrucksCreateUrl(): string
-    {
-        return TruckResource::getUrl('create');
-    }
-
     // -------------------- UNIDADES DE MEDIDA --------------------
     public function getUnitsUrl(): string
     {
