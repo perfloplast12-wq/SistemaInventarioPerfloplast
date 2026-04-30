@@ -2,7 +2,7 @@
     const STORAGE_KEY = 'gps_last_success';
     const LOCK_KEY = 'gps_is_locked';
     
-    const getStorageTime = () => parseInt(localStorage.getItem(STORAGE_KEY)) || Date.now();
+    const getStorageTime = () => parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
     const setStorageTime = (time) => localStorage.setItem(STORAGE_KEY, time);
 
     const initTracker = () => {
@@ -11,26 +11,38 @@
 
         const config = window.trackerConfig || {};
         let watchId = null;
-        let lastSuccess = getStorageTime();
         
         const updateLockUI = (isLocked) => {
             const overlay = document.getElementById('gps-lock-overlay');
             if (overlay) {
-                overlay.style.display = isLocked ? 'flex' : 'none';
+                overlay.style.setProperty('display', isLocked ? 'flex' : 'none', 'important');
+                if (isLocked) {
+                    document.body.style.overflow = 'hidden';
+                    // Ocultar el resto de la app para que no sea interactuable ni visible
+                    const mainContent = document.querySelector('.fi-layout');
+                    if (mainContent) mainContent.style.filter = 'blur(10px) brightness(0.2)';
+                } else {
+                    document.body.style.overflow = '';
+                    const mainContent = document.querySelector('.fi-layout');
+                    if (mainContent) mainContent.style.filter = '';
+                }
             }
             localStorage.setItem(LOCK_KEY, isLocked ? '1' : '0');
         };
 
         const checkStatus = () => {
+            const lastSuccess = getStorageTime();
             const now = Date.now();
             const diff = (now - lastSuccess) / 1000;
             
-            // Si pasan más de 30s sin señal, bloqueamos
-            if (diff > 30) {
+            // Si nunca ha habido éxito o han pasado más de 20s (bajamos a 20s para ser más estrictos)
+            if (lastSuccess === 0 || diff > 20) {
                 updateLockUI(true);
+            } else {
+                updateLockUI(false);
             }
             
-            // Si el permiso está denegado, bloqueo inmediato
+            // Permisos
             if (navigator.permissions && navigator.permissions.query) {
                 navigator.permissions.query({ name: 'geolocation' }).then(res => {
                     if (res.state === 'denied') updateLockUI(true);
@@ -40,7 +52,6 @@
 
         const sendLocation = async (pos) => {
             if (!config.shouldTrack) return;
-            
             try {
                 const { latitude, longitude, speed, heading, accuracy } = pos.coords;
                 await fetch('/api/tracking', {
@@ -68,25 +79,33 @@
             
             watchId = navigator.geolocation.watchPosition(
                 (pos) => {
-                    lastSuccess = Date.now();
-                    setStorageTime(lastSuccess);
+                    setStorageTime(Date.now());
                     updateLockUI(false);
                     sendLocation(pos);
                 },
                 (err) => {
+                    console.error('GPS Watch Error:', err);
                     updateLockUI(true);
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         };
 
-        // Bucle de control cada 3 segundos
-        setInterval(checkStatus, 3000);
-        
-        // Iniciar rastreo
+        // Inyectar CSS preventivo para que no se vea nada antes de que JS decida
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #gps-lock-overlay { z-index: 2147483647 !important; }
+            body.is-gps-locked .fi-layout { display: none !important; }
+        `;
+        document.head.appendChild(style);
+
+        // EJECUCIÓN INMEDIATA
+        checkStatus();
         startWatch();
 
-        // Reiniciar al volver a la app
+        // Bucle rápido (cada 2s)
+        setInterval(checkStatus, 2000);
+        
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 checkStatus();
@@ -94,15 +113,21 @@
             }
         });
         
-        // Exponer función de reintento
-        window.retryGpsConnection = () => {
-            updateLockUI(false); // Reset temporal para permitir el prompt
+        window.retryGpsConnection = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            console.log('Retry requested...');
             startWatch();
-            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+            // Intentar forzar el prompt
+            navigator.geolocation.getCurrentPosition(() => {
+                setStorageTime(Date.now());
+                updateLockUI(false);
+            }, (err) => {
+                updateLockUI(true);
+            }, { enableHighAccuracy: true, timeout: 5000 });
+            return false;
         };
     };
 
-    // Auto-init si estamos en el entorno adecuado
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initTracker);
     } else {
