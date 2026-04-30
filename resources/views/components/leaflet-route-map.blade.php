@@ -17,11 +17,6 @@
         }
     </style>
 
-    <div x-show="!isLoaded" class="absolute inset-0 z-[2000] bg-white dark:bg-gray-900 flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Cargando mapa...</p>
-    </div>
-
     <div x-ref="mapContainer" class="w-full h-[550px]" style="height: 550px;" wire:ignore></div>
 
     <script>
@@ -57,13 +52,16 @@
                             // 2. Ocultar el spinner e inicializar inmediatamente igual que el mapa de vendedores
                             this.isLoaded = true;
 
-                            // 3. Render map
+                            // 3. Render map with initial data
                             await this.render(config.locations);
 
-                            // 4. Connect Echo for real-time updates
+                            // 4. Force immediate poll to get correct server timezone timestamps
+                            this.pollLatestPosition();
+
+                            // 5. Connect Echo for real-time updates
                             this.startEcho();
 
-                            // 5. Polling fallback: fetch latest position every 15s (igual que vendedores)
+                            // 6. Polling fallback: fetch latest position every 15s
                             this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
 
                             // 6. Fix for Filament Modal dimensions: force Leaflet to recalculate size continually for 5 seconds
@@ -183,7 +181,7 @@
                                 <div>👤 <strong>Piloto:</strong> ${this.driverName}</div>
                                 <div>🚛 <strong>Camión:</strong> ${this.truckName}</div>
                                 <div>🗺️ <strong>Ruta:</strong> ${this.routeName}</div>
-                                <div>⏲️ <strong>Última señal:</strong> ${this.lastSignal || 'Reciente'}</div>
+                                <div>⏲️ <strong>Última señal:</strong> ${this.lastSignal || 'Desconocido'}</div>
                                 <div>📍 <strong>Posición:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
                             </div>
                         </div>`;
@@ -208,12 +206,11 @@
                             .map(l => [parseFloat(l.lat), parseFloat(l.lng)])
                             .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
                         
-                        // Determine online status from the last signal
+                        // Determine online status from the last signal (fallback only, pollLatestPosition will overwrite)
                         if (raw.length > 0) {
                             const last = raw[raw.length - 1];
                             if (last.created_at) {
                                 this.lastSignalTime = new Date(last.created_at).getTime();
-                                this.lastSignal = new Date(last.created_at).toLocaleTimeString();
                                 const secsSince = (Date.now() - this.lastSignalTime) / 1000;
                                 // Detect if the last signal was an explicit offline flag (speed = -1)
                                 if (last.speed === -1 || last.speed === '-1' || last.speed === -1.0) {
@@ -264,20 +261,24 @@
 
                             if (isNaN(lat) || isNaN(lng) || !this.isValidCoord(lat, lng)) return;
 
+                            // Actualizar timestamp y hora desde el servidor
+                            if (data.last_seen_exact) {
+                                this.lastSignal = data.last_seen_exact;
+                            } else {
+                                this.lastSignalTime = data.timestamp ? new Date(data.timestamp).getTime() : Date.now();
+                                this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
+                            }
+
                             // Only update if position changed
                             const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
                             if (!last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001) {
                                 this.allPoints.push([lat, lng]);
-                                this.lastSignalTime = Date.now();
-                                this.lastSignal = new Date().toLocaleTimeString();
                                 this.isOnline = true;
                                 this.drawPosition();
                             } else {
-                                // Same position but update timestamp
-                                this.lastSignalTime = data.timestamp ? new Date(data.timestamp).getTime() : Date.now();
                                 const secsSince = (Date.now() - this.lastSignalTime) / 1000;
                                 const wasOnline = this.isOnline;
-                                this.isOnline = secsSince <= 120; // 2 minutes (igual que vendedores)
+                                this.isOnline = data.is_online !== undefined ? !data.is_offline : (secsSince <= 120);
                                 if (wasOnline !== this.isOnline) this.drawPosition();
                             }
                         } catch (e) {
