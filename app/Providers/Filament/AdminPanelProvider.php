@@ -141,6 +141,7 @@ class AdminPanelProvider extends PanelProvider
                         <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
                         <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
                         <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
+                        <script src=\"/js/filament-map.js?v=1.1\"></script>
                         <script>
                             // Service worker disabled for stability
                         </script>
