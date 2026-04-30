@@ -26,12 +26,28 @@
             
             init() {
                 this.startTracking();
-                // Verificación continua cada 10 segundos: si no hay GPS, bloquear rápido
-                this.heartbeatTimer = setInterval(() => this.checkGpsStatus(), 10000);
+                
+                // Verificación continua robusta
+                const runCheck = () => {
+                    this.checkGpsStatus();
+                    setTimeout(runCheck, 10000);
+                };
+                runCheck();
+
+                // Forzar verificación inmediata al regresar a la app
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        this.checkGpsStatus();
+                        this.requestPermission(); // Reintento silencioso
+                    }
+                });
+
+                window.addEventListener('focus', () => {
+                    this.checkGpsStatus();
+                });
             },
             
             destroy() {
-                if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
                 if (this.watchId !== null) navigator.geolocation.clearWatch(this.watchId);
             },
             

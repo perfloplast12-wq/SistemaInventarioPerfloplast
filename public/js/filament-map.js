@@ -148,14 +148,8 @@
                     console.error('Render Fail:', e);
                 }
             },
-
             drawPosition(fitBounds = false) {
                 if (!this.map || this.allPoints.length === 0) return;
-
-                if (this.truckMarker) {
-                    this.map.removeLayer(this.truckMarker);
-                    this.truckMarker = null;
-                }
 
                 const currentPos = this.allPoints[this.allPoints.length - 1];
                 const lat = currentPos[0];
@@ -209,12 +203,23 @@
                         </div>
                     </div>`;
 
-                this.truckMarker = L.marker([lat, lng], {
-                    icon: L.divIcon({ className: '', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 30], popupAnchor: [0, -30] })
-                }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
+                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 30], popupAnchor: [0, -30] });
+
+                if (this.truckMarker) {
+                    this.truckMarker.setLatLng([lat, lng]);
+                    this.truckMarker.setIcon(newIcon);
+                    this.truckMarker.setPopupContent(popupHtml);
+                } else {
+                    this.truckMarker = L.marker([lat, lng], {
+                        icon: newIcon
+                    }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
+                    this.truckMarker.openPopup();
+                }
                 
-                this.truckMarker.openPopup();
-                if (fitBounds) this.map.setView([lat, lng], 15);
+                if (fitBounds) {
+                    this.map.setView([lat, lng], 15);
+                }
+            },iew([lat, lng], 15);
             },
             
             async pollLatestPosition() {
