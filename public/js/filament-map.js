@@ -219,7 +219,6 @@
                 if (fitBounds) {
                     this.map.setView([lat, lng], 15);
                 }
-            },iew([lat, lng], 15);
             },
             
             async pollLatestPosition() {
