@@ -64,19 +64,21 @@
                             // 6. Polling fallback: fetch latest position every 15s
                             this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
 
-                            // 6. Fix for Filament Modal dimensions: force Leaflet to recalculate size continually for 5 seconds
-                            let resizeCount = 0;
-                            const resizeInterval = setInterval(() => {
-                                if (this.map) this.map.invalidateSize(false);
-                                if (++resizeCount > 20) clearInterval(resizeInterval);
-                            }, 250);
-
-                            // 7. Auto-resize observer to handle modal adjustments
-                            if (window.ResizeObserver && this.$refs.mapContainer) {
-                                this.resizeObserver = new ResizeObserver(() => {
-                                    if (this.map) this.map.invalidateSize();
+                            // 6. Fix for Filament Modal dimensions: 
+                            // Escucha cada vez que el mapa se vuelve visible en pantalla (cuando se abre el modal)
+                            if (this.$refs.mapContainer) {
+                                this.visibilityObserver = new IntersectionObserver((entries) => {
+                                    if (entries[0].isIntersecting && this.map) {
+                                        // El modal se acaba de abrir. Forzar a Leaflet a recalcular su tamaño.
+                                        [10, 100, 300, 500].forEach(ms => {
+                                            setTimeout(() => {
+                                                this.map.invalidateSize(false);
+                                                if (this.allPoints.length > 0) this.drawPosition(true); // Re-centrar
+                                            }, ms);
+                                        });
+                                    }
                                 });
-                                this.resizeObserver.observe(this.$refs.mapContainer);
+                                this.visibilityObserver.observe(this.$refs.mapContainer);
                             }
 
                         } catch (e) {
@@ -326,7 +328,7 @@
                     
                     destroy() {
                         if (this.pollTimer) clearInterval(this.pollTimer);
-                        if (this.resizeObserver) this.resizeObserver.disconnect();
+                        if (this.visibilityObserver) this.visibilityObserver.disconnect();
                         if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
                         if (this.map) { this.map.remove(); this.map = null; }
                     }
