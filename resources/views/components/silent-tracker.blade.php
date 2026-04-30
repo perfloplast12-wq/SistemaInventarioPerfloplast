@@ -27,18 +27,41 @@
             init() {
                 this.startTracking();
                 
-                // Verificación continua robusta
+                // 1. Verificación continua cada 2 segundos (Bloqueo agresivo si no hay señal)
                 const runCheck = () => {
-                    this.checkGpsStatus();
-                    setTimeout(runCheck, 10000);
+                    const secsSinceSuccess = (Date.now() - this.lastSuccessTime) / 1000;
+                    
+                    // Si pasan más de 15s sin señal, bloqueamos visualmente para forzar al usuario a revisar
+                    if (secsSinceSuccess > 15 && !this.showLock) {
+                        console.warn('GPS signal lost for 15s - Locking UI');
+                        this.showLock = true;
+                    }
+                    
+                    this.checkGpsStatus(); // Envío de señal offline al servidor si es necesario
+                    setTimeout(runCheck, 2000);
                 };
                 runCheck();
 
-                // Forzar verificación inmediata al regresar a la app
+                // 2. Monitorear cambios de permisos en tiempo real (Chrome/Firefox/Android)
+                if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                        result.onchange = () => {
+                            console.log('GPS Permission changed to:', result.state);
+                            if (result.state === 'denied') {
+                                this.showLock = true;
+                                this.sendOfflineSignal();
+                            } else if (result.state === 'granted') {
+                                this.startTracking();
+                            }
+                        };
+                    });
+                }
+
+                // 3. Forzar verificación al regresar a la app
                 document.addEventListener('visibilitychange', () => {
                     if (document.visibilityState === 'visible') {
                         this.checkGpsStatus();
-                        this.requestPermission(); // Reintento silencioso
+                        this.startTracking(); // Reiniciar watch
                     }
                 });
 

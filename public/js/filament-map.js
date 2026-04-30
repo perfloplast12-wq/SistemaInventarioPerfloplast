@@ -1,7 +1,7 @@
 (function() {
     const registerMap = () => {
         if (typeof Alpine === 'undefined') return;
-        // Always re-register to allow multiple instances
+        
         Alpine.data('leafletRouteMap', (config) => ({
             map: null,
             isLoaded: false,
@@ -16,7 +16,6 @@
             isOnline: true,
             lastSignal: null,
             lastSignalTime: null,
-            heartbeatTimer: null,
             pollTimer: null,
             visibilityObserver: null,
             
@@ -25,39 +24,31 @@
                     this.isLoaded = false;
                     this.isOnline = true;
 
-                    // 1. Load Leaflet CSS+JS
                     await this.loadAssets();
-
-                    // 2. Ocultar el spinner e inicializar inmediatamente
                     this.isLoaded = true;
 
-                    // 3. Render map with initial data
+                    // Render map with initial data
                     await this.render(config.locations);
 
-                    // 4. Force immediate poll
+                    // Polling
                     this.pollLatestPosition();
-
-                    // 5. Connect Echo
-                    this.startEcho();
-
-                    // 6. Polling fallback
                     this.pollTimer = setInterval(() => this.pollLatestPosition(), 10000);
 
-                    // 7. Fix for Filament Modal dimensions
+                    // Real-time
+                    this.startEcho();
+
+                    // Visibility fix
                     if (this.$refs.mapContainer) {
                         this.visibilityObserver = new IntersectionObserver((entries) => {
                             if (entries[0].isIntersecting && this.map) {
-                                [10, 100, 300, 500].forEach(ms => {
-                                    setTimeout(() => {
-                                        this.map.invalidateSize(false);
-                                        if (this.allPoints.length > 0) this.drawPosition(true);
-                                    }, ms);
-                                });
+                                setTimeout(() => {
+                                    this.map.invalidateSize();
+                                    if (this.allPoints.length > 0) this.drawPosition(true);
+                                }, 200);
                             }
                         });
                         this.visibilityObserver.observe(this.$refs.mapContainer);
                     }
-
                 } catch (e) {
                     console.error('Map Init Fail:', e);
                 }
@@ -65,41 +56,30 @@
             
             async loadAssets() {
                 if (window.L) return;
-
-                // CSS
                 if (!document.getElementById('leaflet-css')) {
                     const css = document.createElement('link');
                     css.id = 'leaflet-css'; css.rel = 'stylesheet';
                     css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
                     document.head.appendChild(css);
                 }
-
-                // JS
                 if (!document.getElementById('leaflet-js')) {
                     await new Promise((resolve) => {
                         const js = document.createElement('script');
                         js.id = 'leaflet-js';
                         js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                        js.onload = resolve;
-                        js.onerror = resolve;
+                        js.onload = resolve; js.onerror = resolve;
                         document.head.appendChild(js);
                     });
                 }
-
-                // Wait for L to exist
                 let wait = 0;
-                while (typeof window.L === 'undefined' && wait < 40) {
-                    await new Promise(r => setTimeout(r, 80));
+                while (typeof window.L === 'undefined' && wait < 50) {
+                    await new Promise(r => setTimeout(r, 100));
                     wait++;
                 }
             },
 
             isValidCoord(lat, lng) {
                 return lat > 13.0 && lat < 19.0 && lng > -93.0 && lng < -87.0;
-            },
-
-            getStatusLabel(s) {
-                return {'pending':'Pendiente','in_progress':'En Ruta','completed':'Completado','delivered':'Entregado'}[s] || s;
             },
             
             async render(locationsRaw) {
@@ -109,45 +89,32 @@
                         .map(l => [parseFloat(l.lat), parseFloat(l.lng)])
                         .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
                     
-                    // Determine online status from the last signal (fallback only, pollLatestPosition will overwrite)
                     if (raw.length > 0) {
                         const last = raw[raw.length - 1];
                         if (last.created_at) {
                             this.lastSignalTime = new Date(last.created_at).getTime();
                             this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
                             const secsSince = (Date.now() - this.lastSignalTime) / 1000;
-                            // Detect if the last signal was an explicit offline flag (speed = -1)
-                            if (last.speed === -1 || last.speed === '-1' || last.speed === -1.0) {
-                                this.isOnline = false;
-                            } else {
-                                // Utiliza la calibración de vendedores (hasta 2 minutos = 120s)
-                                this.isOnline = secsSince <= 120;
-                            }
+                            this.isOnline = (last.speed !== -1 && last.speed !== '-1') && (secsSince <= 120);
                         }
                     }
 
                     const el = this.$refs.mapContainer;
-                    if (this.map) {
-                        this.map.remove();
-                        this.map = null;
-                    }
+                    if (this.map) { this.map.remove(); this.map = null; }
                     
                     const center = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : [15.47, -90.37];
-                    this.map = L.map(el, { zoomControl: false }).setView(center, 7);
+                    this.map = L.map(el, { zoomControl: false }).setView(center, this.allPoints.length > 0 ? 15 : 7);
                     
                     L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                        attribution: 'Google Maps',
-                        maxZoom: 20
+                        attribution: 'Google Maps', maxZoom: 20
                     }).addTo(this.map);
                     L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
-                    this.drawPosition(true);
-                    // Initial invalidate
-                    setTimeout(() => this.map.invalidateSize(), 100);
-                } catch (e) {
-                    console.error('Render Fail:', e);
-                }
+                    this.drawPosition();
+                    setTimeout(() => this.map.invalidateSize(), 300);
+                } catch (e) { console.error('Render Fail:', e); }
             },
+
             drawPosition(fitBounds = false) {
                 if (!this.map || this.allPoints.length === 0) return;
 
@@ -183,9 +150,7 @@
                 const popupHtml = `
                     <div style="min-width:220px;padding:12px;font-family:-apple-system,sans-serif;">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                            <div style="width:32px;height:32px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;color:white;">
-                                🚚
-                            </div>
+                            <div style="width:32px;height:32px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;color:white;">🚚</div>
                             <div>
                                 <p style="margin:0;font-weight:700;font-size:14px;color:#111827;">${this.dispatchNumber}</p>
                                 <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:9999px;font-size:10px;font-weight:600;background:${isOffline ? '#fef2f2' : '#dcfce7'};color:${isOffline ? '#dc2626' : '#15803d'};">
@@ -210,15 +175,11 @@
                     this.truckMarker.setIcon(newIcon);
                     this.truckMarker.setPopupContent(popupHtml);
                 } else {
-                    this.truckMarker = L.marker([lat, lng], {
-                        icon: newIcon
-                    }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
+                    this.truckMarker = L.marker([lat, lng], { icon: newIcon }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
                     this.truckMarker.openPopup();
                 }
                 
-                if (fitBounds) {
-                    this.map.setView([lat, lng], 15);
-                }
+                if (fitBounds) this.map.setView([lat, lng], 15);
             },
             
             async pollLatestPosition() {
@@ -233,20 +194,13 @@
                     const lat = parseFloat(data.lat);
                     const lng = parseFloat(data.lng);
                     
-                    // 1. Actualizar siempre la información de señal
-                    if (data.last_seen_exact) {
-                        this.lastSignal = data.last_seen_exact;
-                    }
+                    if (data.last_seen_exact) this.lastSignal = data.last_seen_exact;
                     if (data.timestamp) {
                         this.lastSignalTime = new Date(data.timestamp).getTime();
-                        if (!this.lastSignal) {
-                            this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
-                        }
+                        if (!this.lastSignal) this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
                     }
 
                     const wasOnline = this.isOnline;
-                    
-                    // 2. Determinar estado Online/Offline
                     if (data.is_offline !== undefined) {
                         this.isOnline = !data.is_offline;
                     } else {
@@ -254,14 +208,10 @@
                         this.isOnline = secsSince <= 120;
                     }
 
-                    // 3. Validar coordenadas para actualizar posición
                     const isCoordValid = !isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng);
-                    
                     if (isCoordValid) {
                         const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
-                        const posChanged = !last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001;
-                        
-                        if (posChanged) {
+                        if (!last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001) {
                             this.allPoints.push([lat, lng]);
                             this.drawPosition();
                         } else if (wasOnline !== this.isOnline) {
@@ -270,21 +220,18 @@
                     } else if (wasOnline !== this.isOnline) {
                         this.drawPosition();
                     }
-                } catch (e) {
-                    console.error('[Map Poll Error]', e);
-                }
+                } catch (e) { console.error('[Map Poll Error]', e); }
             },
 
             startEcho() {
                 const connect = () => {
                     if (typeof window.Echo === 'undefined') return false;
-                    this.connectEcho();
-                    return true;
+                    this.connectEcho(); return true;
                 };
                 if (!connect()) {
                     let tries = 0;
                     const retry = setInterval(() => {
-                        if (connect() || ++tries > 15) clearInterval(retry);
+                        if (connect() || ++tries > 10) clearInterval(retry);
                     }, 1000);
                 }
             },
@@ -294,21 +241,15 @@
                     .listen('.location.updated', (data) => {
                         this.lastSignalTime = Date.now();
                         this.lastSignal = new Date().toLocaleTimeString();
-                        
                         if (data.is_offline) {
                             this.isOnline = false;
                         } else {
                             this.isOnline = true;
-                            const lat = parseFloat(data.lat);
-                            const lng = parseFloat(data.lng);
+                            const lat = parseFloat(data.lat); const lng = parseFloat(data.lng);
                             if (!isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng)) {
                                 this.allPoints.push([lat, lng]);
                             }
                         }
-                        this.drawPosition();
-                    })
-                    .listen('.status.updated', (data) => {
-                        this.dispatchStatus = data.status;
                         this.drawPosition();
                     });
             },
