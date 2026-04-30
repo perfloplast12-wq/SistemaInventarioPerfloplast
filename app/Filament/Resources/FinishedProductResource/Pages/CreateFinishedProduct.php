@@ -15,7 +15,7 @@ class CreateFinishedProduct extends CreateRecord
 
     protected function getUniqueFieldsForRestore(): array
     {
-        return ['sku'];
+        return ['name'];
     }
 
     protected function getHeaderActions(): array

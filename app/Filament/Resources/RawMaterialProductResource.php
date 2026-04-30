@@ -75,10 +75,7 @@ class RawMaterialProductResource extends Resource
                         ->required()
                         ->maxLength(150),
 
-                    Forms\Components\TextInput::make('sku')
-                        ->label('SKU / Código (opcional)')
-                        ->maxLength(60)
-                        ->unique(ignoreRecord: true),
+
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\Select::make('unit_of_measure_id')
@@ -88,13 +85,6 @@ class RawMaterialProductResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
-
-                        Forms\Components\Select::make('presentation_unit_id')
-                            ->label('¿Cómo viene empacado? (Sacos/Pacas/etc)')
-                            ->relationship('presentationUnit', 'name')
-                            ->helperText('Ej: Selecciona "Saco" si la materia prima entra por sacos.')
-                            ->searchable()
-                            ->preload(),
 
                         Forms\Components\Hidden::make('units_per_presentation')
                             ->default(1),
@@ -192,30 +182,13 @@ class RawMaterialProductResource extends Resource
                                 ->required()
                                 ->searchable(),
                             
-                            Forms\Components\Select::make('entry_unit')
-                                ->label('Registrar por')
-                                ->options(function (Product $record) {
-                                    $options = ['base' => $record->unitOfMeasure?->name ?? 'Unidad Base'];
-                                    if ($record->presentation_unit_id) {
-                                        $options['presentation'] = $record->presentationUnit?->name ?? 'Sacos/Presentación';
-                                    }
-                                    return $options;
-                                })
-                                ->default(fn (Product $record) => $record->presentation_unit_id ? 'presentation' : 'base')
-                                ->required()
-                                ->live(),
+
 
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Cantidad')
                                 ->numeric()
                                 ->required()
-                                ->minValue(0.01)
-                                ->helperText(function ($get, Product $record) {
-                                    if ($get('entry_unit') === 'presentation' && $record->units_per_presentation > 0) {
-                                        return "Se ingresarán " . ($record->units_per_presentation * (float)($get('quantity') ?: 0)) . " " . ($record->unitOfMeasure?->name ?? '');
-                                    }
-                                    return null;
-                                }),
+                                ->minValue(0.01),
                         ]),
                         Forms\Components\Textarea::make('note')
                             ->label('Nota / Referencia')
@@ -223,9 +196,6 @@ class RawMaterialProductResource extends Resource
                     ])
                     ->action(function (Product $record, array $data) {
                         $qty = (float)$data['quantity'];
-                        if ($data['entry_unit'] === 'presentation') {
-                            $qty *= (float)($record->units_per_presentation ?: 1);
-                        }
 
                         InventoryMovement::create([
                             'type' => 'in',
@@ -233,7 +203,7 @@ class RawMaterialProductResource extends Resource
                             'to_warehouse_id' => $data['to_warehouse_id'],
                             'quantity' => $qty,
                             'unit_cost' => 0,
-                            'note' => $data['note'] ?? 'Entrada por ' . ($data['entry_unit'] === 'presentation' ? 'Sacos' : 'Unidad Base'),
+                            'note' => $data['note'] ?? 'Entrada por unidad base',
                             'created_by' => auth()->id(),
                         ]);
                         

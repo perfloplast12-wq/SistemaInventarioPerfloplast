@@ -74,10 +74,7 @@ class FinishedProductResource extends Resource
                         ->required()
                         ->maxLength(150),
 
-                    Forms\Components\TextInput::make('sku')
-                        ->label('SKU / Código (opcional)')
-                        ->maxLength(60)
-                        ->unique(ignoreRecord: true),
+
 
                     Forms\Components\Grid::make(3)->schema([
                         Forms\Components\TextInput::make('sale_price')
@@ -95,13 +92,6 @@ class FinishedProductResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
-
-                        Forms\Components\Select::make('presentation_unit_id')
-                            ->label('Unidad de Presentación')
-                            ->relationship('presentationUnit', 'name')
-                            ->helperText('Ej: Saco, Tonelada')
-                            ->searchable()
-                            ->preload(),
 
                         Forms\Components\Hidden::make('units_per_presentation')
                             ->default(1),

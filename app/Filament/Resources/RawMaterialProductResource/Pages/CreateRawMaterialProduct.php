@@ -15,7 +15,7 @@ class CreateRawMaterialProduct extends CreateRecord
 
     protected function getUniqueFieldsForRestore(): array
     {
-        return ['sku'];
+        return ['name'];
     }
 
 
