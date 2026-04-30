@@ -54,8 +54,8 @@
                             // 1. Load Leaflet CSS+JS
                             await this.loadAssets();
 
-                            // 2. Wait for container to be visible (critical for Filament modals)
-                            await this.waitForContainer();
+                            // 2. Ocultar el spinner e inicializar inmediatamente igual que el mapa de vendedores
+                            this.isLoaded = true;
 
                             // 3. Render map
                             await this.render(config.locations);
@@ -63,18 +63,15 @@
                             // 4. Connect Echo for real-time updates
                             this.startEcho();
 
-                            // 5. Heartbeat: check if last signal is stale every 8s
-                            this.heartbeatTimer = setInterval(() => {
-                                if (this.lastSignalTime) {
-                                    const secsSinceLastSignal = (Date.now() - this.lastSignalTime) / 1000;
-                                    const wasOnline = this.isOnline;
-                                    this.isOnline = secsSinceLastSignal < 30; // 30s without signal = offline
-                                    if (wasOnline !== this.isOnline) this.drawPosition();
-                                }
-                            }, 8000);
-
-                            // 6. Polling fallback: fetch latest position every 15s
+                            // 5. Polling fallback: fetch latest position every 15s (igual que vendedores)
                             this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
+
+                            // 6. Fix for Filament Modal dimensions: force Leaflet to recalculate size continually for 5 seconds
+                            let resizeCount = 0;
+                            const resizeInterval = setInterval(() => {
+                                if (this.map) this.map.invalidateSize(false);
+                                if (++resizeCount > 20) clearInterval(resizeInterval);
+                            }, 250);
 
                             // 7. Auto-resize observer to handle modal adjustments
                             if (window.ResizeObserver && this.$refs.mapContainer) {
@@ -86,44 +83,7 @@
 
                         } catch (e) {
                             console.error('Map Init Fail:', e);
-                        } finally {
-                            this.isLoaded = true;
-                            // Force Leaflet to recalculate size multiple times
-                            // This is critical for modals where the container size changes
-                            [100, 300, 500, 800, 1200, 2000].forEach(ms => {
-                                setTimeout(() => { if (this.map) this.map.invalidateSize(); }, ms);
-                            });
                         }
-                    },
-
-                    async waitForContainer() {
-                        const el = this.$refs.mapContainer;
-                        if (!el) return;
-                        
-                        return new Promise((resolve) => {
-                            const checkVisibility = setInterval(() => {
-                                const rect = el.getBoundingClientRect();
-                                
-                                // Revisar si el elemento o alguno de sus padres está oculto por CSS
-                                // Filament usa opacity: 0 o display: none para modales cerrados
-                                let isHidden = false;
-                                let node = el;
-                                while (node && node !== document.body) {
-                                    const style = window.getComputedStyle(node);
-                                    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-                                        isHidden = true;
-                                        break;
-                                    }
-                                    node = node.parentElement;
-                                }
-
-                                if (rect.width > 0 && rect.height > 0 && !isHidden) {
-                                    clearInterval(checkVisibility);
-                                    // Esperar extra para que termine cualquier animación de modal
-                                    setTimeout(resolve, 300);
-                                }
-                            }, 200);
-                        });
                     },
                     
                     async loadAssets() {
@@ -259,7 +219,8 @@
                                 if (last.speed === -1 || last.speed === '-1' || last.speed === -1.0) {
                                     this.isOnline = false;
                                 } else {
-                                    this.isOnline = secsSince < 30;
+                                    // Utiliza la calibración de vendedores (hasta 2 minutos = 120s)
+                                    this.isOnline = secsSince <= 120;
                                 }
                             }
                         }
@@ -316,7 +277,7 @@
                                 this.lastSignalTime = data.timestamp ? new Date(data.timestamp).getTime() : Date.now();
                                 const secsSince = (Date.now() - this.lastSignalTime) / 1000;
                                 const wasOnline = this.isOnline;
-                                this.isOnline = secsSince < 30;
+                                this.isOnline = secsSince <= 120; // 2 minutes (igual que vendedores)
                                 if (wasOnline !== this.isOnline) this.drawPosition();
                             }
                         } catch (e) {
@@ -363,7 +324,6 @@
                     },
                     
                     destroy() {
-                        if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
                         if (this.pollTimer) clearInterval(this.pollTimer);
                         if (this.resizeObserver) this.resizeObserver.disconnect();
                         if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
