@@ -74,8 +74,15 @@
                             }, 8000);
 
                             // 6. Polling fallback: fetch latest position every 15s
-                            //    in case Echo/Reverb is not connected
                             this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
+
+                            // 7. Auto-resize observer to handle modal adjustments
+                            if (window.ResizeObserver && this.$refs.mapContainer) {
+                                this.resizeObserver = new ResizeObserver(() => {
+                                    if (this.map) this.map.invalidateSize();
+                                });
+                                this.resizeObserver.observe(this.$refs.mapContainer);
+                            }
 
                         } catch (e) {
                             console.error('Map Init Fail:', e);
@@ -93,19 +100,25 @@
                         const el = this.$refs.mapContainer;
                         if (!el) return;
                         
-                        // Wait for the element to be in the DOM with actual dimensions
-                        let tries = 0;
-                        while (tries < 50) {
-                            // Check if element is visible and has dimensions
-                            const rect = el.getBoundingClientRect();
-                            if (rect.width > 0 && rect.height > 0 && el.offsetParent !== null) {
-                                // Extra wait to ensure modal animation is complete
-                                await new Promise(r => setTimeout(r, 150));
-                                break;
+                        return new Promise((resolve) => {
+                            const check = () => {
+                                const rect = el.getBoundingClientRect();
+                                return rect.width > 0 && rect.height > 0 && el.offsetParent !== null;
+                            };
+
+                            if (check()) {
+                                setTimeout(resolve, 150);
+                                return;
                             }
-                            await new Promise(r => setTimeout(r, 100));
-                            tries++;
-                        }
+
+                            const observer = new IntersectionObserver((entries) => {
+                                if (entries[0].isIntersecting) {
+                                    observer.disconnect();
+                                    setTimeout(resolve, 200);
+                                }
+                            });
+                            observer.observe(el);
+                        });
                     },
                     
                     async loadAssets() {
@@ -342,6 +355,7 @@
                     destroy() {
                         if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
                         if (this.pollTimer) clearInterval(this.pollTimer);
+                        if (this.resizeObserver) this.resizeObserver.disconnect();
                         if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
                         if (this.map) { this.map.remove(); this.map = null; }
                     }
