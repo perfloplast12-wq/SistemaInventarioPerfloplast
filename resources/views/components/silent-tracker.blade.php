@@ -1,73 +1,90 @@
 @php
     $user = auth()->user();
     $isVendedor = $user && $user->hasAnyRole(['sales', 'vendedor', 'vendedores', 'ventas', 'Vendedor', 'Ventas', 'Sales']);
-    $isActiveConductor = $user && $user->hasRole('conductor');
+    $isConductor = $user && $user->hasRole('conductor');
     
+    $shouldRenderTracker = $isVendedor || $isConductor;
+
     $activeDispatchId = null;
-    if ($isActiveConductor) {
+    if ($isConductor) {
         $activeDispatchId = \App\Models\Dispatch::where('driver_id', $user->id)
             ->where('status', 'in_progress')
             ->orderBy('id', 'desc')
             ->value('id');
     }
-
-    // El rastreador se activa si hay un despacho activo O si es un vendedor
-    $shouldTrack = $activeDispatchId || $isVendedor;
 @endphp
 
-@if($shouldTrack)
+@if($shouldRenderTracker)
     <div 
         x-data="{
             dispatchId: {{ $activeDispatchId ?? 'null' }},
+            isVendedor: {{ $isVendedor ? 'true' : 'false' }},
             watchId: null,
             showLock: false,
-            heartbeatTimer: null,
             lastSuccessTime: Date.now(),
             
             init() {
+                // Verificación de permisos inmediata al cargar
+                this.checkPermissions();
                 this.startTracking();
                 
-                // 1. Verificación continua cada 2 segundos (Bloqueo agresivo si no hay señal)
+                // Bucle de bloqueo agresivo (2s)
                 const runCheck = () => {
                     const secsSinceSuccess = (Date.now() - this.lastSuccessTime) / 1000;
-                    
-                    // Si pasan más de 15s sin señal, bloqueamos visualmente para forzar al usuario a revisar
-                    if (secsSinceSuccess > 15 && !this.showLock) {
-                        console.warn('GPS signal lost for 15s - Locking UI');
+                    if (secsSinceSuccess > 10 && !this.showLock) {
                         this.showLock = true;
+                        this.sendOfflineSignal();
                     }
-                    
-                    this.checkGpsStatus(); // Envío de señal offline al servidor si es necesario
                     setTimeout(runCheck, 2000);
                 };
                 runCheck();
 
-                // 2. Monitorear cambios de permisos en tiempo real (Chrome/Firefox/Android)
+                // Listeners de retorno a la app
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        this.checkPermissions();
+                        this.startTracking();
+                    }
+                });
+            },
+
+            checkPermissions() {
                 if (navigator.permissions && navigator.permissions.query) {
                     navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                        if (result.state === 'denied') {
+                            this.showLock = true;
+                        }
                         result.onchange = () => {
-                            console.log('GPS Permission changed to:', result.state);
-                            if (result.state === 'denied') {
-                                this.showLock = true;
-                                this.sendOfflineSignal();
-                            } else if (result.state === 'granted') {
-                                this.startTracking();
-                            }
+                            if (result.state === 'denied') this.showLock = true;
+                            else if (result.state === 'granted') this.startTracking();
                         };
                     });
                 }
-
-                // 3. Forzar verificación al regresar a la app
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        this.checkGpsStatus();
-                        this.startTracking(); // Reiniciar watch
-                    }
-                });
-
-                window.addEventListener('focus', () => {
-                    this.checkGpsStatus();
-                });
+            },
+            
+            startTracking() {
+                if (!navigator.geolocation) {
+                    this.showLock = true;
+                    return;
+                }
+                
+                if (this.watchId !== null) navigator.geolocation.clearWatch(this.watchId);
+                
+                this.watchId = navigator.geolocation.watchPosition(
+                    (pos) => { 
+                        this.lastSuccessTime = Date.now();
+                        this.showLock = false;
+                        // Solo enviar al servidor si hay despacho activo o es vendedor
+                        if (this.dispatchId || this.isVendedor) {
+                            this.sendLocation(pos);
+                        }
+                    },
+                    (err) => {
+                        this.showLock = true;
+                        this.sendOfflineSignal();
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
             },
             
             destroy() {
