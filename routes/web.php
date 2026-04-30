@@ -37,15 +37,24 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
         return response()->json(null);
     }
 
-    $secsSince = $lastLocation->created_at ? now()->diffInSeconds($lastLocation->created_at) : 999;
+    $isOfflineSignal = ($lastLocation->speed == -1);
+
+    if ($isOfflineSignal) {
+        $realLocation = $dispatch->locations()->where('speed', '!=', -1)->latest('id')->first();
+        $displayLocation = $realLocation ?? $lastLocation;
+    } else {
+        $displayLocation = $lastLocation;
+    }
+
+    $secsSince = $displayLocation->created_at ? now()->diffInSeconds($displayLocation->created_at) : 999;
 
     return response()->json([
-        'lat' => (float) $lastLocation->lat,
-        'lng' => (float) $lastLocation->lng,
-        'speed' => (float) ($lastLocation->speed ?? 0),
-        'heading' => (float) ($lastLocation->heading ?? 0),
-        'timestamp' => $lastLocation->created_at?->toIso8601String(),
-        'is_offline' => $secsSince > 30,
+        'lat' => (float) $displayLocation->lat,
+        'lng' => (float) $displayLocation->lng,
+        'speed' => (float) ($displayLocation->speed ?? 0),
+        'heading' => (float) ($displayLocation->heading ?? 0),
+        'timestamp' => $displayLocation->created_at?->toIso8601String(),
+        'is_offline' => $isOfflineSignal || $secsSince > 30,
     ]);
 })->middleware(['web', 'auth'])->name('web.dispatch-location.latest');
 

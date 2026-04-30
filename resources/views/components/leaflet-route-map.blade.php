@@ -101,23 +101,28 @@
                         if (!el) return;
                         
                         return new Promise((resolve) => {
-                            const check = () => {
+                            const checkVisibility = setInterval(() => {
                                 const rect = el.getBoundingClientRect();
-                                return rect.width > 0 && rect.height > 0 && el.offsetParent !== null;
-                            };
-
-                            if (check()) {
-                                setTimeout(resolve, 150);
-                                return;
-                            }
-
-                            const observer = new IntersectionObserver((entries) => {
-                                if (entries[0].isIntersecting) {
-                                    observer.disconnect();
-                                    setTimeout(resolve, 200);
+                                
+                                // Revisar si el elemento o alguno de sus padres está oculto por CSS
+                                // Filament usa opacity: 0 o display: none para modales cerrados
+                                let isHidden = false;
+                                let node = el;
+                                while (node && node !== document.body) {
+                                    const style = window.getComputedStyle(node);
+                                    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                                        isHidden = true;
+                                        break;
+                                    }
+                                    node = node.parentElement;
                                 }
-                            });
-                            observer.observe(el);
+
+                                if (rect.width > 0 && rect.height > 0 && !isHidden) {
+                                    clearInterval(checkVisibility);
+                                    // Esperar extra para que termine cualquier animación de modal
+                                    setTimeout(resolve, 300);
+                                }
+                            }, 200);
                         });
                     },
                     
@@ -250,7 +255,12 @@
                                 this.lastSignalTime = new Date(last.created_at).getTime();
                                 this.lastSignal = new Date(last.created_at).toLocaleTimeString();
                                 const secsSince = (Date.now() - this.lastSignalTime) / 1000;
-                                this.isOnline = secsSince < 30;
+                                // Detect if the last signal was an explicit offline flag (speed = -1)
+                                if (last.speed === -1 || last.speed === '-1' || last.speed === -1.0) {
+                                    this.isOnline = false;
+                                } else {
+                                    this.isOnline = secsSince < 30;
+                                }
                             }
                         }
                         
