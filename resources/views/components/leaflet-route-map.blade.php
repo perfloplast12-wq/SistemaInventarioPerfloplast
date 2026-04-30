@@ -8,6 +8,7 @@
         dispatchStatus: '{{ $dispatchStatus ?? 'pending' }}',
         locations: '{{ base64_encode(json_encode($locations)) }}'
      })"
+     x-init="$nextTick(() => { init(); })"
 >
     <style>
         @keyframes truck-pulse {
@@ -18,6 +19,7 @@
 
     <div x-show="!isLoaded" class="absolute inset-0 z-[2000] bg-white dark:bg-gray-900 flex flex-col items-center justify-center">
         <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Cargando mapa...</p>
     </div>
 
     <div x-ref="mapContainer" class="w-full h-[550px]" style="height: 550px;" wire:ignore></div>
@@ -26,8 +28,7 @@
         (function() {
             const registerMap = () => {
                 if (typeof Alpine === 'undefined') return;
-                try { if (Alpine.data('leafletRouteMap')) return; } catch (e) {}
-
+                // Always re-register to allow multiple instances
                 Alpine.data('leafletRouteMap', (config) => ({
                     map: null,
                     isLoaded: false,
@@ -43,39 +44,46 @@
                     lastSignal: null,
                     lastSignalTime: null,
                     heartbeatTimer: null,
+                    pollTimer: null,
                     
                     async init() {
                         try {
                             this.isLoaded = false;
                             this.isOnline = true;
 
-                            // 1. Cargar Leaflet CSS+JS
+                            // 1. Load Leaflet CSS+JS
                             await this.loadAssets();
 
-                            // 2. Esperar a que el contenedor sea visible (modales de Filament)
+                            // 2. Wait for container to be visible (critical for Filament modals)
                             await this.waitForContainer();
 
-                            // 3. Renderizar mapa
+                            // 3. Render map
                             await this.render(config.locations);
 
-                            // 4. Conectar Echo
+                            // 4. Connect Echo for real-time updates
                             this.startEcho();
 
-                            // 5. Heartbeat: cada 10s revisar si la última señal es vieja
+                            // 5. Heartbeat: check if last signal is stale every 8s
                             this.heartbeatTimer = setInterval(() => {
                                 if (this.lastSignalTime) {
                                     const secsSinceLastSignal = (Date.now() - this.lastSignalTime) / 1000;
                                     const wasOnline = this.isOnline;
-                                    this.isOnline = secsSinceLastSignal < 45; // 45 seg sin señal = offline
+                                    this.isOnline = secsSinceLastSignal < 30; // 30s without signal = offline
                                     if (wasOnline !== this.isOnline) this.drawPosition();
                                 }
-                            }, 10000);
+                            }, 8000);
+
+                            // 6. Polling fallback: fetch latest position every 15s
+                            //    in case Echo/Reverb is not connected
+                            this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
 
                         } catch (e) {
                             console.error('Map Init Fail:', e);
                         } finally {
                             this.isLoaded = true;
-                            [200, 600, 1200].forEach(ms => {
+                            // Force Leaflet to recalculate size multiple times
+                            // This is critical for modals where the container size changes
+                            [100, 300, 500, 800, 1200, 2000].forEach(ms => {
                                 setTimeout(() => { if (this.map) this.map.invalidateSize(); }, ms);
                             });
                         }
@@ -84,8 +92,17 @@
                     async waitForContainer() {
                         const el = this.$refs.mapContainer;
                         if (!el) return;
+                        
+                        // Wait for the element to be in the DOM with actual dimensions
                         let tries = 0;
-                        while ((el.offsetWidth === 0 || el.offsetHeight === 0) && tries < 30) {
+                        while (tries < 50) {
+                            // Check if element is visible and has dimensions
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0 && el.offsetParent !== null) {
+                                // Extra wait to ensure modal animation is complete
+                                await new Promise(r => setTimeout(r, 150));
+                                break;
+                            }
                             await new Promise(r => setTimeout(r, 100));
                             tries++;
                         }
@@ -114,7 +131,7 @@
                             });
                         }
 
-                        // Esperar a que L exista
+                        // Wait for L to exist
                         let wait = 0;
                         while (typeof window.L === 'undefined' && wait < 40) {
                             await new Promise(r => setTimeout(r, 80));
@@ -213,14 +230,14 @@
                             .map(l => [parseFloat(l.lat), parseFloat(l.lng)])
                             .filter(p => !isNaN(p[0]) && !isNaN(p[1]) && this.isValidCoord(p[0], p[1]));
                         
-                        // Determinar estado online basado en la última señal
+                        // Determine online status from the last signal
                         if (raw.length > 0) {
                             const last = raw[raw.length - 1];
                             if (last.created_at) {
                                 this.lastSignalTime = new Date(last.created_at).getTime();
                                 this.lastSignal = new Date(last.created_at).toLocaleTimeString();
                                 const secsSince = (Date.now() - this.lastSignalTime) / 1000;
-                                this.isOnline = secsSince < 45;
+                                this.isOnline = secsSince < 30;
                             }
                         }
                         
@@ -238,6 +255,50 @@
                             });
                         if (forceFocus) this.map.setView(lastPoint, 17);
                         else this.map.panTo(lastPoint);
+                    },
+
+                    // Polling fallback: fetch the latest location from the server
+                    async pollLatestPosition() {
+                        if (!this.dispatchId) return;
+                        try {
+                            const resp = await fetch('/api/dispatch-location/' + this.dispatchId + '/latest', {
+                                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            if (!resp.ok) return;
+                            const data = await resp.json();
+                            if (!data || !data.lat || !data.lng) return;
+
+                            const lat = parseFloat(data.lat);
+                            const lng = parseFloat(data.lng);
+
+                            if (data.is_offline) {
+                                const wasOnline = this.isOnline;
+                                this.isOnline = false;
+                                if (wasOnline) this.drawPosition();
+                                return;
+                            }
+
+                            if (isNaN(lat) || isNaN(lng) || !this.isValidCoord(lat, lng)) return;
+
+                            // Only update if position changed
+                            const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
+                            if (!last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001) {
+                                this.allPoints.push([lat, lng]);
+                                this.lastSignalTime = Date.now();
+                                this.lastSignal = new Date().toLocaleTimeString();
+                                this.isOnline = true;
+                                this.drawPosition();
+                            } else {
+                                // Same position but update timestamp
+                                this.lastSignalTime = data.timestamp ? new Date(data.timestamp).getTime() : Date.now();
+                                const secsSince = (Date.now() - this.lastSignalTime) / 1000;
+                                const wasOnline = this.isOnline;
+                                this.isOnline = secsSince < 30;
+                                if (wasOnline !== this.isOnline) this.drawPosition();
+                            }
+                        } catch (e) {
+                            // Silently fail - polling is a fallback
+                        }
                     },
 
                     startEcho() {
@@ -280,6 +341,7 @@
                     
                     destroy() {
                         if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+                        if (this.pollTimer) clearInterval(this.pollTimer);
                         if (typeof window.Echo !== 'undefined') window.Echo.leave('dispatch.' + this.dispatchId);
                         if (this.map) { this.map.remove(); this.map = null; }
                     }

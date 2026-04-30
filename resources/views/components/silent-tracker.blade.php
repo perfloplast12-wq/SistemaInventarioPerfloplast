@@ -27,7 +27,7 @@
             init() {
                 this.startTracking();
                 // Verificación continua cada 10 segundos: si no hay GPS, bloquear rápido
-                this.heartbeatTimer = setInterval(() => this.checkGpsStatus(), 10000);
+                this.heartbeatTimer = setInterval(() => this.checkGpsStatus(), 8000);
             },
             
             destroy() {
@@ -58,14 +58,14 @@
                         this.showLock = true;
                         this.sendOfflineSignal();
                     },
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 3000 }
                 );
             },
             
             // Verificación periódica: si hace más de 30s sin posición exitosa, bloquear
             checkGpsStatus() {
                 const secondsSinceLastSuccess = (Date.now() - this.lastSuccessTime) / 1000;
-                if (secondsSinceLastSuccess > 30) {
+                if (secondsSinceLastSuccess > 20) {
                     this.showLock = true;
                     this.sendOfflineSignal();
                     // Reintentar el watch por si se restauró el GPS

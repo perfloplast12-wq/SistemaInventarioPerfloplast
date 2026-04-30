@@ -29,6 +29,26 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
     ->middleware(['web', 'auth'])
     ->name('web.tracking.store');
 
+// Polling endpoint: get the latest dispatch location for real-time map updates
+Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
+    $lastLocation = $dispatch->locations()->latest('id')->first();
+
+    if (!$lastLocation) {
+        return response()->json(null);
+    }
+
+    $secsSince = $lastLocation->created_at ? now()->diffInSeconds($lastLocation->created_at) : 999;
+
+    return response()->json([
+        'lat' => (float) $lastLocation->lat,
+        'lng' => (float) $lastLocation->lng,
+        'speed' => (float) ($lastLocation->speed ?? 0),
+        'heading' => (float) ($lastLocation->heading ?? 0),
+        'timestamp' => $lastLocation->created_at?->toIso8601String(),
+        'is_offline' => $secsSince > 30,
+    ]);
+})->middleware(['web', 'auth'])->name('web.dispatch-location.latest');
+
 // Ruta para obtener ubicaciones de vendedores (actualización silenciosa del mapa)
 Route::get('/api/sales-locations', function () {
     try {
