@@ -41,7 +41,7 @@
                     this.startEcho();
 
                     // 6. Polling fallback
-                    this.pollTimer = setInterval(() => this.pollLatestPosition(), 15000);
+                    this.pollTimer = setInterval(() => this.pollLatestPosition(), 10000);
 
                     // 7. Fix for Filament Modal dimensions
                     if (this.$refs.mapContainer) {

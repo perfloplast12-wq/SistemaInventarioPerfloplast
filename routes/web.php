@@ -54,7 +54,8 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
         'speed' => (float) ($displayLocation->speed ?? 0),
         'heading' => (float) ($displayLocation->heading ?? 0),
         'timestamp' => $displayLocation->created_at?->toIso8601String(),
-        'is_offline' => $isOfflineSignal || $secsSince > 30,
+        'last_seen_exact' => $displayLocation->created_at?->shiftTimezone('UTC')->setTimezone('America/Guatemala')->format('h:i:s A'),
+        'is_offline' => $isOfflineSignal || $secsSince > 120,
     ]);
 })->middleware(['web', 'auth'])->name('web.dispatch-location.latest');
 
