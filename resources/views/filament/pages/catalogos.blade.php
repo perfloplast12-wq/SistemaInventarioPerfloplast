@@ -28,8 +28,8 @@
 <div class="space-y-4">
     <div class="cat-header flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl shadow-sm">
         <div>
-            <h1 class="text-xl font-bold tracking-tight text-gray-950 dark:text-white leading-none">Maestros</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-black tracking-widest">Maestros del Sistema</p>
+            <h1 class="text-xl font-bold tracking-tight text-gray-950 dark:text-white leading-none">Ajustes de Operación</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-black tracking-widest">Configuraciones del Sistema</p>
         </div>
     </div>
 
