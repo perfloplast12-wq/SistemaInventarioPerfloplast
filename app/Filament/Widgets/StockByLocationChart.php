@@ -27,9 +27,9 @@ class StockByLocationChart extends Widget
             ->groupBy('warehouse_id')
             ->get()
             ->map(function($s) {
-                $w = Warehouse::withTrashed()->find($s->warehouse_id);
+                $w = Warehouse::find($s->warehouse_id);
                 return [
-                    'name' => $w?->name ?? 'Bodega Desconocida',
+                    'name' => $w?->name ?? "Bodega #{$s->warehouse_id}",
                     'total' => (float)$s->total
                 ];
             })
@@ -41,9 +41,9 @@ class StockByLocationChart extends Widget
             ->groupBy('truck_id')
             ->get()
             ->map(function($s) {
-                $t = \App\Models\Truck::withTrashed()->find($s->truck_id);
+                $t = \App\Models\Truck::find($s->truck_id);
                 return [
-                    'name' => $t?->name ?? ($t?->plate ?? 'Camión Desconocido'),
+                    'name' => $t ? ('Camión: ' . ($t->name ?? $t->plate)) : "Camión #{$s->truck_id}",
                     'total' => (float)$s->total
                 ];
             })
