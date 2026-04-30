@@ -20,8 +20,8 @@ class TruckResource extends Resource
     protected static ?string $modelLabel = 'Camión';
     protected static ?string $pluralModelLabel = 'Camiones';
 
-    protected static ?string $navigationGroup = 'Logística y Pedidos';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'LOGÍSTICA';
+    protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
     {

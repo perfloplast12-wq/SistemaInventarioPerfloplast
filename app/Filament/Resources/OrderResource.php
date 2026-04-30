@@ -18,7 +18,7 @@ class OrderResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?int $navigationSort = 1;
-    protected static ?string $navigationGroup = 'Logística y Pedidos';
+    protected static ?string $navigationGroup = 'ÁREA COMERCIAL';
     protected static ?string $modelLabel = 'Pedido';
     protected static ?string $pluralModelLabel = 'Pedidos';
 

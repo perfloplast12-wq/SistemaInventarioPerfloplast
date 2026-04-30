@@ -25,6 +25,7 @@ class GeneralReports extends Page
     protected static ?string $title = 'Panel Estratégico General';
 
     protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'REPORTES';
 
     protected static string $view = 'filament.pages.general-reports';
 

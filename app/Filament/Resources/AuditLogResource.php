@@ -24,7 +24,7 @@ class AuditLogResource extends Resource
     // ✅ Solo usuarios con permiso audit.view ven bitácora
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->can('audit.view') ?? false;
+        return false;
     }
 
     public static function canViewAny(): bool

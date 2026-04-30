@@ -15,9 +15,10 @@ use App\Filament\Resources\ShiftResource;
 class Catalogos extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
-    protected static ?string $navigationLabel = 'Maestros';
-    protected static ?string $title = 'Maestros';
-    protected static ?int $navigationSort = 30;
+    protected static ?string $navigationLabel = 'Ajustes de Operación';
+    protected static ?string $title = 'Ajustes de Operación';
+    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'AJUSTES DE OPERACIÓN';
 
     protected static string $view = 'filament.pages.catalogos';
 

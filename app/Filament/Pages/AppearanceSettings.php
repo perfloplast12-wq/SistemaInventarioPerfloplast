@@ -18,6 +18,11 @@ class AppearanceSettings extends Page
     protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
 
     protected static string $view = 'filament.pages.appearance-settings';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     protected static ?string $navigationLabel = 'Apariencia';
 

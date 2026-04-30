@@ -22,7 +22,7 @@ class WarehouseResource extends Resource
 
     protected static ?string $navigationGroup = 'Catálogos / Maestros';
     protected static ?int $navigationSort = 2;
-    protected static bool $shouldRegisterNavigation = true;
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function canViewAny(): bool
     {

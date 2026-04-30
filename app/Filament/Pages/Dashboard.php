@@ -21,7 +21,8 @@ class Dashboard extends Page
     protected static ?string $navigationIcon = 'heroicon-o-home';
     protected static ?string $title = 'Dashboard Gerencial';
     protected static ?string $navigationLabel = 'Escritorio';
-    protected static ?int $navigationSort = -2;
+    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'INICIO Y SEGURIDAD';
 
     public static function canAccess(): bool
     {

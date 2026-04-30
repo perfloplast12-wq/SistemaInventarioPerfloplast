@@ -13,6 +13,20 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('apariencia')
+                ->label('Apariencia')
+                ->icon('heroicon-o-paint-brush')
+                ->color('info')
+                ->url(\App\Filament\Pages\AppearanceSettings::getUrl())
+                ->visible(fn () => auth()->user()?->hasRole('super_admin')),
+
+            Actions\Action::make('bitacora')
+                ->label('Bitácora')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->color('warning')
+                ->url(\App\Filament\Resources\AuditLogResource::getUrl('index'))
+                ->visible(fn () => auth()->user()?->can('audit.view')),
+
             Actions\CreateAction::make()->label('Crear usuario'),
         ];
     }

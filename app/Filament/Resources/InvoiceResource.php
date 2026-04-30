@@ -18,8 +18,8 @@ class InvoiceResource extends Resource
     protected static ?string $model = Invoice::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?int $navigationSort = 2;
-    protected static ?string $navigationGroup = 'Área Comercial';
+    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'ÁREA COMERCIAL';
     protected static ?string $modelLabel = 'Factura / Recibo';
     protected static ?string $pluralModelLabel = 'Facturas';
 

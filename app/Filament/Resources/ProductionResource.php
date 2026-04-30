@@ -22,8 +22,8 @@ class ProductionResource extends Resource
     protected static ?string $modelLabel = 'Producción';
     protected static ?string $pluralModelLabel = 'Producciones';
 
-    protected static ?int $navigationSort = 1;
-    protected static ?string $navigationGroup = 'Área de Producción';
+    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'INVENTARIO Y PRODUCCIÓN';
 
     public static function canViewAny(): bool
     {
