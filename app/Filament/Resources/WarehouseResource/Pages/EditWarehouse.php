@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\WarehouseResource\Pages;
 
-use App\Filament\Pages\Catalogos;
 use App\Filament\Resources\WarehouseResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -17,7 +16,7 @@ class EditWarehouse extends EditRecord
             Actions\Action::make('volver_catalogos')
                 ->label('Volver')
                 ->icon('heroicon-o-arrow-left')
-                ->url(fn () => $this->getResource()::getUrl('index')),
+                ->url(fn () => WarehouseResource::getUrl('index')),
 
             Actions\DeleteAction::make()
                 ->label('Eliminar'),

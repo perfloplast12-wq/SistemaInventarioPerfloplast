@@ -178,6 +178,12 @@ class AppearanceSettings extends Page
     protected function getFormActions(): array
     {
         return [
+            Action::make('volver_usuarios')
+                ->label('Volver')
+                ->icon('heroicon-o-arrow-left')
+                ->url(\App\Filament\Resources\UserResource::getUrl('index'))
+                ->color('gray'),
+
             Action::make('save')
                 ->label('Guardar Cambios')
                 ->submit('save'),

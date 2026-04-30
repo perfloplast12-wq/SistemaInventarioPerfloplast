@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TruckResource\Pages;
 
 use App\Filament\Concerns\HandlesSoftDeletedDuplicates;
-use App\Filament\Pages\Catalogos;
 use App\Filament\Resources\TruckResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
@@ -22,10 +21,10 @@ class CreateTruck extends CreateRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('volver_catalogos')
+            Actions\Action::make('volver')
                 ->label('Volver')
                 ->icon('heroicon-o-arrow-left')
-                ->url(Catalogos::getUrl()),
+                ->url(TruckResource::getUrl('index')),
         ];
     }
 

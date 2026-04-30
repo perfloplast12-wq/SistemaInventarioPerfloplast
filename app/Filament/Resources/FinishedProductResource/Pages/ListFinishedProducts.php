@@ -19,6 +19,12 @@ class ListFinishedProducts extends ListRecords
                 ->url(route('filament.admin.pages.inventario'))
                 ->color('gray'),
 
+            Actions\Action::make('gestionar_colores')
+                ->label('Gestionar Colores')
+                ->icon('heroicon-o-swatch')
+                ->url(\App\Filament\Resources\ColorResource::getUrl('index'))
+                ->color('info'),
+
             Actions\CreateAction::make()->label('Crear Producto terminado'),
         ];
     }

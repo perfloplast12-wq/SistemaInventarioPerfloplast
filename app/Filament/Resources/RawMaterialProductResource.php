@@ -28,12 +28,9 @@ class RawMaterialProductResource extends Resource
     protected static ?string $modelLabel = 'Materia prima';
     protected static ?string $pluralModelLabel = 'Materia prima';
 
-    protected static ?string $navigationGroup = 'INVENTARIO Y PRODUCCIÓN';
-    protected static ?int $navigationSort = 2;
-
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        return false;
     }
 
     // ✅ PERMISOS (usa los mismos que ProductResource)

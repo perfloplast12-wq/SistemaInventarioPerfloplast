@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\UnitOfMeasureResource\Pages;
 
-use App\Filament\Pages\Catalogos;
+use App\Filament\Pages\Inventario;
 use App\Filament\Resources\UnitOfMeasureResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -14,10 +14,10 @@ class ListUnitOfMeasures extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('volver_catalogos')
+            Actions\Action::make('volver_inventario')
                 ->label('Volver')
                 ->icon('heroicon-o-arrow-left')
-                ->url(Catalogos::getUrl()),
+                ->url(Inventario::getUrl()),
 
             Actions\CreateAction::make()->label('Crear Unidad de medida'),
         ];

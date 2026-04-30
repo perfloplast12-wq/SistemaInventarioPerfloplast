@@ -141,11 +141,6 @@ class Inventario extends Page
         return \App\Filament\Resources\UnitOfMeasureResource::getUrl('index');
     }
 
-    public function getColorsUrl(): string
-    {
-        return \App\Filament\Resources\ColorResource::getUrl('index');
-    }
-
 
 
 

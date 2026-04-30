@@ -26,12 +26,9 @@ class FinishedProductResource extends Resource
     protected static ?string $modelLabel = 'Producto terminado';
     protected static ?string $pluralModelLabel = 'Productos terminados';
 
-    protected static ?string $navigationGroup = 'INVENTARIO Y PRODUCCIÓN';
-    protected static ?int $navigationSort = 4;
-
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        return false;
     }
 
     // ✅ PERMISOS (mismos products.*)
