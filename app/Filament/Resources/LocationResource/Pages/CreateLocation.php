@@ -17,4 +17,9 @@ class CreateLocation extends CreateRecord
     {
         return ['code'];
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

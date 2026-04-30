@@ -14,15 +14,15 @@ class CreateOrderReturn extends CreateRecord
     {
         return [
             Actions\Action::make('volver')
-                ->label('Volver a Inventario')
+                ->label('Volver')
                 ->icon('heroicon-o-arrow-left')
-                ->url(route('filament.admin.pages.inventario'))
+                ->url($this->getResource()::getUrl('index'))
                 ->color('gray'),
         ];
     }
 
     protected function getRedirectUrl(): string
     {
-        return route('filament.admin.pages.inventario');
+        return $this->getResource()::getUrl('index');
     }
 }

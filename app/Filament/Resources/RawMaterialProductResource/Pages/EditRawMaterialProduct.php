@@ -19,6 +19,6 @@ class EditRawMaterialProduct extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return route('filament.admin.pages.inventario');
+        return $this->getResource()::getUrl('index');
     }
 }
