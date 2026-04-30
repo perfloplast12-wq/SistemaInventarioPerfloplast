@@ -20,6 +20,7 @@ class ListDispatches extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            \App\Filament\Resources\DispatchResource\Widgets\FleetButton::class,
             \App\Filament\Resources\DispatchResource\Widgets\DispatchesOverview::class,
         ];
     }
