@@ -19,9 +19,12 @@ class SalesMap extends Page
     public function getViewData(): array
     {
         try {
-            // Buscamos usuarios que tengan al menos una ubicación registrada en el sistema
+            // Solo mostramos usuarios activos que tengan el rol 'sales' y tengan ubicación registrada
             $userIdsWithLocation = \App\Models\UserLocation::select('user_id')->distinct()->pluck('user_id');
-            $salesUsers = \App\Models\User::whereIn('id', $userIdsWithLocation)->get();
+            $salesUsers = \App\Models\User::role('sales')
+                ->where('is_active', true)
+                ->whereIn('id', $userIdsWithLocation)
+                ->get();
             
             $locations = $salesUsers->map(function ($user) {
                 try {
