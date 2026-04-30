@@ -65,7 +65,7 @@
             // Verificación periódica: si hace más de 30s sin posición exitosa, bloquear
             checkGpsStatus() {
                 const secondsSinceLastSuccess = (Date.now() - this.lastSuccessTime) / 1000;
-                if (secondsSinceLastSuccess > 30) {
+                if (secondsSinceLastSuccess > 60) {
                     this.showLock = true;
                     this.sendOfflineSignal();
                     // Reintentar el watch por si se restauró el GPS

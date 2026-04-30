@@ -114,6 +114,7 @@
                         const last = raw[raw.length - 1];
                         if (last.created_at) {
                             this.lastSignalTime = new Date(last.created_at).getTime();
+                            this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
                             const secsSince = (Date.now() - this.lastSignalTime) / 1000;
                             // Detect if the last signal was an explicit offline flag (speed = -1)
                             if (last.speed === -1 || last.speed === '-1' || last.speed === -1.0) {
@@ -228,34 +229,39 @@
                     const lat = parseFloat(data.lat);
                     const lng = parseFloat(data.lng);
 
-                    if (data.is_offline) {
-                        const wasOnline = this.isOnline;
-                        this.isOnline = false;
-                        if (wasOnline) this.drawPosition();
-                        return;
-                    }
-
                     if (isNaN(lat) || isNaN(lng) || !this.isValidCoord(lat, lng)) return;
 
-                    // Actualizar timestamp y hora desde el servidor
+                    // Actualizar timestamp y hora desde el servidor siempre
                     if (data.last_seen_exact) {
                         this.lastSignal = data.last_seen_exact;
-                    } else {
-                        this.lastSignalTime = data.timestamp ? new Date(data.timestamp).getTime() : Date.now();
-                        this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
+                    }
+                    if (data.timestamp) {
+                        this.lastSignalTime = new Date(data.timestamp).getTime();
+                        if (!data.last_seen_exact) {
+                            this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
+                        }
                     }
 
-                    // Only update if position changed
-                    const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
-                    if (!last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001) {
-                        this.allPoints.push([lat, lng]);
-                        this.isOnline = true;
-                        this.drawPosition();
+                    const wasOnline = this.isOnline;
+                    
+                    // Si el servidor dice explícitamente que está offline, lo respetamos
+                    if (data.is_offline !== undefined) {
+                        this.isOnline = !data.is_offline;
                     } else {
-                        const secsSince = (Date.now() - this.lastSignalTime) / 1000;
-                        const wasOnline = this.isOnline;
-                        this.isOnline = data.is_online !== undefined ? !data.is_offline : (secsSince <= 120);
-                        if (wasOnline !== this.isOnline) this.drawPosition();
+                        // Fallback de seguridad usando el tiempo transcurrido
+                        const secsSince = (Date.now() - (this.lastSignalTime || Date.now())) / 1000;
+                        this.isOnline = secsSince <= 120;
+                    }
+
+                    // Only update if position changed or status changed
+                    const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
+                    const posChanged = !last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001;
+                    
+                    if (posChanged) {
+                        this.allPoints.push([lat, lng]);
+                        this.drawPosition();
+                    } else if (wasOnline !== this.isOnline) {
+                        this.drawPosition();
                     }
                 } catch (e) {
                     // Silently fail - polling is a fallback
