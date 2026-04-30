@@ -39,6 +39,7 @@ class TrackingController extends Controller
                             'lng' => $lastLoc->lng,
                             'speed' => -1, // Marca especial de OFFLINE
                             'heading' => 0,
+                            'created_at' => now(),
                         ]);
                         event(new \App\Events\LocationUpdated($location, true));
                     }
@@ -49,6 +50,7 @@ class TrackingController extends Controller
                         'lng' => $validated['lng'],
                         'speed' => $validated['speed'] ?? null,
                         'heading' => $validated['heading'] ?? null,
+                        'created_at' => now(),
                     ]);
                     try {
                         event(new \App\Events\LocationUpdated($location));
@@ -70,6 +72,7 @@ class TrackingController extends Controller
                             'speed' => 0,
                             'heading' => 0,
                             'accuracy' => -1, // Marcador especial: usuario desconectado
+                            'created_at' => now(),
                         ]);
                     }
                 } else {
@@ -80,6 +83,7 @@ class TrackingController extends Controller
                         'speed' => $validated['speed'],
                         'heading' => $validated['heading'],
                         'accuracy' => $validated['accuracy'] ?? null,
+                        'created_at' => now(),
                     ]);
                 }
             }

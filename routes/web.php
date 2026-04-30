@@ -54,7 +54,7 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
         'speed' => (float) ($displayLocation->speed ?? 0),
         'heading' => (float) ($displayLocation->heading ?? 0),
         'timestamp' => $displayLocation->created_at?->toIso8601String(),
-        'last_seen_exact' => $displayLocation->created_at?->shiftTimezone('UTC')->setTimezone('America/Guatemala')->format('h:i:s A'),
+        'last_seen_exact' => $displayLocation->created_at?->format('h:i:s A'),
         'is_offline' => $isOfflineSignal || $secsSince > 120,
     ]);
 })->middleware(['web', 'auth'])->name('web.dispatch-location.latest');
@@ -86,8 +86,7 @@ Route::get('/api/sales-locations', function () {
 
                 $createdAt = $displayLocation->created_at;
                 if ($createdAt) {
-                    $localTime = $createdAt->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala');
-                    $minutesAgo = (int) $localTime->diffInMinutes(now('America/Guatemala'));
+                    $minutesAgo = (int) $createdAt->diffInMinutes(now());
                     $isOnline = !$isOfflineSignal && $minutesAgo <= 2;
                 } else {
                     $localTime = null;

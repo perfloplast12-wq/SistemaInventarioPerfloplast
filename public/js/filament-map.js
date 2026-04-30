@@ -224,47 +224,50 @@
                     });
                     if (!resp.ok) return;
                     const data = await resp.json();
-                    if (!data || !data.lat || !data.lng) return;
+                    if (!data) return;
 
                     const lat = parseFloat(data.lat);
                     const lng = parseFloat(data.lng);
-
-                    if (isNaN(lat) || isNaN(lng) || !this.isValidCoord(lat, lng)) return;
-
-                    // Actualizar timestamp y hora desde el servidor siempre
+                    
+                    // 1. Actualizar siempre la información de señal
                     if (data.last_seen_exact) {
                         this.lastSignal = data.last_seen_exact;
                     }
                     if (data.timestamp) {
                         this.lastSignalTime = new Date(data.timestamp).getTime();
-                        if (!data.last_seen_exact) {
+                        if (!this.lastSignal) {
                             this.lastSignal = new Date(this.lastSignalTime).toLocaleTimeString();
                         }
                     }
 
                     const wasOnline = this.isOnline;
                     
-                    // Si el servidor dice explícitamente que está offline, lo respetamos
+                    // 2. Determinar estado Online/Offline
                     if (data.is_offline !== undefined) {
                         this.isOnline = !data.is_offline;
                     } else {
-                        // Fallback de seguridad usando el tiempo transcurrido
                         const secsSince = (Date.now() - (this.lastSignalTime || Date.now())) / 1000;
                         this.isOnline = secsSince <= 120;
                     }
 
-                    // Only update if position changed or status changed
-                    const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
-                    const posChanged = !last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001;
+                    // 3. Validar coordenadas para actualizar posición
+                    const isCoordValid = !isNaN(lat) && !isNaN(lng) && this.isValidCoord(lat, lng);
                     
-                    if (posChanged) {
-                        this.allPoints.push([lat, lng]);
-                        this.drawPosition();
+                    if (isCoordValid) {
+                        const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
+                        const posChanged = !last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001;
+                        
+                        if (posChanged) {
+                            this.allPoints.push([lat, lng]);
+                            this.drawPosition();
+                        } else if (wasOnline !== this.isOnline) {
+                            this.drawPosition();
+                        }
                     } else if (wasOnline !== this.isOnline) {
                         this.drawPosition();
                     }
                 } catch (e) {
-                    // Silently fail - polling is a fallback
+                    console.error('[Map Poll Error]', e);
                 }
             },
 
