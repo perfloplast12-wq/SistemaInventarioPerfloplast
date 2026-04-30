@@ -43,108 +43,12 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 function () {
-                    $settings = Cache::remember('appearance_settings', 3600, function () {
-                        return Setting::whereIn('key', [
-                            'primary_color_1',
-                            'primary_color_2',
-                            'border_radius',
-                            'glass_effect',
-                            'mesh_background',
-                            'button_layout',
-                            'shadow_depth',
-                            'bg_color',
-                            'sidebar_bg_color',
-                            'card_bg_color',
-                            'text_color',
-                        ])->pluck('value', 'key')->toArray();
-                    });
-
-                    $p1 = $settings['primary_color_1'] ?? '#6366f1';
-                    $p2 = $settings['primary_color_2'] ?? '#3b82f6';
-                    $sw = '16rem';
-                    $br = ($settings['border_radius'] ?? 12).'px';
-
-                    $isGlass = (bool) ($settings['glass_effect'] ?? true);
-                    $btnStyle = $settings['button_layout'] ?? 'pill';
-                    $shadowDepth = $settings['shadow_depth'] ?? 'medium';
-
-                    $bgColor = $settings['bg_color'] ?? '#f8fafc';
-                    $sidebarBg = $settings['sidebar_bg_color'] ?? '#ffffff';
-                    $cardBg = $settings['card_bg_color'] ?? '#ffffff';
-                    $textColor = $settings['text_color'] ?? '#1e293b';
-
-                    $shadows = [
-                        'none' => 'none',
-                        'soft' => '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
-                        'medium' => '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-                        'deep' => '0 25px 50px -12px rgb(0 0 0 / 0.15)',
-                    ];
-                    $selectedShadow = $shadows[$shadowDepth] ?? $shadows['medium'];
-
-                    $btnRadius = match ($btnStyle) {
-                        'square' => '2px',
-                        'pill' => '9999px',
-                        default => $br,
-                    };
-
-                    $v = time(); // Force refresh for this update
-
-                    $styles = "
-                        <style>
-                            :root {
-                                --p-1: {$p1};
-                                --p-2: {$p2};
-                                --fi-sidebar-width: {$sw};
-                                --fi-main-content-max-width: 100%;
-                                --premium-shadow: {$selectedShadow};
-                                --btn-radius: {$btnRadius};
-                                --border-radius: {$br};
-                                --bg-color: {$bgColor};
-                                --sidebar-bg: {$sidebarBg};
-                                --card-bg: {$cardBg};
-                                --text-primary: {$textColor};
-                                --text-muted: color-mix(in srgb, var(--text-primary), transparent 40%);
-                                --border-color: rgba(0,0,0,0.08);
-                                --main-gradient: linear-gradient(135deg, var(--p-1), var(--p-2));
-                                --is-glass: ".($isGlass ? '1' : '0').";
-                                --is-mesh: ".((bool)($settings['mesh_background'] ?? true) ? '1' : '0').";
-                            }
-
-                            html:not(.dark) .fi-layout,
-                            html:not(.dark) .fi-main-ctn,
-                            html:not(.dark) .fi-main,
-                            html:not(.dark) .fi-panels-main-ctn {
-                                background: transparent !important;
-                                background-color: transparent !important;
-                            }
-
-                            .fi-topbar, 
-                            .fi-topbar > nav, 
-                            .fi-topbar-content,
-                            .fi-sidebar-header,
-                            .fi-topbar-content-ctn {
-                                background: transparent !important;
-                                background-color: transparent !important;
-                                border: none !important;
-                                box-shadow: none !important;
-                            }
-
-                            .fi-main-ctn {
-                                background: transparent !important;
-                            }
-                        </style>
-                    ";
-
+                    $v = time();
                     return new HtmlString("
                         <link rel=\"manifest\" href=\"/manifest.json\">
-                        <meta name=\"theme-color\" content=\"{$p1}\">
                         <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
                         <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
                         <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
-                        <script>
-                            // Service worker disabled for stability
-                        </script>
-                        {$styles}
                     ");
                 }
             )
