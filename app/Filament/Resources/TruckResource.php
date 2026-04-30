@@ -62,7 +62,7 @@ class TruckResource extends Resource
                         ->label('Placa')
                         ->required()
                         ->maxLength(20)
-                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
+                        ->unique(ignoreRecord: true)
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get){
                             if (blank($get('name')) && filled($state)) {
@@ -112,7 +112,7 @@ class TruckResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y H:i:s')->sortable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                //
             ])
             ->actions([
 
@@ -129,14 +129,10 @@ class TruckResource extends Resource
 
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

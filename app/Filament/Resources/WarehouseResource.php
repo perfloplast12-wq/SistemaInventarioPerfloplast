@@ -59,7 +59,7 @@ class WarehouseResource extends Resource
                         ->helperText('Ej: BOD-01, MOS-01, CAM-01')
                         ->required()
                         ->maxLength(30)
-                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at')),
+                        ->unique(ignoreRecord: true),
 
                     Forms\Components\Textarea::make('notes')
                         ->label('Notas')
@@ -96,7 +96,7 @@ class WarehouseResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime('d/m/Y H:i:s')->sortable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                //
             ])
             ->actions([
                 Tables\Actions\Action::make('kardex')
@@ -109,14 +109,10 @@ class WarehouseResource extends Resource
 
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('id', 'desc');

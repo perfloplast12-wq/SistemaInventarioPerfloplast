@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class InjectionReport extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
         'user_id',
         'employee_name',

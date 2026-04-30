@@ -78,7 +78,7 @@ class RawMaterialProductResource extends Resource
                     Forms\Components\TextInput::make('sku')
                         ->label('SKU / Código (opcional)')
                         ->maxLength(60)
-                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at')),
+                        ->unique(ignoreRecord: true),
 
                     Forms\Components\Grid::make(2)->schema([
                         Forms\Components\Select::make('unit_of_measure_id')
@@ -177,7 +177,7 @@ class RawMaterialProductResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                //
             ])
             ->actions([
                 Tables\Actions\Action::make('register_entry')
@@ -253,14 +253,10 @@ class RawMaterialProductResource extends Resource
                     ])),
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('id', 'desc');

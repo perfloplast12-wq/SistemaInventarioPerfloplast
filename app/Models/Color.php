@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Color extends Model
 {
-    use Auditable, SoftDeletes;
+    use Auditable;
 
     protected string $auditModule = 'catalogs';
     use HasFactory;

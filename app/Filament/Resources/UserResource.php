@@ -223,7 +223,7 @@ class UserResource extends Resource
                         ->email()
                         ->required()
                         ->maxLength(255)
-                        ->unique(ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
+                        ->unique(ignoreRecord: true)
                         ->rules(['ends_with:@perfloplast.com'])
                         ->validationMessages([
                             'ends_with' => 'El correo debe pertenecer al dominio corporativo @perfloplast.com',
@@ -379,7 +379,6 @@ class UserResource extends Resource
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Activo'),
-                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 // ✅ Acción Roles (solo super_admin/admin)
@@ -451,8 +450,6 @@ class UserResource extends Resource
 
                         return false;
                     }),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

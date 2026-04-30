@@ -755,6 +755,15 @@ html.dark .fi-logo {
     overflow: visible !important;
     isolation: auto !important;
     transform: none !important;
+    position: relative !important;
+}
+
+/* Ensure the section being interacted with is always on top */
+.fi-section:focus-within, 
+.fi-card:focus-within,
+.fi-section:hover,
+.fi-card:hover {
+    z-index: 50 !important;
 }
 
 .fi-fo-repeater-item {
@@ -765,15 +774,11 @@ html.dark .fi-logo {
     overflow: visible !important;
 }
 
-/* Remove hover transform that creates stacking contexts */
-.fi-card:hover, .fi-section:hover {
-    transform: none !important;
-}
-
 /* Target Choices.js dropdown (used by Filament Select) */
 .choices__list--dropdown, 
 .choices__list[aria-expanded] {
     z-index: 9999 !important;
+    position: absolute !important;
 }
 
 /* Target Alpine float contents */
@@ -783,6 +788,21 @@ html.dark .fi-logo {
 
 /* Ensure the choices dropdown container doesn't get clipped */
 .choices {
+    overflow: visible !important;
+}
+
+/* Fix for Filament 3 field wrappers clipping dropdowns */
+.fi-fo-field-wrp {
+    overflow: visible !important;
+}
+
+/* Ensure the main form container doesn't clip */
+.fi-fo-form {
+    overflow: visible !important;
+}
+
+/* Specific fix for the Roles select appearing behind the next section */
+.fi-section-content {
     overflow: visible !important;
 }
 

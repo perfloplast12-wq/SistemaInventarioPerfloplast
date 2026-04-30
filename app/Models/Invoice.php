@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Invoice extends Model
 {
-    use SoftDeletes, \App\Models\Concerns\Auditable;
+    use \App\Models\Concerns\Auditable;
 
     protected string $auditModule = 'invoices';
     protected $fillable = [
