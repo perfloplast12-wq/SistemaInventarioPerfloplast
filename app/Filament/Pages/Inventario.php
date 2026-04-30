@@ -131,6 +131,21 @@ class Inventario extends Page
         return FinishedProductResource::getUrl('index');
     }
 
+    public function getWarehousesUrl(): string
+    {
+        return \App\Filament\Resources\WarehouseResource::getUrl('index');
+    }
+
+    public function getUnitsUrl(): string
+    {
+        return \App\Filament\Resources\UnitOfMeasureResource::getUrl('index');
+    }
+
+    public function getColorsUrl(): string
+    {
+        return \App\Filament\Resources\ColorResource::getUrl('index');
+    }
+
 
 
 
