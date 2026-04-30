@@ -63,17 +63,6 @@ class Catalogos extends Page
         return UnitOfMeasureResource::getUrl('create');
     }
 
-    // -------------------- TURNOS --------------------
-    public function getShiftsUrl(): string
-    {
-        return ShiftResource::getUrl('index');
-    }
-
-    public function getShiftsCreateUrl(): string
-    {
-        return ShiftResource::getUrl('create');
-    }
-
     // -------------------- COLORES --------------------
     public function getColorsUrl(): string
     {

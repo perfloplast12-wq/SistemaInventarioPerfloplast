@@ -20,6 +20,7 @@ class ListProductions extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            \App\Filament\Resources\ProductionResource\Widgets\ShiftsButton::class,
             \App\Filament\Widgets\ProductionStatsOverview::class,
         ];
     }

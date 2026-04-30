@@ -39,7 +39,6 @@
                 ['label' => 'Unidades', 'color' => 'emerald', 'icon' => 'scale', 'url' => \App\Filament\Resources\UnitOfMeasureResource::getUrl('index'), 'desc' => 'U. Medida'],
                 ['label' => 'Colores', 'color' => 'rose', 'icon' => 'swatch', 'url' => \App\Filament\Resources\ColorResource::getUrl('index'), 'desc' => 'Variantes'],
                 ['label' => 'Bodegas', 'color' => 'blue', 'icon' => 'home-modern', 'url' => \App\Filament\Resources\WarehouseResource::getUrl('index'), 'desc' => 'Almacenes'],
-                ['label' => 'Turnos', 'color' => 'slate', 'icon' => 'clock', 'url' => \App\Filament\Resources\ShiftResource::getUrl('index'), 'desc' => 'Horarios'],
             ];
         @endphp
 
