@@ -180,17 +180,24 @@ class StockService
         $current = $stock ? (float)$stock->quantity : 0.0;
 
         if ($current < $qty) {
-             $locationModel = $location['warehouse_id'] 
-                ? \App\Models\Warehouse::find($location['warehouse_id'])
-                : \App\Models\Truck::find($location['truck_id']);
-            
-            $locationName = $locationModel ? $locationModel->name : "ID: " . ($location['warehouse_id'] ?: $location['truck_id']);
-            $label = $location['warehouse_id'] ? "Bodega" : "Camión";
-            
-            $colorName = $colorId ? (\App\Models\Color::find($colorId)?->name ?? "ID:$colorId") : "N/A";
+            $locationName = "Bodega/Camión";
+            try {
+                if ($location['warehouse_id']) {
+                    $locationName = \App\Models\Warehouse::find($location['warehouse_id'])?->name ?? "Bodega ID: " . $location['warehouse_id'];
+                } elseif ($location['truck_id']) {
+                    $locationName = \App\Models\Truck::find($location['truck_id'])?->name ?? "Camión ID: " . $location['truck_id'];
+                }
+            } catch (\Exception $e) {}
+
+            $colorName = "N/A";
+            try {
+                if ($colorId) {
+                    $colorName = \App\Models\Color::find($colorId)?->name ?? "ID: $colorId";
+                }
+            } catch (\Exception $e) {}
 
             throw ValidationException::withMessages([
-                'quantity' => "Stock insuficiente en {$label} '{$locationName}' para color '{$colorName}'. Disponible: {$current}, Requerido: {$qty}"
+                'quantity' => "Stock insuficiente en '{$locationName}' para el color '{$colorName}'. Disponible: " . number_format($current, 2) . ", Requerido: " . number_format($qty, 2)
             ]);
         }
 
