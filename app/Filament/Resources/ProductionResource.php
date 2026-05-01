@@ -72,18 +72,15 @@ class ProductionResource extends Resource
                                                     $set('shift_id', $shift->id);
                                                     return;
                                                 }
-                                            }
-                                        }
-                                    }),
-
+                                                                             }),
+                                
                                 Forms\Components\Select::make('shift_id')
                                     ->label('Turno')
                                     ->relationship('shift', 'name')
                                     ->options(fn () => \App\Models\Shift::where('is_active', true)->pluck('name', 'id'))
                                     ->required()
-                                    ->disabled()
                                     ->dehydrated(true)
-                                    ->hint('Automático')
+                                    ->hint('Se detecta automáticamente según la hora')
                                     ->default(function () {
                                         $hour = now()->format('H:i');
                                         $shifts = \App\Models\Shift::where('is_active', true)->get();
@@ -305,12 +302,20 @@ class ProductionResource extends Resource
                     ->modalDescription('Esto descontará materias primas e ingresará TODOS los productos terminados.')
                     ->visible(fn ($record) => $record->status === 'draft')
                     ->action(function (Production $record) {
-                        $record->confirm();
+                        try {
+                            $record->confirm();
 
-                        Notification::make()
-                            ->title('Producción confirmada')
-                            ->success()
-                            ->send();
+                            Notification::make()
+                                ->title('Producción confirmada')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error al confirmar')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
                 
                 Tables\Actions\Action::make('cancel')

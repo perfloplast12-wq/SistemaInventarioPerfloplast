@@ -50,10 +50,11 @@ class SalesMap extends Page
                     
                     $createdAt = $displayLocation->created_at;
                     if ($createdAt) {
-                        $localTime = $createdAt->copy()->shiftTimezone('UTC')->setTimezone('America/Guatemala');
-                        $minutesAgo = (int) $localTime->diffInMinutes(now('America/Guatemala'));
-                        // Offline inmediato si accuracy=-1, o si no hay señal en 2 min
-                        $isOnline = !$isOfflineSignal && $minutesAgo <= 2;
+                        // El sistema usa America/Guatemala por defecto, así que comparamos directamente
+                        $minutesAgo = (int) $createdAt->diffInMinutes(now());
+                        $localTime = $createdAt;
+                        // Offline inmediato si accuracy=-1, o si no hay señal en 5 min (ampliamos un poco el margen)
+                        $isOnline = !$isOfflineSignal && $minutesAgo <= 5;
                     } else {
                         $localTime = null;
                         $isOnline = false;

@@ -22,26 +22,28 @@ class EditProduction extends EditRecord
                 ->modalDescription('Esta acción descontará materias primas de bodega e ingresará el producto terminado. No se puede deshacer.')
                 ->visible(fn ($record) => $record->status === 'draft')
                 ->action(function ($record) {
-                    $record->confirm();
-                    
-                    \Filament\Notifications\Notification::make()
-                        ->title('Producción Finalizada Correctamente')
-                        ->success()
-                        ->send();
+                    try {
+                        $record->confirm();
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Producción Finalizada Correctamente')
+                            ->success()
+                            ->send();
+
+                        return redirect(ProductionResource::getUrl('index'));
+                    } catch (\Exception $e) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Error al finalizar')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
             Actions\DeleteAction::make(),
         ];
     }
 
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-        $color = \App\Models\Color::find($data['color_id'] ?? null);
-        if ($color) {
-            $data['color_name_filter'] = $color->name;
-        }
- 
-        return $data;
-    }
+
 
     protected function getRedirectUrl(): string
     {
