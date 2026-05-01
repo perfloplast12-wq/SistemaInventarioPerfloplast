@@ -72,7 +72,7 @@ class SaleService
                     'unit_cost'         => $item->product->cost_price ?? 0,
                     'from_warehouse_id' => $sale->from_warehouse_id,
                     'from_truck_id'     => $sale->from_truck_id,
-                    'note'              => "Venta #{$sale->sale_number}",
+                    'note'              => ($sale->origin_type === 'warehouse' ? "Pre-venta de Bodega" : "Venta Directa de Camión") . " - #{$sale->sale_number}",
                     'created_by'        => auth()->id(),
                     'source_type'       => 'sale',
                     'source_id'         => $sale->id,

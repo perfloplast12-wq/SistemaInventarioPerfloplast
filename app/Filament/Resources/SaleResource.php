@@ -84,17 +84,47 @@ class SaleResource extends Resource
                                     ->maxLength(20)
                                     ->default('C/F'),
 
-                                Forms\Components\Select::make('from_truck_id')
-                                    ->label('Camión Origen (Vendedor)')
+                                Forms\Components\ToggleButtons::make('origin_type')
+                                    ->label('Tipo de Operación')
+                                    ->options([
+                                        'warehouse' => '📦 Preventa (Desde Bodega)',
+                                        'truck' => '🚚 Venta en Ruta (Desde Camión)',
+                                    ])
+                                    ->colors([
+                                        'warehouse' => 'info',
+                                        'truck' => 'warning',
+                                    ])
+                                    ->icons([
+                                        'warehouse' => 'heroicon-m-building-office',
+                                        'truck' => 'heroicon-m-truck',
+                                    ])
+                                    ->inline()
+                                    ->default('warehouse')
                                     ->required()
+                                    ->live(),
+
+                                Forms\Components\Select::make('from_warehouse_id')
+                                    ->label('Bodega Origen')
+                                    ->required(fn(Get $get) => $get('origin_type') === 'warehouse')
+                                    ->visible(fn(Get $get) => $get('origin_type') === 'warehouse')
+                                    ->options(\App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
+                                    ->default(fn() => \App\Models\Warehouse::where('is_factory', true)->first()?->id)
+                                    ->searchable()
+                                    ->live(),
+
+                                Forms\Components\Select::make('from_truck_id')
+                                    ->label('Camión Origen')
+                                    ->required(fn(Get $get) => $get('origin_type') === 'truck')
+                                    ->visible(fn(Get $get) => $get('origin_type') === 'truck')
                                     ->options(\App\Models\Truck::where('is_active', true)
                                         ->get()
-                                        ->mapWithKeys(fn ($truck) => [$truck->id => "{$truck->name} ({$truck->plate})"]))
+                                        ->mapWithKeys(fn ($truck) => [$truck->id => $truck->name . " [" . ($truck->plate ?? 'N/A') . "]"]))
                                     ->searchable()
                                     ->live(),
 
                                 Forms\Components\Textarea::make('note')
                                     ->label('Notas / Observaciones')
+                                    ->placeholder('Escriba aquí cualquier detalle relevante...')
                                     ->rows(2),
                             ])->columnSpan(['default' => 'full', 'lg' => 4]),
 
@@ -109,29 +139,34 @@ class SaleResource extends Resource
                                                 Forms\Components\Select::make('product_id')
                                                     ->label('Producto')
                                                     ->options(function (Get $get) {
+                                                        $originType = $get('../../origin_type');
                                                         $truckId = $get('../../from_truck_id');
+                                                        $warehouseId = $get('../../from_warehouse_id');
                                                         
-                                                        if (!$truckId) return [];
+                                                        $query = \App\Models\Product::where('type', 'finished_product')->where('is_active', true);
+                                                        
+                                                        if ($originType === 'truck' && $truckId) {
+                                                            $query->whereHas('stocks', fn($q) => $q->where('truck_id', $truckId)->where('quantity', '>', 0));
+                                                        } elseif ($originType === 'warehouse' && $warehouseId) {
+                                                            $query->whereHas('stocks', fn($q) => $q->where('warehouse_id', $warehouseId)->where('quantity', '>', 0));
+                                                        } else {
+                                                            return [];
+                                                        }
 
-                                                        $products = \App\Models\Product::where('type', 'finished_product')
-                                                            ->where('is_active', true)
-                                                            ->whereHas('stocks', fn($q) => $q->where('truck_id', $truckId)->where('quantity', '>', 0))
-                                                            ->get();
+                                                        return $query->get()->mapWithKeys(function ($p) use ($originType, $truckId, $warehouseId) {
+                                                            $stockQuery = $p->stocks();
+                                                            if ($originType === 'truck') $stockQuery->where('truck_id', $truckId);
+                                                            else $stockQuery->where('warehouse_id', $warehouseId);
                                                             
-                                                        return $products->mapWithKeys(function ($p) use ($truckId) {
-                                                            $stock = $p->stocks()
-                                                                ->where('truck_id', $truckId)
-                                                                ->sum('quantity');
-                                                                
-                                                            return [$p->id => "{$p->name} — <span class='text-gray-500 font-bold ml-1'>(" . ($stock + 0) . " disp.)</span>"];
+                                                            $stock = $stockQuery->sum('quantity');
+                                                            return [$p->id => "{$p->name} — [Disp: " . number_format($stock, 2) . "]"];
                                                         })->toArray();
                                                     })
-                                                    ->allowHtml()
                                                     ->required()
                                                     ->searchable()
                                                     ->live()
                                                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                                        $set('color_id', null); // Reset color on product change
+                                                        $set('color_id', null);
                                                         if (!$state) {
                                                             $set('unit_price', null);
                                                             $set('quantity', null);
@@ -140,11 +175,12 @@ class SaleResource extends Resource
                                                         }
                                                         $product = \App\Models\Product::find($state);
                                                         $price = $product ? (float)$product->sale_price : 0;
-                                                        $qty = (float)($get('quantity') ?: 1);
                                                         $set('unit_price', $price);
-                                                        $set('subtotal', $price * $qty);
                                                         if (!$get('quantity')) {
                                                             $set('quantity', 1);
+                                                            $set('subtotal', $price);
+                                                        } else {
+                                                            $set('subtotal', $price * (float)$get('quantity'));
                                                         }
                                                     })
                                                     ->columnSpan(['default' => 12, 'md' => 3]),
@@ -153,37 +189,31 @@ class SaleResource extends Resource
                                                     ->label('Color')
                                                     ->options(function (Get $get) {
                                                         $productId = $get('product_id');
+                                                        $originType = $get('../../origin_type');
                                                         $truckId = $get('../../from_truck_id');
+                                                        $warehouseId = $get('../../from_warehouse_id');
                                                         
-                                                        if (!$productId || !$truckId) return [];
+                                                        if (!$productId || (!$truckId && !$warehouseId)) return [];
 
                                                         $product = \App\Models\Product::with('color')->find($productId);
                                                         
-                                                        $stocks = \App\Models\Stock::with('color')
-                                                            ->where('product_id', $productId)
-                                                            ->where('truck_id', $truckId)
-                                                            ->where('quantity', '>', 0)
-                                                            ->get();
+                                                        $query = \App\Models\Stock::with('color')->where('product_id', $productId)->where('quantity', '>', 0);
+                                                        if ($originType === 'truck') $query->where('truck_id', $truckId);
+                                                        else $query->where('warehouse_id', $warehouseId);
+                                                        
+                                                        $stocks = $query->get();
 
-                                                        // Agrupar por color_id para sumar cantidades si hay registros dispersos
                                                         return $stocks->groupBy(fn($s) => $s->color_id ?? 'null')->mapWithKeys(function ($group, $key) use ($product) {
                                                             $totalQty = $group->sum('quantity');
                                                             $stockRecord = $group->first();
                                                             $stockColor = $stockRecord->color;
+                                                            $colorLabel = $stockColor ? $stockColor->display_name : ($product->color ? $product->color->display_name . ' (Catálogo)' : 'Sin Color');
                                                             
-                                                            $colorLabel = $stockColor ? $stockColor->display_name : null;
-                                                            
-                                                            if (!$colorLabel && $key === 'null') {
-                                                                $catalogColor = $product->color;
-                                                                $colorLabel = $catalogColor ? "{$catalogColor->display_name} (Catálogo)" : "Sin Color (N/A)";
-                                                            }
-
                                                             return [
-                                                                $key => ($colorLabel ?: 'Sin Color') . " — <span class='text-emerald-600 font-bold'>(" . ($totalQty + 0) . " disp.)</span>"
+                                                                $key => $colorLabel . " — [Disp: " . number_format($totalQty, 2) . "]"
                                                             ];
                                                         })->toArray();
                                                     })
-                                                    ->allowHtml()
                                                     ->required()
                                                     ->searchable()
                                                     ->live()
@@ -310,7 +340,6 @@ class SaleResource extends Resource
                     ->badge()
                     ->color('info')
                     ->weight('bold')
-                    ->fontFamily('mono')
                     ->copyable(),
 
                 Tables\Columns\TextColumn::make('sale_date')
@@ -320,72 +349,56 @@ class SaleResource extends Resource
 
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Cliente')
+                    ->description(fn($record) => "NIT: {$record->customer_nit}")
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('origin')
+                    ->label('Origen')
+                    ->state(fn ($record) => $record->fromWarehouse?->name ?? $record->fromTruck?->name ?? '—')
+                    ->icon(fn ($record) => $record->origin_type === 'warehouse' ? 'heroicon-m-building-office' : 'heroicon-m-truck')
+                    ->color(fn ($record) => $record->origin_type === 'warehouse' ? 'info' : 'warning'),
+
+                Tables\Columns\TextColumn::make('items_summary')
+                    ->label('Productos')
+                    ->state(function ($record) {
+                        return $record->items->count() . " items";
+                    })
+                    ->description(function ($record) {
+                        return $record->items->take(2)->map(function ($item) {
+                            $color = $item->color ? " ({$item->color->display_name})" : "";
+                            return "• {$item->product->name}{$color}";
+                        })->implode("\n");
+                    })
+                    ->wrap(),
 
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
                     ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
                     ->sortable()
+                    ->weight('black')
                     ->alignment('right'),
-
-                Tables\Columns\TextColumn::make('total_paid')
-                    ->label('Pagado')
-                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
-                    ->color('success')
-                    ->alignment('right'),
-
-                Tables\Columns\TextColumn::make('balance')
-                    ->label('Saldo')
-                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
-                    ->color(fn ($record) => $record->balance > 0.01 ? 'danger' : 'success')
-                    ->alignment('right'),
-
-                Tables\Columns\TextColumn::make('discount_type')
-                    ->label('Descuento')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'none', null => 'Sin descuento',
-                        'percent' => 'Porcentaje',
-                        'fixed' => 'Monto Fijo',
-                        default => $state,
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'none', null => 'gray',
-                        default => 'warning',
-                    }),
-
-                Tables\Columns\TextColumn::make('payments.method')
-                    ->label('Método Pago')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'cash' => 'Efectivo',
-                        'transfer' => 'Transferencia',
-                        'card' => 'Tarjeta',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'cash' => 'success',
-                        'transfer' => 'info',
-                        'card' => 'warning',
-                        default => 'gray',
-                    }),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'confirmed' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'draft' => 'Borrador',
                         'confirmed' => 'Confirmada',
                         'cancelled' => 'Cancelada',
                         default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'draft' => 'gray',
+                        'confirmed' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
                     }),
+
+                Tables\Columns\TextColumn::make('note')
+                    ->label('Observación')
+                    ->limit(30)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Vendedor')

@@ -44,113 +44,87 @@ class InventoryMovementResource extends Resource
                         ->schema([
                             Forms\Components\Select::make('product_id')
                                 ->label('Producto')
-                                ->options(\App\Models\Product::where('is_active', true)->pluck('name', 'id'))
+                                ->options(function () {
+                                     return \App\Models\Product::where('is_active', true)
+                                         ->get()
+                                         ->mapWithKeys(fn($p) => [
+                                             $p->id => $p->name . ($p->type === 'raw_material' ? ' (Materia Prima)' : ' (Prod. Terminado)')
+                                         ]);
+                                })
                                 ->searchable()
-                                ->preload()
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, Forms\Set $set, Get $get) {
-                                    if (!$state) return;
-                                    $product = \App\Models\Product::find($state);
-                                    if ($product) {
-                                        $set('product_category', $product->type);
-                                        // Auto-Select movement type if empty
-                                        if (!$get('type')) {
-                                            if ($product->type === 'raw_material') $set('type', 'in');
-                                            if ($product->type === 'finished_product') $set('type', 'transfer');
-                                        }
-                                    }
-                                })
+                                     if (!$state) return;
+                                     $product = \App\Models\Product::find($state);
+                                     if ($product) {
+                                         $set('product_category', $product->type);
+                                         $set('color_id', null);
+                                         if (!$get('type')) {
+                                             if ($product->type === 'raw_material') $set('type', 'in');
+                                             if ($product->type === 'finished_product') $set('type', 'transfer');
+                                         }
+                                     }
+                                 })
                                 ->columnSpan(1),
 
                             Forms\Components\Select::make('color_id')
-                                ->label('Color/Variante')
+                                ->label('Color / Variante')
                                 ->options(function(Get $get) {
                                     $productId = $get('product_id');
                                     if (!$productId) return [];
 
-                                    return \App\Models\Stock::query()
+                                    $fromWh = $get('from_warehouse_id');
+                                    $fromTr = $get('from_truck_id');
+
+                                    $query = \App\Models\Stock::query()
                                         ->where('product_id', $productId)
-                                        ->where('quantity', '>', 0)
-                                        ->with('color')
-                                        ->get()
-                                        ->mapWithKeys(fn($s) => [
-                                            ($s->color_id) => $s->color ? $s->color->display_name : '(Sin Variante)'
-                                        ])
+                                        ->with('color');
+                                    
+                                    if ($fromWh) $query->where('warehouse_id', $fromWh);
+                                    if ($fromTr) $query->where('truck_id', $fromTr);
+
+                                    return $query->get()
+                                        ->mapWithKeys(function($s) {
+                                            $label = $s->color ? $s->color->display_name : '(Sin Variante)';
+                                            $qty = number_format($s->quantity, 2);
+                                            return [$s->color_id ?? 'null' => "{$label} — [Disp: {$qty}]"];
+                                        })
                                         ->toArray();
                                 })
                                 ->searchable()
                                 ->preload()
-                                ->required()
-                                ->visible(fn (Get $get) => $get('product_category') === 'finished_product' || \App\Models\Product::find($get('product_id'))?->type === 'finished_product')
+                                ->required(fn (Get $get) => $get('product_category') === 'finished_product')
+                                ->visible(fn (Get $get) => $get('product_category') === 'finished_product')
+                                ->dehydrateStateUsing(fn ($state) => $state === 'null' ? null : $state)
                                 ->columnSpan(1),
 
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Cantidad a Operar')
                                 ->numeric()
+                                ->placeholder('0.00')
                                 ->extraInputAttributes(['step' => '0.01'])
                                 ->required()
                                 ->minValue(0.01)
                                 ->live()
-                                ->rules([
-                                    fn (Get $get, $record): \Closure => function (string $attribute, $value, \Closure $fail) use ($get, $record) {
-                                        $type = $get('type');
-                                        // Solo validar en salidas o traslados
-                                        if (!in_array($type, ['out', 'transfer', 'return'])) return;
-                                        if ($type === 'transfer' && $get('motive') === 'unload') return; // Descarga no resta de bodega (resta de camion, validar luego)
-
-                                        $qty = (float) $value;
-                                        $productId = $get('product_id');
-                                        $colorId = $get('color_id');
-                                        
-                                        // Determinar origen segun el tipo
-                                        $fromWh = $get('from_warehouse_id');
-                                        $fromTr = $get('from_truck_id');
-                                        
-                                        if (!$productId) return;
-                                        if (!$fromWh && !$fromTr) return;
-
-                                        $stockQuery = \App\Models\Stock::query()
-                                            ->where('product_id', $productId)
-                                            ->where('color_id', $colorId)
-                                            ->where('warehouse_id', $fromWh)
-                                            ->where('truck_id', $fromTr);
-
-                                        $available = (float) ($stockQuery->value('quantity') ?? 0);
-
-                                        // Si estamos editando, sumar la cantidad actual del registro al disponible
-                                        if ($record && $record->product_id == $productId && $record->color_id == $colorId) {
-                                            // Solo si el origen coincide
-                                            $oldFromWh = $record->from_warehouse_id;
-                                            $oldFromTr = $record->from_truck_id;
-                                            if ($oldFromWh == $fromWh && $oldFromTr == $fromTr) {
-                                                $available += abs((float)$record->quantity);
-                                            }
-                                        }
-
-                                        if ($available < $qty) {
-                                            $fail("Stock insuficiente en la ubicación de origen. Disponible: " . number_format($available, 2));
-                                        }
-                                    },
-                                ])
-                                ->dehydrateStateUsing(function ($state, Get $get) {
-                                    $qty = (float) $state;
-                                    if ($get('type') === 'adjust' && $get('adjustment_direction') === 'subtract') {
-                                        return -$qty;
-                                    }
-                                    return $qty;
-                                })
                                 ->columnSpan(1),
                             
                             Forms\Components\Placeholder::make('stock_available_hint')
-                                ->label('Existencia en Origen')
+                                ->label('Estatus de Inventario')
                                 ->content(function (Get $get, $record) {
                                     $productId = $get('product_id');
-                                    $colorId = $get('color_id');
+                                    $colorId = $get('color_id') === 'null' ? null : $get('color_id');
                                     $fromWh = $get('from_warehouse_id');
                                     $fromTr = $get('from_truck_id');
 
-                                    if (!$productId || (!$fromWh && !$fromTr)) return 'Seleccione producto y origen...';
+                                    if (!$productId || (!$fromWh && !$fromTr)) {
+                                        return new \Illuminate\Support\HtmlString("
+                                            <div class='flex items-center p-3 bg-gray-50 rounded-lg border border-gray-100'>
+                                                <div class='w-2 h-2 bg-gray-400 rounded-full animate-pulse mr-3'></div>
+                                                <span class='text-sm text-gray-500 italic'>Seleccione ubicación de origen para ver existencias...</span>
+                                            </div>
+                                        ");
+                                    }
 
                                     $stock = (float) (\App\Models\Stock::query()
                                         ->where('product_id', $productId)
@@ -159,7 +133,6 @@ class InventoryMovementResource extends Resource
                                         ->where('truck_id', $fromTr)
                                         ->value('quantity') ?? 0);
                                     
-                                    // Compensar si es edicion
                                     if ($record && $record->product_id == $productId && $record->color_id == $colorId) {
                                         if ($record->from_warehouse_id == $fromWh && $record->from_truck_id == $fromTr) {
                                             $stock += abs((float)$record->quantity);
@@ -167,10 +140,15 @@ class InventoryMovementResource extends Resource
                                     }
 
                                     $colorName = $colorId ? (\App\Models\Color::find($colorId)?->name ?? 'N/A') : 'Base';
+                                    $colorClass = $stock > 0 ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100';
+                                    
                                     return new \Illuminate\Support\HtmlString("
-                                        <div class='flex items-center space-x-2'>
-                                            <span class='text-2xl font-bold " . ($stock > 0 ? 'text-success-600' : 'text-danger-600') . "'>" . number_format($stock, 2) . "</span>
-                                            <span class='text-xs text-gray-500'>unidades disponibles de <b>{$colorName}</b></span>
+                                        <div class='flex flex-col p-3 rounded-lg border {$colorClass}'>
+                                            <div class='flex items-baseline justify-between'>
+                                                <span class='text-xs uppercase tracking-wider font-bold opacity-70'>Existencia Disponible</span>
+                                                <span class='text-3xl font-black'>" . number_format($stock, 2) . "</span>
+                                            </div>
+                                            <div class='mt-1 text-xs font-medium'>Variante seleccionada: <b>{$colorName}</b></div>
                                         </div>
                                     ");
                                 })
@@ -375,65 +353,70 @@ class InventoryMovementResource extends Resource
                         'in'       => 'Entrada',
                         'out'      => 'Salida',
                         'adjust'   => 'Ajuste',
-                        'transfer' => 'Transferencia',
-                        'return'   => 'Devolución',
+                        'transfer' => 'Traslado',
+                        'return'   => 'Retorno',
                         default    => $state,
                     })
-                    ->colors([
-                        'success' => 'in',
-                        'danger'  => 'out',
-                        'warning' => 'adjust',
-                        'info'    => 'transfer',
-                        'primary' => 'return',
-                    ]),
-
-                Tables\Columns\TextColumn::make('motive')
-                    ->label('Motivo')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'load' => 'Carga Camión',
-                        'unload' => 'Descarga Camión',
-                        'internal_wh' => 'Entre Bodegas',
-                        'transshipment' => 'Trasbordo',
-                        default => '—',
-                    })
-                    ->toggleable(),
+                    ->color(fn ($state) => match ($state) {
+                        'in'       => 'success',
+                        'out'      => 'danger',
+                        'adjust'   => 'warning',
+                        'transfer' => 'info',
+                        'return'   => 'primary',
+                        default    => 'gray',
+                    }),
 
                 Tables\Columns\TextColumn::make('product.name')
-                    ->label('Producto')
+                    ->label('Producto / Color')
+                    ->description(fn (InventoryMovement $record) => $record->color ? $record->color->display_name : 'Sin variante')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cant. Base')
+                    ->label('Cantidad')
                     ->formatStateUsing(fn($state) => number_format(abs((float)$state), 2, '.', ','))
-                    ->description(fn(InventoryMovement $record) => 
-                        ($record->type === 'adjust' && $record->quantity < 0) ? 'Resta' : ''
-                    ),
+                    ->color(fn(InventoryMovement $record) => $record->quantity < 0 ? 'danger' : 'success')
+                    ->weight('black')
+                    ->alignment('right'),
 
                 Tables\Columns\TextColumn::make('origen')
-                    ->label('Origen')
-                    ->state(fn (InventoryMovement $record) => $record->fromWarehouse?->name ?? $record->fromTruck?->name ?? '—'),
+                    ->label('📍 Origen')
+                    ->state(fn (InventoryMovement $record) => $record->fromWarehouse?->name ?? $record->fromTruck?->name ?? '—')
+                    ->icon(fn ($record) => $record->fromWarehouse ? 'heroicon-m-building-office' : ($record->fromTruck ? 'heroicon-m-truck' : null))
+                    ->color(fn ($record) => $record->fromWarehouse ? 'info' : ($record->fromTruck ? 'warning' : 'gray')),
 
                 Tables\Columns\TextColumn::make('destino')
-                    ->label('Destino')
-                    ->state(fn (InventoryMovement $record) => $record->toWarehouse?->name ?? $record->toTruck?->name ?? '—'),
+                    ->label('🎯 Destino')
+                    ->state(fn (InventoryMovement $record) => $record->toWarehouse?->name ?? $record->toTruck?->name ?? '—')
+                    ->icon(fn ($record) => $record->toWarehouse ? 'heroicon-m-building-office' : ($record->toTruck ? 'heroicon-m-truck' : null))
+                    ->color(fn ($record) => $record->toWarehouse ? 'info' : ($record->toTruck ? 'warning' : 'gray')),
 
-                Tables\Columns\TextColumn::make('source_id')
-                    ->label('Origen Doc.')
-                    ->toggleable()
-                    ->formatStateUsing(fn ($state, $record) => $record->source_type === 'dispatch' ? 'Despacho' : '—')
-                    ->description(function ($record) {
+                Tables\Columns\TextColumn::make('source_info')
+                    ->label('Referencia')
+                    ->badge()
+                    ->state(function ($record) {
                         if ($record->source_type === 'dispatch') {
                             $dispatch = \App\Models\Dispatch::find($record->source_id);
-                            return $dispatch ? $dispatch->dispatch_number : "#{$record->source_id}";
+                            return $dispatch ? "Despacho: {$dispatch->dispatch_number}" : "Despacho #{$record->source_id}";
                         }
-                        return null;
+                        if ($record->source_type === 'sale') {
+                            $sale = \App\Models\Sale::find($record->source_id);
+                            return $sale ? "Venta: {$sale->sale_number}" : "Venta #{$record->source_id}";
+                        }
+                        return $record->note ? 'Nota' : 'Manual';
                     })
-                    ->color('gray')
-                    ->icon('heroicon-m-document-text')
+                    ->color(fn ($record) => match ($record->source_type) {
+                        'dispatch' => 'primary',
+                        'sale' => 'success',
+                        default => 'gray',
+                    })
                     ->url(function ($record) {
                         if ($record->source_type === 'dispatch') {
                             return \App\Filament\Resources\DispatchResource::getUrl('view', ['record' => $record->source_id]);
+                        }
+                        if ($record->source_type === 'sale') {
+                            return \App\Filament\Resources\SaleResource::getUrl('view', ['record' => $record->source_id]);
                         }
                         return null;
                     }),
@@ -441,9 +424,8 @@ class InventoryMovementResource extends Resource
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Usuario')
                     ->icon('heroicon-m-user-circle')
-                    ->iconColor('gray')
                     ->color('gray')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 // Filtro visible solo si NO estamos en modo contextual

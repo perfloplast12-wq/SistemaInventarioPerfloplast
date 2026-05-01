@@ -288,49 +288,48 @@ class ProductionResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('info')
-                    ->fontFamily('mono'),
+                    ->weight('bold')
+                    ->copyable(),
                 
                 Tables\Columns\TextColumn::make('production_date')
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
                 
-                Tables\Columns\TextColumn::make('outputs_count')
-                    ->label('Productos Fabricados')
-                    ->counts('outputs')
+                Tables\Columns\TextColumn::make('outputs_summary')
+                    ->label('Fabricado')
+                    ->state(fn ($record) => $record->outputs->count() . " items")
+                    ->description(fn ($record) => $record->outputs->take(1)->map(fn($o) => "• " . $o->product->name . ($o->color ? " ({$o->color->display_name})" : ""))->implode("\n"))
                     ->badge()
                     ->color('success'),
 
-                Tables\Columns\TextColumn::make('outputs.product.name')
-                    ->label('Listado de Productos')
-                    ->listWithLineBreaks()
-                    ->bulleted()
-                    ->limitList(2)
-                    ->expandableLimitedList(),
+                Tables\Columns\TextColumn::make('toWarehouse.name')
+                    ->label('📍 Destino')
+                    ->icon('heroicon-m-building-office')
+                    ->color('info')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('shift.name')
                     ->label('Turno')
+                    ->icon('heroicon-m-clock')
+                    ->color('gray')
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'confirmed' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'draft' => 'Borrador',
                         'confirmed' => 'Confirmada',
                         'cancelled' => 'Cancelada',
                         default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'draft' => 'gray',
+                        'confirmed' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
                     }),
-
-                Tables\Columns\TextColumn::make('toWarehouse.name')
-                    ->label('Bodega Destino')
-                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

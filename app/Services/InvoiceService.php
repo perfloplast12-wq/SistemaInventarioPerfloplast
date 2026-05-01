@@ -21,7 +21,7 @@ class InvoiceService
                 'customer_nit' => $sale->customer_nit ?? 'C/F',
                 'invoice_date' => now(),
                 'payment_method' => $this->getPaymentMethodLabel($sale),
-                'sale_type' => ($sale->origin_type === 'warehouse' && !$sale->from_truck_id) ? 'Venta Directa' : 'Venta Normal',
+                'sale_type' => ($sale->origin_type === 'warehouse') ? 'Preventa (Bodega)' : 'Venta en Ruta (Camión)',
                 'subtotal' => $sale->total + $sale->discount_amount,
                 'discount_amount' => $sale->discount_amount,
                 'total' => $sale->total,

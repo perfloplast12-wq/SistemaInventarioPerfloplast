@@ -41,20 +41,38 @@ class InvoiceResource extends Resource
                     ->label('Nro. Factura')
                     ->searchable()
                     ->sortable()
-                    ->badge(),
+                    ->badge()
+                    ->color('gray')
+                    ->weight('bold')
+                    ->copyable(),
+                
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Cliente')
-                    ->searchable(),
+                    ->description(fn($record) => "NIT: {$record->customer_nit}")
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('invoice_date')
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('sale_type')
                     ->label('Tipo Venta')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (string $state): string => match (true) {
+                        str_contains($state, 'Bodega') => 'info',
+                        str_contains($state, 'Camión') => 'warning',
+                        str_contains($state, 'Pedido') => 'success',
+                        default => 'gray',
+                    }),
+
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
-                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ',')),
+                    ->formatStateUsing(fn ($state) => 'Q ' . number_format((float)$state, 2, '.', ','))
+                    ->weight('black')
+                    ->alignment('right')
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
