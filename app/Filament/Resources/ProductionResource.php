@@ -72,7 +72,9 @@ class ProductionResource extends Resource
                                                     $set('shift_id', $shift->id);
                                                     return;
                                                 }
-                                                                             }),
+                                            }
+                                        }
+                                    }),
                                 
                                 Forms\Components\Select::make('shift_id')
                                     ->label('Turno')
