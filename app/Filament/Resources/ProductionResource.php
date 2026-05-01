@@ -178,14 +178,27 @@ class ProductionResource extends Resource
                                             ->label('Materia Prima')
                                             ->options(fn () => \App\Models\Product::where('type', 'raw_material')
                                                 ->where('is_active', true)
+                                                ->with(['stocks.warehouse'])
                                                 ->get()
-                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} [ID: {$p->id}]"])
+                                                ->mapWithKeys(function ($p) {
+                                                    $stockByWh = $p->stocks->where('quantity', '>', 0)
+                                                        ->groupBy('warehouse_id')
+                                                        ->map(function ($group) {
+                                                            $whName = $group->first()->warehouse?->name ?? 'Bodega';
+                                                            $total = $group->sum('quantity');
+                                                            return "{$whName}: " . number_format($total, 0);
+                                                        })
+                                                        ->implode(' | ');
+                                                    
+                                                    $label = $p->name . ($stockByWh ? " — [{$stockByWh}]" : " — [Sin Stock]");
+                                                    return [$p->id => $label];
+                                                })
                                             )
                                             ->required()
                                             ->searchable()
                                             ->preload()
                                             ->live()
-                                            ->columnSpan(['default' => 12, 'md' => 7]),
+                                            ->columnSpan(['default' => 12, 'md' => 12]),
                                         
                                         Forms\Components\TextInput::make('quantity')
                                             ->label('Cantidad Consumo')

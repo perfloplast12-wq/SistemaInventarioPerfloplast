@@ -142,7 +142,6 @@ class RawMaterialProductResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Materia prima')
-                    ->description(fn ($record) => "ID: {$record->id}")
                     ->searchable()
                     ->sortable(),
 
