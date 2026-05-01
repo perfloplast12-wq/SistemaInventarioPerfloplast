@@ -181,10 +181,12 @@ class ProductionResource extends Resource
                                                 ->with(['stocks.warehouse'])
                                                 ->get()
                                                 ->mapWithKeys(function ($p) {
-                                                    $stockByWh = $p->stocks->where('quantity', '>', 0)
+                                                    $stocks = $p->stocks ?? collect();
+                                                    $stockByWh = $stocks->where('quantity', '>', 0)
                                                         ->groupBy('warehouse_id')
                                                         ->map(function ($group) {
-                                                            $whName = $group->first()->warehouse?->name ?? 'Bodega';
+                                                            $first = $group->first();
+                                                            $whName = $first && $first->warehouse ? $first->warehouse->name : 'Bodega';
                                                             $total = $group->sum('quantity');
                                                             return "{$whName}: " . number_format($total, 0);
                                                         })
