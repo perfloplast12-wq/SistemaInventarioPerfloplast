@@ -153,14 +153,7 @@ class SaleResource extends Resource
                                                             return [];
                                                         }
 
-                                                        return $query->get()->mapWithKeys(function ($p) use ($originType, $truckId, $warehouseId) {
-                                                            $stockQuery = $p->stocks();
-                                                            if ($originType === 'truck') $stockQuery->where('truck_id', $truckId);
-                                                            else $stockQuery->where('warehouse_id', $warehouseId);
-                                                            
-                                                            $stock = $stockQuery->sum('quantity');
-                                                            return [$p->id => "{$p->name} — [Disp: " . number_format($stock, 2) . "]"];
-                                                        })->toArray();
+                                                        return $query->pluck('name', 'id')->toArray();
                                                     })
                                                     ->required()
                                                     ->searchable()
@@ -183,7 +176,7 @@ class SaleResource extends Resource
                                                             $set('subtotal', $price * (float)$get('quantity'));
                                                         }
                                                     })
-                                                    ->columnSpan(['default' => 12, 'md' => 3]),
+                                                    ->columnSpan(['default' => 12, 'md' => 4]),
 
                                                 Forms\Components\Select::make('color_id')
                                                     ->label('Color')
@@ -217,7 +210,34 @@ class SaleResource extends Resource
                                                     ->required()
                                                     ->searchable()
                                                     ->live()
-                                                    ->columnSpan(['default' => 12, 'md' => 3]),
+                                                    ->columnSpan(['default' => 12, 'md' => 4]),
+
+                                                Forms\Components\Placeholder::make('stock_availability')
+                                                    ->label('Existencia Actual')
+                                                    ->content(function (Get $get) {
+                                                        $productId = $get('product_id');
+                                                        $colorId = $get('color_id');
+                                                        $originType = $get('../../origin_type');
+                                                        $truckId = $get('../../from_truck_id');
+                                                        $warehouseId = $get('../../from_warehouse_id');
+
+                                                        if (!$productId || (!$truckId && !$warehouseId)) return 'Seleccione producto y color';
+
+                                                        $query = \App\Models\Stock::where('product_id', $productId);
+                                                        if ($colorId) $query->where('color_id', $colorId);
+                                                        else $query->whereNull('color_id');
+
+                                                        if ($originType === 'truck') $query->where('truck_id', $truckId);
+                                                        else $query->where('warehouse_id', $warehouseId);
+
+                                                        $stock = (float) $query->sum('quantity');
+                                                        
+                                                        $color = $stock > 0 ? 'text-success-600' : 'text-danger-600';
+                                                        $label = $stock > 0 ? '✅ Disponible: ' : '❌ Agotado: ';
+
+                                                        return new \Illuminate\Support\HtmlString("<span class='font-bold {$color}'>{$label} " . number_format($stock, 2) . "</span>");
+                                                    })
+                                                    ->columnSpan(['default' => 12, 'md' => 4]),
 
                                                 Forms\Components\TextInput::make('quantity')
                                                     ->label('Cant.')
@@ -308,13 +328,25 @@ class SaleResource extends Resource
                                                 ])
                                                 ->default('cash'),
 
+                                        Forms\Components\Group::make([
                                             Forms\Components\TextInput::make('payment_amount')
                                                 ->label('Monto Recibido')
                                                 ->numeric()
                                                 ->step(0.01)
                                                 ->prefix('Q')
+                                                ->live()
                                                 ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                                 ->default(0),
+
+                                            Forms\Components\Placeholder::make('change_amount_display')
+                                                ->label('Vuelto / Cambio')
+                                                ->content(function (Get $get) {
+                                                    $total = (float) $get('total') ?: 0;
+                                                    $received = (float) $get('payment_amount') ?: 0;
+                                                    $change = max(0, $received - $total);
+                                                    return 'Q ' . number_format($change, 2, '.', ',');
+                                                })
+                                                ->extraAttributes(['class' => 'text-xl font-bold text-success-600']),
                                         ])->columns(2),
                                     ]),
                                 
