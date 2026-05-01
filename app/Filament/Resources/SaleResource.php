@@ -328,7 +328,6 @@ class SaleResource extends Resource
                                                 ])
                                                 ->default('cash'),
 
-                                        Forms\Components\Group::make([
                                             Forms\Components\TextInput::make('payment_amount')
                                                 ->label('Monto Recibido')
                                                 ->numeric()
@@ -347,7 +346,7 @@ class SaleResource extends Resource
                                                     return 'Q ' . number_format($change, 2, '.', ',');
                                                 })
                                                 ->extraAttributes(['class' => 'text-xl font-bold text-success-600']),
-                                        ])->columns(2),
+                                        ])->columnSpan(2)->columns(2),
                                     ]),
                                 
                                 Forms\Components\Hidden::make('discount_amount'),
