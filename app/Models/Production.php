@@ -87,7 +87,7 @@ class Production extends Model
                     \App\Models\InventoryMovement::create([
                         'type' => 'out',
                         'product_id' => $item->product_id,
-                        'color_id' => null, 
+                        'color_id' => $item->color_id ?? $item->product?->color_id, 
                         'quantity' => $item->quantity,
                         'unit_cost' => 0,
                         'from_warehouse_id' => $this->to_warehouse_id,

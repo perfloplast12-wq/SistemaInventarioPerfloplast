@@ -105,7 +105,8 @@ class ProductionResource extends Resource
                             ->options(fn () => \App\Models\Warehouse::where('is_active', true)->pluck('name', 'id'))
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->live(),
 
                         Forms\Components\Placeholder::make('status_display')
                             ->label('Estado Actual')
@@ -171,7 +172,7 @@ class ProductionResource extends Resource
                             ->schema([
                                 Forms\Components\Grid::make(12)
                                     ->schema([
-                                        Forms\Components\Select::make('product_id')
+                                         Forms\Components\Select::make('product_id')
                                             ->label('Materia Prima')
                                             ->options(fn () => \App\Models\Product::where('type', 'raw_material')
                                                 ->where('is_active', true)
@@ -179,6 +180,7 @@ class ProductionResource extends Resource
                                             ->required()
                                             ->searchable()
                                             ->preload()
+                                            ->live()
                                             ->columnSpan(['default' => 12, 'md' => 7]),
                                         
                                         Forms\Components\TextInput::make('quantity')
@@ -189,6 +191,31 @@ class ProductionResource extends Resource
                                             ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                                             ->minValue(0.01)
                                             ->columnSpan(['default' => 12, 'md' => 5]),
+
+                                        Forms\Components\Placeholder::make('stock_hint')
+                                            ->label('')
+                                            ->content(function (Get $get) {
+                                                $productId = $get('product_id');
+                                                // Acceder al campo del formulario principal (fuera del repeater)
+                                                $warehouseId = $get('../../to_warehouse_id'); 
+                                                
+                                                if (!$productId || !$warehouseId) return 'Seleccione bodega...';
+
+                                                $product = \App\Models\Product::find($productId);
+                                                if (!$product) return '';
+
+                                                $stock = \App\Models\Stock::where('product_id', $productId)
+                                                    ->where('warehouse_id', $warehouseId)
+                                                    ->where('color_id', $product->color_id)
+                                                    ->value('quantity') ?? 0;
+
+                                                return new \Illuminate\Support\HtmlString("
+                                                    <div class='text-xs " . ($stock > 0 ? 'text-success-600' : 'text-danger-600') . "'>
+                                                        Stock disponible en bodega: <b>" . number_format($stock, 2) . "</b>
+                                                    </div>
+                                                ");
+                                            })
+                                            ->columnSpan(12),
 
                                         Forms\Components\Hidden::make('type')->default('consumable'),
                                     ]),
