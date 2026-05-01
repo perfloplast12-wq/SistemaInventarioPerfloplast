@@ -178,7 +178,9 @@ class ProductionResource extends Resource
                                             ->label('Materia Prima')
                                             ->options(fn () => \App\Models\Product::where('type', 'raw_material')
                                                 ->where('is_active', true)
-                                                ->pluck('name', 'id'))
+                                                ->get()
+                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} [ID: {$p->id}]"])
+                                            )
                                             ->required()
                                             ->searchable()
                                             ->preload()
@@ -198,24 +200,42 @@ class ProductionResource extends Resource
                                             ->label('')
                                             ->content(function (Get $get) {
                                                 $productId = $get('product_id');
-                                                // Acceder al campo del formulario principal (fuera del repeater)
-                                                $warehouseId = $get('../../to_warehouse_id'); 
+                                                $selectedWarehouseId = $get('../../to_warehouse_id'); 
                                                 
-                                                if (!$productId || !$warehouseId) return 'Seleccione bodega...';
+                                                if (!$productId) return 'Seleccione un producto...';
 
                                                 $product = \App\Models\Product::find($productId);
                                                 if (!$product) return '';
 
-                                                $stock = \App\Models\Stock::where('product_id', $productId)
-                                                    ->where('warehouse_id', $warehouseId)
-                                                    ->where('color_id', $product->color_id)
-                                                    ->value('quantity') ?? 0;
+                                                $stocks = \App\Models\Stock::where('product_id', $productId)
+                                                    ->where('quantity', '>', 0)
+                                                    ->with(['warehouse', 'truck', 'color'])
+                                                    ->get();
 
-                                                return new \Illuminate\Support\HtmlString("
-                                                    <div class='text-xs " . ($stock > 0 ? 'text-success-600' : 'text-danger-600') . "'>
-                                                        Stock disponible en bodega: <b>" . number_format($stock, 2) . "</b>
-                                                    </div>
-                                                ");
+                                                if ($stocks->isEmpty()) {
+                                                    return new \Illuminate\Support\HtmlString("<div class='text-xs text-danger-600 italic'>Sin existencias en ninguna bodega.</div>");
+                                                }
+
+                                                $html = "<div class='text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 space-y-1'>";
+                                                $html .= "<div class='font-bold text-gray-700 dark:text-gray-300 border-b pb-1 mb-1'>Disponibilidad actual:</div>";
+                                                
+                                                foreach ($stocks as $s) {
+                                                    $locName = $s->warehouse?->name ?? ($s->truck?->name ?? 'Desconocido');
+                                                    $isMatch = $s->warehouse_id == $selectedWarehouseId;
+                                                    $colorInfo = $s->color_id ? " (" . ($s->color?->name ?? 'Color') . ")" : "";
+                                                    
+                                                    $colorClass = $isMatch ? 'text-success-600 font-bold' : 'text-gray-500 dark:text-gray-400';
+                                                    $indicator = $isMatch ? '➔' : '•';
+                                                    
+                                                    $html .= "<div class='{$colorClass}'>{$indicator} {$locName}{$colorInfo}: " . number_format($s->quantity, 2) . "</div>";
+                                                }
+
+                                                if (!$stocks->contains('warehouse_id', $selectedWarehouseId)) {
+                                                    $html .= "<div class='text-danger-500 text-[10px] pt-1'>⚠ No hay stock en la bodega de destino seleccionada.</div>";
+                                                }
+
+                                                $html .= "</div>";
+                                                return new \Illuminate\Support\HtmlString($html);
                                             })
                                             ->columnSpan(12),
 

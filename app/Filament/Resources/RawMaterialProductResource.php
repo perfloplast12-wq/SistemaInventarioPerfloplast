@@ -142,13 +142,14 @@ class RawMaterialProductResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Materia prima')
+                    ->description(fn ($record) => "ID: {$record->id}")
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('stock_total')
-                    ->label('Stock Disponible')
+                    ->label('Stock Total')
                     ->formatStateUsing(function ($state, Product $record) {
-                        $baseUnit = $record->unitOfMeasure?->name ?? 'Sacos';
+                        $baseUnit = $record->unitOfMeasure?->abbreviation ?? 'u';
                         return number_format((float)$state, 2, '.', ',') . ' ' . $baseUnit;
                     })
                     ->sortable()
@@ -157,6 +158,20 @@ class RawMaterialProductResource extends Resource
                         $state <= 0 => 'danger',
                         $state < 10 => 'warning',
                         default => 'success',
+                    }),
+
+                Tables\Columns\TextColumn::make('distribution')
+                    ->label('Ubicación / Stock')
+                    ->html()
+                    ->state(function (Product $record) {
+                        $stocks = $record->stocks()->where('quantity', '>', 0)->with(['warehouse', 'truck'])->get();
+                        if ($stocks->isEmpty()) return '<span class="text-gray-400 italic text-[10px]">Sin existencias</span>';
+                        
+                        return $stocks->map(function ($s) {
+                            $name = $s->warehouse?->name ?? ($s->truck?->name ?? 'Camión');
+                            $qty = number_format($s->quantity, 2);
+                            return "<div class='text-[10px] leading-none mb-1 text-gray-600 dark:text-gray-400'>• {$name}: <b>{$qty}</b></div>";
+                        })->implode('');
                     }),
 
                 Tables\Columns\ToggleColumn::make('is_active')

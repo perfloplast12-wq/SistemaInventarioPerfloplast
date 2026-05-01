@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\InventoryMovement;
 use App\Models\Stock;
+use App\Models\Warehouse;
+use App\Models\Truck;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
