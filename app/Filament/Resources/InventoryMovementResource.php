@@ -441,9 +441,15 @@ class InventoryMovementResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->source_type === null), // Solo manuales
+                    ->visible(fn ($record) => 
+                        $record->source_type === null && 
+                        $record->created_at->gt(now()->subHours(24))
+                    ),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record) => $record->source_type === null), // Solo manuales
+                    ->visible(fn ($record) => 
+                        $record->source_type === null && 
+                        $record->created_at->gt(now()->subHours(24))
+                    ),
             ])
             ->defaultSort('created_at', 'desc');
     }
