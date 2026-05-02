@@ -252,24 +252,21 @@ class SaleResource extends Resource
                                                         $qty = (float)($state ?: 0);
                                                         $set('subtotal', $qty * $price);
                                                     })
-                                                    ->columnSpan(['default' => 4, 'md' => 2]),
+                                                    ->columnSpan(['default' => 4, 'md' => 4]),
 
-                                                Forms\Components\TextInput::make('unit_price')
+                                                Forms\Components\Placeholder::make('unit_price_display')
                                                     ->label('Precio Q')
-                                                    ->numeric()
-                                                    ->step(0.01)
-                                                    ->required()
-                                                    ->readOnly() 
-                                                    ->dehydrated()
-                                                    ->prefix('Q')
-                                                    ->columnSpan(['default' => 4, 'md' => 2]),
+                                                    ->content(fn (Get $get) => 'Q ' . number_format((float)($get('unit_price') ?? 0), 2, '.', ','))
+                                                    ->extraAttributes(['class' => 'font-bold text-gray-900 pt-2'])
+                                                    ->columnSpan(['default' => 4, 'md' => 4]),
 
                                                 Forms\Components\Placeholder::make('subtotal_display')
                                                     ->label('Subtotal')
                                                     ->content(fn (Get $get) => 'Q ' . number_format((float)($get('subtotal') ?? 0), 2, '.', ','))
-                                                    ->extraAttributes(['class' => 'font-bold text-right pt-2'])
-                                                    ->columnSpan(['default' => 4, 'md' => 2]),
+                                                    ->extraAttributes(['class' => 'font-bold text-right text-primary-600 pt-2'])
+                                                    ->columnSpan(['default' => 4, 'md' => 4]),
 
+                                                Forms\Components\Hidden::make('unit_price'),
                                                 Forms\Components\Hidden::make('subtotal'),
                                             ]),
                                     ])
