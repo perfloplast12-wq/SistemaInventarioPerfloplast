@@ -256,14 +256,20 @@ class SaleResource extends Resource
 
                                                 Forms\Components\Placeholder::make('unit_price_display')
                                                     ->label('Precio Q')
-                                                    ->content(fn (Get $get) => 'Q ' . number_format((float)($get('unit_price') ?? 0), 2, '.', ','))
-                                                    ->extraAttributes(['class' => 'font-bold text-gray-900 pt-2'])
+                                                    ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
+                                                        <div class='bg-gray-100 border-2 border-gray-300 rounded-lg p-2 text-center text-2xl font-black text-gray-950 shadow-sm'>
+                                                            Q " . number_format((float)($get('unit_price') ?? 0), 2, '.', ',') . "
+                                                        </div>
+                                                    "))
                                                     ->columnSpan(['default' => 4, 'md' => 4]),
 
                                                 Forms\Components\Placeholder::make('subtotal_display')
                                                     ->label('Subtotal')
-                                                    ->content(fn (Get $get) => 'Q ' . number_format((float)($get('subtotal') ?? 0), 2, '.', ','))
-                                                    ->extraAttributes(['class' => 'font-bold text-right text-primary-600 pt-2'])
+                                                    ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
+                                                        <div class='bg-primary-50 border-2 border-primary-200 rounded-lg p-2 text-right text-2xl font-black text-primary-700 shadow-sm'>
+                                                            Q " . number_format((float)($get('subtotal') ?? 0), 2, '.', ',') . "
+                                                        </div>
+                                                    "))
                                                     ->columnSpan(['default' => 4, 'md' => 4]),
 
                                                 Forms\Components\Hidden::make('unit_price'),
