@@ -68,20 +68,25 @@ class WarehouseStockDetail extends Page implements HasTable
                     ->whereHas('product', fn (Builder $q) => $q->where('type', $this->productType))
                     ->with(['product', 'color'])
             )
-            ->defaultSort('quantity', 'desc')
-            ->columns([
-                Tables\Columns\TextColumn::make('product.name')
+            ->groups([
+                Tables\Grouping\Group::make('product.name')
                     ->label('Producto')
-                    ->description(fn ($record) => $record->color?->display_name)
-                    ->searchable()
+                    ->collapsible(),
+            ])
+            ->defaultGroup('product.name')
+            ->columns([
+                Tables\Columns\TextColumn::make('color.display_name')
+                    ->label('Color / Variante')
+                    ->placeholder('Base / Único')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Existencia')
+                    ->label('Cantidad')
                     ->numeric(decimalPlaces: 2)
                     ->sortable()
                     ->badge()
-                    ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->label('Total Producto')),
             ])
             ->paginated([10, 25, 50, 100])
             ->striped();
