@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Sale;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\InventoryMovement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -99,12 +101,12 @@ class SaleService
             ]);
 
             foreach ($sale->items as $item) {
-                \App\Models\OrderItem::create([
+                OrderItem::create([
                     'order_id'   => $order->id,
                     'product_id' => $item->product_id,
                     'color_id'   => $item->color_id,
                     'quantity'   => $item->quantity,
-                    'price'      => $item->unit_price,
+                    'unit_price' => $item->unit_price,
                     'subtotal'   => $item->subtotal,
                 ]);
             }
@@ -128,11 +130,16 @@ class SaleService
         }
 
         DB::transaction(function () use ($sale) {
-            // Revertir stock (Eliminar movimientos asociados)
+            // 1. Revertir stock (Eliminar movimientos asociados)
             InventoryMovement::where('source_type', 'sale')
                 ->where('source_id', $sale->id)
                 ->get()
                 ->each(fn ($m) => $m->delete());
+
+            // 2. CANCELACIÓN AUTOMÁTICA DEL PEDIDO (Logística)
+            // Si existe un pedido vinculado, lo cancelamos para que el piloto no lo entregue
+            Order::where('sale_id', $sale->id)
+                ->update(['status' => 'cancelled']);
 
             $sale->update(['status' => 'cancelled']);
         });
