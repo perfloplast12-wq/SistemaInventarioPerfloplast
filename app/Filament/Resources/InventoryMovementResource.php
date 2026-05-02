@@ -440,9 +440,10 @@ class InventoryMovementResource extends Resource
                     ->visible(fn() => !request()->has('type')),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                // Delete revierte el stock gracias al Observer
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn ($record) => $record->source_type === null), // Solo manuales
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn ($record) => $record->source_type === null), // Solo manuales
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -450,7 +451,7 @@ class InventoryMovementResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['product', 'fromWarehouse', 'fromTruck', 'toWarehouse', 'toTruck', 'creator']);
+            ->with(['product', 'color', 'fromWarehouse', 'fromTruck', 'toWarehouse', 'toTruck', 'creator']);
 
         // 🚀 FILTRADO AUTOMÁTICO POR URL
         if ($type = request()->query('type')) {
