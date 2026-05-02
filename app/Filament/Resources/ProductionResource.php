@@ -299,7 +299,7 @@ class ProductionResource extends Resource
                 Tables\Columns\TextColumn::make('outputs_summary')
                     ->label('Fabricado')
                     ->state(fn ($record) => $record->outputs->count() . " items")
-                    ->description(fn ($record) => $record->outputs->take(1)->map(fn($o) => "• " . $o->product->name . ($o->color ? " ({$o->color->display_name})" : ""))->implode("\n"))
+                    ->description(fn ($record) => $record->outputs->take(1)->map(fn($o) => "• " . (optional($o->product)->name ?? 'Producto Eliminado') . ($o->color ? " ({$o->color->display_name})" : ""))->implode("\n"))
                     ->badge()
                     ->color('success'),
 
