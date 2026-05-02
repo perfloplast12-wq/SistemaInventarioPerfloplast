@@ -84,6 +84,18 @@ class SaleResource extends Resource
                                     ->maxLength(20)
                                     ->default('C/F'),
 
+                                Forms\Components\TextInput::make('delivery_address')
+                                    ->label('Dirección de Entrega')
+                                    ->placeholder('Ciudad, zona, calle, etc.')
+                                    ->prefixIcon('heroicon-m-map-pin')
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('phone')
+                                    ->label('Teléfono de Contacto')
+                                    ->tel()
+                                    ->placeholder('44556677')
+                                    ->prefixIcon('heroicon-m-phone'),
+
                                 Forms\Components\ToggleButtons::make('origin_type')
                                     ->label('Tipo de Operación')
                                     ->options([

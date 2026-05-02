@@ -13,6 +13,7 @@ class Order extends Model
 
     protected string $auditModule = 'orders';
     protected $fillable = [
+        'sale_id',
         'order_number',
         'customer_name',
         'customer_nit',
@@ -26,6 +27,11 @@ class Order extends Model
         'dispatch_id',
         'created_by',
     ];
+
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
 
     protected $casts = [
         'order_date' => 'datetime',

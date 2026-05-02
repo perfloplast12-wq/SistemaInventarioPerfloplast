@@ -39,6 +39,8 @@ class Sale extends Model
         'origin_type',
         'customer_name',
         'customer_nit',
+        'delivery_address',
+        'phone',
         'note',
         'total',
         'discount_type',

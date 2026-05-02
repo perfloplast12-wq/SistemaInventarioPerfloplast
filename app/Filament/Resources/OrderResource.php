@@ -174,6 +174,14 @@ class OrderResource extends Resource
                     ->label('Cliente')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('origin')
+                    ->label('Origen')
+                    ->state(fn ($record) => $record->sale_id ? "Preventa #{$record->sale->sale_number}" : 'Pedido Directo')
+                    ->description(fn ($record) => $record->sale_id ? "Sincronizado" : "Manual")
+                    ->badge()
+                    ->color(fn ($record) => $record->sale_id ? 'success' : 'gray')
+                    ->icon(fn ($record) => $record->sale_id ? 'heroicon-m-arrow-path' : 'heroicon-m-user'),
                 Tables\Columns\TextColumn::make('order_date')
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i')

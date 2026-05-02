@@ -82,7 +82,34 @@ class SaleService
             // 5. Actualizar estado
             $sale->update(['status' => 'confirmed']);
 
-            // 6. Generar Factura
+            // 6. GENERACIÓN AUTOMÁTICA DE PEDIDO (Logística)
+            // Esto permite que el área de despachos vea la venta como un pedido pendiente
+            $order = \App\Models\Order::create([
+                'sale_id'          => $sale->id,
+                'customer_name'    => $sale->customer_name,
+                'customer_nit'     => $sale->customer_nit,
+                'delivery_address' => $sale->delivery_address,
+                'phone'            => $sale->phone,
+                'order_date'       => $sale->sale_date,
+                'payment_method'   => $sale->payments->first()?->method ?? 'cash',
+                'payment_status'   => $sale->balance <= 0 ? 'paid' : 'partial',
+                'notes'            => "Generado automáticamente desde Preventa #{$sale->sale_number}. " . $sale->note,
+                'status'           => $sale->origin_type === 'warehouse' ? 'pending' : 'shipped',
+                'created_by'       => $sale->created_by,
+            ]);
+
+            foreach ($sale->items as $item) {
+                \App\Models\OrderItem::create([
+                    'order_id'   => $order->id,
+                    'product_id' => $item->product_id,
+                    'color_id'   => $item->color_id,
+                    'quantity'   => $item->quantity,
+                    'price'      => $item->unit_price,
+                    'subtotal'   => $item->subtotal,
+                ]);
+            }
+
+            // 7. Generar Factura
             app(InvoiceService::class)->generateFromSale($sale);
         });
     }
