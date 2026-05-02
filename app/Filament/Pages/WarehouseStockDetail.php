@@ -72,12 +72,8 @@ class WarehouseStockDetail extends Page implements HasTable
             ->columns([
                 Tables\Columns\TextColumn::make('product.name')
                     ->label('Producto')
+                    ->description(fn ($record) => $record->color?->display_name)
                     ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('color.display_name')
-                    ->label('Color')
-                    ->placeholder('N/A')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('quantity')

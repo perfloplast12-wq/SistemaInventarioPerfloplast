@@ -367,8 +367,8 @@ class InventoryMovementResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('product.name')
-                    ->label('Producto / Color')
-                    ->description(fn (InventoryMovement $record) => $record->color ? $record->color->display_name : 'Sin variante')
+                    ->label('Producto')
+                    ->description(fn (InventoryMovement $record) => $record->color?->display_name)
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
