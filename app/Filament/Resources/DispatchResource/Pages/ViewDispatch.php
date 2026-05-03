@@ -165,7 +165,10 @@ class ViewDispatch extends ViewRecord
                                     ->state(fn ($record) => (float)$record->total_value > 0 ? $record->total_value : $record->items()->sum('subtotal')),
                                 Components\TextEntry::make('total_products')
                                     ->label('Unidades Totales')
-                                    ->state(fn ($record) => $record->total_products > 0 ? $record->total_products : $record->items()->sum('quantity')),
+                                    ->state(function ($record) {
+                                        $qty = $record->total_products > 0 ? $record->total_products : $record->items()->sum('quantity');
+                                        return number_format($qty, (round($qty) == $qty ? 0 : 2), '.', ',');
+                                    }),
                                 Components\TextEntry::make('product_types')
                                     ->label('Tipos de Producto')
                                     ->state(fn ($record) => $record->product_types > 0 ? $record->product_types : $record->items()->count()),
@@ -179,7 +182,9 @@ class ViewDispatch extends ViewRecord
                             ->columns(4)
                             ->schema([
                                 Components\TextEntry::make('product.name')->label('Producto'),
-                                Components\TextEntry::make('quantity')->label('Cantidad'),
+                                Components\TextEntry::make('quantity')
+                                    ->label('Cantidad')
+                                    ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ',')),
                                 Components\TextEntry::make('unit_price')->label('Valor Unit.')->money('GTQ'),
                                 Components\TextEntry::make('subtotal')->label('Subtotal')->money('GTQ')->weight('bold'),
                             ]),

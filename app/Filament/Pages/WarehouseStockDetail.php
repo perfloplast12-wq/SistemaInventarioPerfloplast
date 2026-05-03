@@ -78,32 +78,30 @@ class WarehouseStockDetail extends Page implements HasTable
             ->contentGrid([
                 'sm' => 2,
                 'md' => 3,
-                'lg' => 4,
-                'xl' => 5,
+                'lg' => 3,
+                'xl' => 4,
             ])
             ->columns([
-                Tables\Columns\Layout\Stack::make([
-                    Tables\Columns\TextColumn::make('color.name')
-                        ->label('Variante')
-                        ->placeholder('Base / Único')
-                        ->weight('black')
-                        ->size('md') // Reduced size
-                        ->color('primary')
-                        ->icon('heroicon-m-swatch'),
+                Tables\Columns\Layout\Grid::make(12) // 12 columns for fine control
+                    ->schema([
+                        Tables\Columns\TextColumn::make('color.name')
+                            ->label('Variante')
+                            ->placeholder('Base / Único')
+                            ->weight('bold')
+                            ->size('md')
+                            ->color('primary')
+                            ->icon('heroicon-m-swatch')
+                            ->columnSpan(8), // Name takes 8/12
 
-                    Tables\Columns\Layout\Grid::make(1) // Single column inside for more vertical compactness
-                        ->schema([
-                            Tables\Columns\TextColumn::make('quantity')
-                                ->label('Existencia')
-                                ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
-                                ->badge()
-                                ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
-                                ->icon('heroicon-m-cube')
-                                ->size('lg'), // Reduced from xl to lg
-                        ]),
-                ])->space(1), // Reduced space between elements
+                        Tables\Columns\TextColumn::make('quantity')
+                            ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
+                            ->badge()
+                            ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                            ->alignment('right')
+                            ->columnSpan(4), // Quantity takes 4/12
+                    ]),
             ])
-            ->paginated([20, 40, 80])
+            ->paginated([24, 48, 96])
             ->striped();
     }
 
