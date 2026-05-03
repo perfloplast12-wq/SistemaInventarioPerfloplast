@@ -19,30 +19,30 @@
             margin-bottom: 20px;
         }
         .logo {
-            width: 180px;
+            width: 140px;
             height: auto;
         }
         .company-info {
             text-align: right;
-            font-size: 9pt;
+            font-size: 8pt;
             color: #718096;
         }
         .report-title {
             text-align: center;
-            font-size: 16pt;
+            font-size: 14pt;
             font-weight: bold;
             color: #1A202C;
             text-transform: uppercase;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #4A5568;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #CBD5E0;
+            padding-bottom: 8px;
         }
         .user-info {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background-color: #F7FAFC;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #2D3748;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid #E2E8F0;
         }
         .user-info table {
             width: 100%;
@@ -127,7 +127,7 @@
     <table class="header-table">
         <tr>
             <td>
-                <img src="{{ public_path('images/logo-perfloplast.png') }}" class="logo" alt="Logo Perflo Plast">
+                <img src="{{ public_path('images/logo-perfloplast-clean.png') }}" class="logo" alt="Logo Perflo Plast">
             </td>
             <td class="company-info">
                 <strong>Perflo Plast, S.A.</strong><br>

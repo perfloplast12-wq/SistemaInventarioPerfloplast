@@ -70,6 +70,11 @@ class InjectionReportResource extends Resource
 
                         Forms\Components\TextInput::make('week_range')
                             ->label('Semana')
+                            ->default(function() {
+                                $start = now()->startOfWeek(\Carbon\CarbonInterface::MONDAY)->format('d/m/Y');
+                                $end = now()->endOfWeek(\Carbon\CarbonInterface::SATURDAY)->format('d/m/Y');
+                                return "Del $start al $end";
+                            })
                             ->placeholder('Ej: lunes - sábado')
                             ->required()
                             ->maxLength(255),
@@ -85,7 +90,24 @@ class InjectionReportResource extends Resource
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->label('Fecha')
+                                    ->default(now())
                                     ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                        if ($state) {
+                                            $date = \Carbon\Carbon::parse($state);
+                                            $days = [
+                                                0 => 'Domingo',
+                                                1 => 'Lunes',
+                                                2 => 'Martes',
+                                                3 => 'Miércoles',
+                                                4 => 'Jueves',
+                                                5 => 'Viernes',
+                                                6 => 'Sábado',
+                                            ];
+                                            $set('day', $days[$date->dayOfWeek]);
+                                        }
+                                    })
                                     ->columnSpan(2),
 
                                 Forms\Components\Select::make('day')
