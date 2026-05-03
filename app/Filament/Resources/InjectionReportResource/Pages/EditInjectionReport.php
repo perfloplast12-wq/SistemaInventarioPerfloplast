@@ -13,6 +13,12 @@ class EditInjectionReport extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('pdf')
+                ->label('Exportar PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('danger')
+                ->url(fn ($record) => url('/admin/injection-reports/'.$record->id.'/pdf'))
+                ->openUrlInNewTab(),
             Actions\DeleteAction::make(),
         ];
     }

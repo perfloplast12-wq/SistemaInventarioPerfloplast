@@ -13,7 +13,7 @@ class InjectionReportPdfController extends Controller
         $report->load('items');
 
         $pdf = Pdf::loadView('pdf.injection-report', ['report' => $report])
-            ->setPaper('letter', 'landscape'); // Better for reading weekly grids
+            ->setPaper('letter', 'portrait'); 
 
         return $pdf->stream('reporte-actividad-' . $report->id . '.pdf');
     }
