@@ -230,6 +230,58 @@ class DispatchResource extends Resource
             ]);
     }
 
+    public static function infolist(\Filament\Infolists\Infolist $infolist): \Filament\Infolists\Infolist
+    {
+        return $infolist
+            ->schema([
+                \Filament\Infolists\Components\Section::make('Info del Despacho')
+                    ->columns(3)
+                    ->schema([
+                        \Filament\Infolists\Components\TextEntry::make('dispatch_number')->label('Nro. Despacho')->badge()->color('info'),
+                        \Filament\Infolists\Components\TextEntry::make('dispatch_date')->label('Fecha')->dateTime('d/m/Y H:i'),
+                        \Filament\Infolists\Components\TextEntry::make('status')->label('Estado Actual')->badge()
+                            ->formatStateUsing(fn ($state) => match ($state) {
+                                'pending' => 'Pendiente',
+                                'in_progress' => 'En Proceso',
+                                'completed' => 'Completado',
+                                'delivered' => 'Entregado',
+                                default => $state,
+                            })
+                            ->color(fn ($state) => match ($state) {
+                                'pending' => 'gray',
+                                'in_progress' => 'info',
+                                'completed' => 'success',
+                                'delivered' => 'primary',
+                                default => 'gray',
+                            }),
+                        \Filament\Infolists\Components\TextEntry::make('truck.name')->label('Camión'),
+                        \Filament\Infolists\Components\TextEntry::make('driver.name')->label('Piloto'),
+                        \Filament\Infolists\Components\TextEntry::make('route')->label('Ruta / Destino'),
+                    ]),
+
+                \Filament\Infolists\Components\Section::make('Productos en Camión')
+                    ->schema([
+                        \Filament\Infolists\Components\RepeatableEntry::make('items')
+                            ->label('')
+                            ->schema([
+                                \Filament\Infolists\Components\Grid::make(4)
+                                    ->schema([
+                                        \Filament\Infolists\Components\TextEntry::make('product.name')->label('Producto')->weight('bold'),
+                                        \Filament\Infolists\Components\TextEntry::make('color.name')->label('Color')->placeholder('N/A'),
+                                        \Filament\Infolists\Components\TextEntry::make('quantity')
+                                            ->label('Cantidad')
+                                            ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
+                                            ->badge()
+                                            ->color('success'),
+                                        \Filament\Infolists\Components\TextEntry::make('subtotal')
+                                            ->label('Subtotal')
+                                            ->money('GTQ'),
+                                    ]),
+                            ])->columns(1),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table

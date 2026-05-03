@@ -76,20 +76,22 @@ class WarehouseStockDetail extends Page implements HasTable
             ])
             ->defaultGroup('product.name')
             ->contentGrid([
-                'md' => 2,
-                'xl' => 3,
+                'sm' => 2,
+                'md' => 3,
+                'lg' => 4,
+                'xl' => 5,
             ])
             ->columns([
                 Tables\Columns\Layout\Stack::make([
-                    Tables\Columns\TextColumn::make('color.display_name')
+                    Tables\Columns\TextColumn::make('color.name')
                         ->label('Variante')
                         ->placeholder('Base / Único')
                         ->weight('black')
-                        ->size('lg')
+                        ->size('md') // Reduced size
                         ->color('primary')
                         ->icon('heroicon-m-swatch'),
 
-                    Tables\Columns\Layout\Grid::make(2)
+                    Tables\Columns\Layout\Grid::make(1) // Single column inside for more vertical compactness
                         ->schema([
                             Tables\Columns\TextColumn::make('quantity')
                                 ->label('Existencia')
@@ -97,17 +99,11 @@ class WarehouseStockDetail extends Page implements HasTable
                                 ->badge()
                                 ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
                                 ->icon('heroicon-m-cube')
-                                ->size('xl'),
-                            
-                            Tables\Columns\TextColumn::make('product.unitOfMeasure.abbreviation')
-                                ->color('gray')
-                                ->size('xs')
-                                ->weight('medium')
-                                ->extraAttributes(['class' => 'mt-2']),
+                                ->size('lg'), // Reduced from xl to lg
                         ]),
-                ])->space(3),
+                ])->space(1), // Reduced space between elements
             ])
-            ->paginated([12, 24, 48])
+            ->paginated([20, 40, 80])
             ->striped();
     }
 
