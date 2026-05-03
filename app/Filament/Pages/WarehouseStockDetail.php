@@ -75,22 +75,39 @@ class WarehouseStockDetail extends Page implements HasTable
                     ->collapsible(),
             ])
             ->defaultGroup('product.name')
-            ->columns([
-                Tables\Columns\TextColumn::make('color.display_name')
-                    ->label('Color / Variante')
-                    ->placeholder('Base / Único')
-                    ->sortable()
-                    ->weight('medium'),
-
-                Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cantidad')
-                    ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
-                    ->sortable()
-                    ->badge()
-                    ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
-                    ->alignment('right'),
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
             ])
-            ->paginated([25, 50, 100])
+            ->columns([
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('color.display_name')
+                        ->label('Variante')
+                        ->placeholder('Base / Único')
+                        ->weight('black')
+                        ->size('lg')
+                        ->color('primary')
+                        ->icon('heroicon-m-swatch'),
+
+                    Tables\Columns\Layout\Grid::make(2)
+                        ->schema([
+                            Tables\Columns\TextColumn::make('quantity')
+                                ->label('Existencia')
+                                ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
+                                ->badge()
+                                ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                                ->icon('heroicon-m-cube')
+                                ->size('xl'),
+                            
+                            Tables\Columns\TextColumn::make('product.unitOfMeasure.abbreviation')
+                                ->color('gray')
+                                ->size('xs')
+                                ->weight('medium')
+                                ->extraAttributes(['class' => 'mt-2']),
+                        ]),
+                ])->space(3),
+            ])
+            ->paginated([12, 24, 48])
             ->striped();
     }
 
