@@ -76,10 +76,10 @@ class WarehouseStockDetail extends Page implements HasTable
             ])
             ->defaultGroup('product.name')
             ->contentGrid([
-                'sm' => 2,
-                'md' => 3,
-                'lg' => 3,
-                'xl' => 4,
+                'sm' => 3,
+                'md' => 4,
+                'lg' => 5,
+                'xl' => 6,
             ])
             ->columns([
                 Tables\Columns\Layout\Split::make([
@@ -97,7 +97,7 @@ class WarehouseStockDetail extends Page implements HasTable
                         ->badge()
                         ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
                         ->grow(false),
-                ])->extraAttributes(['class' => 'justify-start gap-4']), // Forces them to be together
+                ])->extraAttributes(['class' => 'justify-start gap-2']), // Forces them even closer
             ])
             ->paginated([24, 48, 96])
             ->striped();
