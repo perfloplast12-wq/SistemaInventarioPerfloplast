@@ -158,7 +158,7 @@ class ViewDispatch extends ViewRecord
                             ->schema([
                                 Components\TextEntry::make('total_value')
                                     ->label('Valor en Q')
-                                    ->money('GTQ')
+                                    ->formatStateUsing(fn ($state) => 'Q ' . number_format($state, 2, '.', ','))
                                     ->size('lg')
                                     ->weight('bold')
                                     ->color('primary')
@@ -185,8 +185,13 @@ class ViewDispatch extends ViewRecord
                                 Components\TextEntry::make('quantity')
                                     ->label('Cantidad')
                                     ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ',')),
-                                Components\TextEntry::make('unit_price')->label('Valor Unit.')->money('GTQ'),
-                                Components\TextEntry::make('subtotal')->label('Subtotal')->money('GTQ')->weight('bold'),
+                                Components\TextEntry::make('unit_price')
+                                    ->label('Valor Unit.')
+                                    ->formatStateUsing(fn ($state) => 'Q ' . number_format($state, 2, '.', ',')),
+                                Components\TextEntry::make('subtotal')
+                                    ->label('Subtotal')
+                                    ->formatStateUsing(fn ($state) => 'Q ' . number_format($state, 2, '.', ','))
+                                    ->weight('bold'),
                             ]),
                     ]),
 
@@ -198,7 +203,9 @@ class ViewDispatch extends ViewRecord
                             ->schema([
                                 Components\TextEntry::make('order_number')->label('Pedido')->badge(),
                                 Components\TextEntry::make('customer_name')->label('Cliente'),
-                                Components\TextEntry::make('total')->label('Monto')->money('GTQ'),
+                                Components\TextEntry::make('total')
+                                    ->label('Monto')
+                                    ->formatStateUsing(fn ($state) => 'Q ' . number_format($state, 2, '.', ',')),
                             ])
                             ->placeholder('No hay pedidos asignados a este despacho.'),
                     ]),

@@ -82,24 +82,22 @@ class WarehouseStockDetail extends Page implements HasTable
                 'xl' => 4,
             ])
             ->columns([
-                Tables\Columns\Layout\Grid::make(12) // 12 columns for fine control
-                    ->schema([
-                        Tables\Columns\TextColumn::make('color.name')
-                            ->label('Variante')
-                            ->placeholder('Base / Único')
-                            ->weight('bold')
-                            ->size('md')
-                            ->color('primary')
-                            ->icon('heroicon-m-swatch')
-                            ->columnSpan(8), // Name takes 8/12
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('color.name')
+                        ->label('Variante')
+                        ->placeholder('Base / Único')
+                        ->weight('bold')
+                        ->size('md')
+                        ->color('primary')
+                        ->icon('heroicon-m-swatch')
+                        ->grow(false),
 
-                        Tables\Columns\TextColumn::make('quantity')
-                            ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
-                            ->badge()
-                            ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
-                            ->alignment('right')
-                            ->columnSpan(4), // Quantity takes 4/12
-                    ]),
+                    Tables\Columns\TextColumn::make('quantity')
+                        ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
+                        ->badge()
+                        ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
+                        ->grow(false),
+                ])->extraAttributes(['class' => 'justify-start gap-4']), // Forces them to be together
             ])
             ->paginated([24, 48, 96])
             ->striped();
