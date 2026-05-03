@@ -375,7 +375,7 @@ class InventoryMovementResource extends Resource
 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad')
-                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), 2, '.', ','))
+                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), (round($state) == $state ? 0 : 2), '.', ','))
                     ->color(fn(InventoryMovement $record) => $record->quantity < 0 ? 'danger' : 'success')
                     ->weight('black')
                     ->alignment('right'),

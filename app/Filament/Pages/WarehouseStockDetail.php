@@ -71,7 +71,7 @@ class WarehouseStockDetail extends Page implements HasTable
             ->groups([
                 Tables\Grouping\Group::make('product.name')
                     ->label('Producto')
-                    ->getTitleFromRecordUsing(fn ($record) => "{$record->product->name} — Existencia Total: " . number_format($record->product->stocks->where('warehouse_id', $this->warehouseId)->sum('quantity'), 2))
+                    ->getTitleFromRecordUsing(fn ($record) => "{$record->product->name} — Existencia Total: " . number_format($record->product->stocks->where('warehouse_id', $this->warehouseId)->sum('quantity'), 0, '.', ','))
                     ->collapsible(),
             ])
             ->defaultGroup('product.name')
@@ -84,7 +84,7 @@ class WarehouseStockDetail extends Page implements HasTable
 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad')
-                    ->numeric(decimalPlaces: 2)
+                    ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ','))
                     ->sortable()
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'danger')

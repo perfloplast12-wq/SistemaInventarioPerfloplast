@@ -160,7 +160,10 @@ class DispatchResource extends Resource
                             ->extraAttributes(['class' => 'text-xl font-bold text-primary-600']),
                         Forms\Components\Placeholder::make('total_products_display')
                             ->label('Unidades Totales')
-                            ->content(fn (Forms\Get $get) => number_format((float)collect($get('items'))->sum('quantity'), 2, '.', ',')),
+                            ->content(function (Forms\Get $get) {
+                                $total = (float)collect($get('items'))->sum('quantity');
+                                return number_format($total, (round($total) == $total ? 0 : 2), '.', ',');
+                            }),
                         Forms\Components\Placeholder::make('product_types_display')
                             ->label('Tipos de Producto')
                             ->content(fn (Forms\Get $get) => collect($get('items'))->unique('product_id')->count()),
@@ -217,7 +220,7 @@ class DispatchResource extends Resource
                                 ($state['product_id'] ?? null) 
                                 ? Product::find($state['product_id'])?->name . 
                                   (($state['color_id'] ?? null) ? ' (' . \App\Models\Color::find($state['color_id'])?->name . ')' : '') .
-                                  ' (' . ($state['quantity'] ?? 0) . ')' 
+                                  ' (' . number_format((float)($state['quantity'] ?? 0), (round($state['quantity'] ?? 0) == ($state['quantity'] ?? 0) ? 0 : 2), '.', ',') . ')' 
                                 : null),
                     ]),
 
