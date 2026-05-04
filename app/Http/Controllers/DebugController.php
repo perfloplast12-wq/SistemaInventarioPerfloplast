@@ -18,11 +18,8 @@ class DebugController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
+                'message' => 'Ocurrió un error al procesar el formulario.'
+            ], 500);
         }
     }
 }
