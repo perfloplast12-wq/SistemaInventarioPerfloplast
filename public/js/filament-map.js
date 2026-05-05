@@ -116,16 +116,23 @@
             },
 
             drawPosition(fitBounds = false) {
-                if (!this.map || this.allPoints.length === 0) return;
+                if (!this.map) return;
 
-                const currentPos = this.allPoints[this.allPoints.length - 1];
-                const lat = currentPos[0];
-                const lng = currentPos[1];
+                let lat = 15.3725; // Default lat (Cobán/Verapaces general area)
+                let lng = -90.3800; // Default lng
+                let hasRealLocation = false;
+
+                if (this.allPoints.length > 0) {
+                    const currentPos = this.allPoints[this.allPoints.length - 1];
+                    lat = currentPos[0];
+                    lng = currentPos[1];
+                    hasRealLocation = true;
+                }
 
                 const isOffline = !this.isOnline || this.dispatchStatus === 'completed' || this.dispatchStatus === 'delivered';
                 const dotColor = isOffline ? '#ef4444' : '#22c55e';
-                const pulseHtml = !isOffline ? `<div class="absolute w-[40px] h-[40px] bg-emerald-500/30 rounded-full animate-[truck-pulse_2s_ease-out_infinite]"></div>` : '';
-                const stateText = isOffline ? 'Sin señal' : 'En línea';
+                const pulseHtml = (!isOffline && hasRealLocation) ? `<div class="absolute w-[40px] h-[40px] bg-emerald-500/30 rounded-full animate-[truck-pulse_2s_ease-out_infinite]"></div>` : '';
+                const stateText = !hasRealLocation ? 'Esperando Señal...' : (isOffline ? 'Sin señal' : 'En línea');
 
                 const iconHtml = `
                     <div class="flex flex-col items-center" style="transform: translateY(-50%);">

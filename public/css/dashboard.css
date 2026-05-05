@@ -718,7 +718,7 @@ html.dark .fi-logo {
     filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
 }
 
-.fi-dropdown-panel, .tippy-box, [data-tippy-root] {
+.fi-dropdown-panel, .tippy-box, [data-tippy-root], .fi-modal, .fi-modal-window, .fi-modal-container {
     z-index: 99999 !important;
 }
 
