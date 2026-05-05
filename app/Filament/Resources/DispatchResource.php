@@ -395,20 +395,30 @@ class DispatchResource extends Resource
                     ->label('Ver Ruta')
                     ->icon('heroicon-o-map')
                     ->color('success')
-                    ->visible(fn ($record) => $record->locations()->exists() && !auth()->user()?->hasRole('conductor'))
-                    ->modalHeading(fn ($record) => 'Historial de Ruta: ' . $record->dispatch_number)
+                    ->visible(fn ($record) => !auth()->user()?->hasRole('conductor'))
+                    ->modalHeading(fn ($record) => 'Ruta Diaria del Camión: ' . ($record->truck?->name ?? 'Sin asignar'))
                     ->modalSubmitAction(false) // Solo cerrar
                     ->modalCancelActionLabel('Cerrar')
                     ->modalWidth('6xl')
-                    ->modalContent(fn (Dispatch $record) => view('components.leaflet-route-map', [
-                        'locations' => $record->locations()->orderBy('created_at', 'asc')->get(),
-                        'dispatchId' => $record->id,
-                        'dispatchNumber' => $record->dispatch_number,
-                        'driverName' => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
-                        'truckName' => $record->truck?->name ?? 'Sin asignar',
-                        'routeName' => $record->route ?? 'Sin ruta',
-                        'dispatchStatus' => $record->status,
-                    ])),
+                    ->modalContent(function (Dispatch $record) {
+                        $sharedDispatchIds = Dispatch::where('truck_id', $record->truck_id)
+                            ->whereDate('created_at', $record->created_at->toDateString())
+                            ->pluck('id');
+                            
+                        $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+                            ->orderBy('created_at', 'asc')
+                            ->get();
+
+                        return view('components.leaflet-route-map', [
+                            'locations' => $locations,
+                            'dispatchId' => $record->id,
+                            'dispatchNumber' => $record->dispatch_number,
+                            'driverName' => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
+                            'truckName' => $record->truck?->name ?? 'Sin asignar',
+                            'routeName' => $record->route ?? 'Sin ruta',
+                            'dispatchStatus' => $record->status,
+                        ]);
+                    }),
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->status === 'pending'),
                 Tables\Actions\Action::make('report_return')

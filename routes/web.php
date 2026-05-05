@@ -32,9 +32,15 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
     ->middleware(['web', 'auth'])
     ->name('web.tracking.store');
 
-// Polling endpoint: get the latest dispatch location for real-time map updates
+// Polling endpoint: get the latest dispatch location for real-time map updates (Shared by Truck)
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
-    $lastLocation = $dispatch->locations()->latest('id')->first();
+    $sharedDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
+        ->whereDate('created_at', $dispatch->created_at->toDateString())
+        ->pluck('id');
+
+    $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+        ->latest('id')
+        ->first();
 
     if (!$lastLocation) {
         return response()->json(null);
@@ -43,7 +49,10 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
     $isOfflineSignal = ($lastLocation->speed == -1);
 
     if ($isOfflineSignal) {
-        $realLocation = $dispatch->locations()->where('speed', '!=', -1)->latest('id')->first();
+        $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+            ->where('speed', '!=', -1)
+            ->latest('id')
+            ->first();
         $displayLocation = $realLocation ?? $lastLocation;
     } else {
         $displayLocation = $lastLocation;
