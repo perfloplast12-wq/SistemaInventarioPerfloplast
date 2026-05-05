@@ -293,9 +293,14 @@ class SaleResource extends Resource
                                     ->reorderable(false)
                                     ->live()
                                     ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
-                                        // Ensure sale_items has discount_amount and total (required by DB but not in form)
+                                        // Ensure all required fields are explicitly present to prevent SQL constraint errors
+                                        $qty = (float)($data['quantity'] ?? 0);
+                                        $price = (float)($data['unit_price'] ?? 0);
+                                        
+                                        $data['unit_price'] = $price;
+                                        $data['subtotal'] = (float)($data['subtotal'] ?? ($qty * $price));
                                         $data['discount_amount'] = 0;
-                                        $data['total'] = (float)($data['subtotal'] ?? ((float)($data['quantity'] ?? 0) * (float)($data['unit_price'] ?? 0)));
+                                        $data['total'] = $data['subtotal'];
                                         
                                         // Convert string 'null' from select back to actual null for database
                                         if (isset($data['color_id']) && $data['color_id'] === 'null') {
