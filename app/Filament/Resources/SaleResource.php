@@ -476,7 +476,6 @@ class SaleResource extends Resource
                     ->searchable()
                     ->preload(),
             ])
-            ->deferLoading()
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
@@ -560,7 +559,6 @@ class SaleResource extends Resource
                         }),
                 ]),
             ])
-            ->simplePagination()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

@@ -104,8 +104,8 @@ class Dashboard extends Page
 
     public function getStatsData(): array
     {
-        $start = \Illuminate\Support\Carbon::parse($this->filters['startDate'] ?? now()->startOfMonth())->startOfDay();
-        $end   = \Illuminate\Support\Carbon::parse($this->filters['endDate']   ?? now())->endOfDay();
+        $start = Carbon::parse($this->filters['startDate'] ?? now()->startOfMonth())->startOfDay();
+        $end   = Carbon::parse($this->filters['endDate']   ?? now())->endOfDay();
         
         $diffInDays = $start->diffInDays($end) + 1;
         $prevStart = $start->copy()->subDays($diffInDays);
@@ -114,7 +114,6 @@ class Dashboard extends Page
         $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
         $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
         
-        // Fix: Use production_items for quantity sum
         $prod = (float) ProductionItem::where('type', 'output')
             ->whereHas('production', function($q) use ($start, $end) {
                 $q->where('status', 'confirmed')
@@ -127,23 +126,12 @@ class Dashboard extends Page
                   ->whereBetween('production_date', [$prevStart, $prevEnd]);
             })->sum('quantity');
 
-        // OPTIMIZACIÓN: Suma directa en SQL
-        $inventoryVal = (float) \Illuminate\Support\Facades\DB::table('stocks')
-            ->join('products', 'stocks.product_id', '=', 'products.id')
-            ->select(\Illuminate\Support\Facades\DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
-            ->value('total_value') ?? 0;
-
-        $pendingSalesVal = (float) \Illuminate\Support\Facades\DB::table('orders')
-            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.payment_status', 'pending')
-            ->sum('order_items.subtotal');
-
-        $lowStockCount = \Illuminate\Support\Facades\DB::table('stocks')
-            ->whereNotNull('warehouse_id')
-            ->groupBy('product_id')
-            ->havingRaw('SUM(quantity) <= 10')
-            ->get()
-            ->count();
+        $inventoryVal = 0;
+        $stocks = Stock::all();
+        foreach($stocks as $st) {
+            $val = (float)($st->product->cost_price ?? $st->product->purchase_cost ?? 0);
+            $inventoryVal += ($st->quantity * $val);
+        }
 
         $pendOrders = Order::where('status', 'pending')->count();
         $activeDisp = Dispatch::where('status', 'in_progress')->count();
@@ -160,7 +148,7 @@ class Dashboard extends Page
             'orders'      => $pendOrders,
             'efficiency'  => '100%',
             'dispatches'  => $activeDisp,
-            'lowStock'    => $lowStockCount,
+            'lowStock'    => 0,
         ];
     }
 

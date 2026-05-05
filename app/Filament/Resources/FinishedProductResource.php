@@ -152,7 +152,6 @@ class FinishedProductResource extends Resource
             ->filters([
                 //
             ])
-            ->deferLoading()
             ->actions([
                 Tables\Actions\Action::make('register_entry')
                     ->label('Entrada')
@@ -202,7 +201,6 @@ class FinishedProductResource extends Resource
                 Tables\Actions\EditAction::make()->label('Editar'),
                 Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
-            ->simplePagination()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
