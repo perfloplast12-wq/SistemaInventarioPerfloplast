@@ -203,6 +203,7 @@ class DispatchResource extends Resource
                                     ->numeric()
                                     ->step(0.01)
                                     ->required()
+                                    ->readOnly()
                                     ->prefix('Q')
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(fn ($state, $get, Forms\Set $set) => 
