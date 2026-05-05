@@ -476,7 +476,6 @@ class SaleResource extends Resource
                     ->searchable()
                     ->preload(),
             ])
-            ->deferLoading()
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
