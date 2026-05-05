@@ -154,15 +154,15 @@ class DebugController extends Controller
             return response('No log file found at ' . $logPath, 404);
         }
         
-        // Read safely to avoid memory limit issues
-        $lines = [];
-        $file = escapeshellarg($logPath);
-        $tail = `tail -n 200 {$file}`;
-        
-        if (empty($tail)) {
-            return response('Log is empty or cannot be read.');
+        try {
+            $file = fopen($logPath, 'r');
+            fseek($file, -10000, SEEK_END);
+            $content = fread($file, 10000);
+            fclose($file);
+            
+            return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars($content) . '</pre>');
+        } catch (\Throwable $e) {
+            return response('Error reading log: ' . $e->getMessage(), 500);
         }
-        
-        return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars($tail) . '</pre>');
     }
 }
