@@ -11,6 +11,7 @@ class StockByLocationChart extends Widget
 {
     protected static string $view = 'filament.widgets.stock-by-location-chart';
     protected static ?int $sort = 4;
+    protected static bool $isLazy = true;
 
     public ?string $selectedLocation = null;
 

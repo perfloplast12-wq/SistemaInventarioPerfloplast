@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StockByLocationTable extends TableWidget
 {
+    protected static bool $isLazy = true;
+    protected static ?int $sort = 9;
     protected static ?string $heading = 'Stock por ubicación';
     protected int|string|array $columnSpan = 'full';
 

@@ -14,6 +14,7 @@ class ProfitabilityTrendChart extends Widget
 
     protected static string $view = 'filament.widgets.profitability-trend-chart';
     protected static ?int $sort = 3;
+    protected static bool $isLazy = true;
 
     public ?int $local_warehouse_id = null;
 

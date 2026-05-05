@@ -427,6 +427,7 @@ class InventoryMovementResource extends Resource
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->deferLoading()
             ->filters([
                 // Filtro visible solo si NO estamos en modo contextual
                 Tables\Filters\SelectFilter::make('type')
@@ -451,6 +452,7 @@ class InventoryMovementResource extends Resource
                         $record->created_at->gt(now()->subHours(24))
                     ),
             ])
+            ->simplePagination()
             ->defaultSort('created_at', 'desc');
     }
 

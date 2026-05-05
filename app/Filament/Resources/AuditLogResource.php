@@ -207,29 +207,31 @@ class AuditLogResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('module')
                     ->label('Módulo')
-                    ->options(fn () => AuditLog::query()
-                        ->whereNotNull('module')
-                        ->select('module')
-                        ->distinct()
-                        ->pluck('module', 'module')
-                        ->map(fn ($m) => static::humanModule($m))
-                        ->toArray()
-                    ),
+                    ->options([
+                        'auth' => 'Acceso / Autenticación',
+                        'users' => 'Usuarios',
+                        'products' => 'Productos',
+                        'inventory' => 'Inventario',
+                        'sales' => 'Ventas',
+                        'orders' => 'Pedidos',
+                        'production' => 'Producción',
+                        'dispatch' => 'Despachos',
+                    ]),
 
                 Tables\Filters\SelectFilter::make('event')
                     ->label('Acción')
-                    ->options(fn () => AuditLog::query()
-                        ->whereNotNull('event')
-                        ->select('event')
-                        ->distinct()
-                        ->pluck('event', 'event')
-                        ->map(fn ($e) => static::humanEvent($e))
-                        ->toArray()
-                    ),
+                    ->options([
+                        'created' => 'Creación',
+                        'updated' => 'Actualización',
+                        'deleted' => 'Eliminación',
+                        'login' => 'Inicio de sesión',
+                    ]),
             ])
+            ->deferLoading()
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Ver Detalle')->icon('heroicon-o-eye')->color('gray'),
             ])
+            ->simplePagination()
             ->bulkActions([]);
     }
 

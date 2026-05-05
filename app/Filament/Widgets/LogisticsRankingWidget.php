@@ -13,6 +13,7 @@ class LogisticsRankingWidget extends Widget
 {
     use InteractsWithPageFilters;
 
+    protected static bool $isLazy = true;
     protected static string $view = 'filament.widgets.logistics-ranking-widget';
     protected int|string|array $columnSpan = 'half';
 

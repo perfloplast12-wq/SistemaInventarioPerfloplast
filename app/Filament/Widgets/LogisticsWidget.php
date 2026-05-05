@@ -14,7 +14,8 @@ class LogisticsWidget extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.logistics-widget';
-    protected static ?int $sort = 8;
+    protected static ?int $sort = 10;
+    protected static bool $isLazy = true;
 
     public function getChartData(): array
     {

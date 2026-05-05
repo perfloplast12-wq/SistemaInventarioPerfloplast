@@ -9,6 +9,7 @@ class InventoryDistributionChart extends Widget
 {
     protected static string $view = 'filament.widgets.inventory-distribution-chart';
     protected static ?int $sort = 5;
+    protected static bool $isLazy = true;
 
     public function getChartData(): array
     {

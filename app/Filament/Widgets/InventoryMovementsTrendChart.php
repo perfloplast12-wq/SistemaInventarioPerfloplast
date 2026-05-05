@@ -13,7 +13,8 @@ class InventoryMovementsTrendChart extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.inventory-movements-trend-chart';
-    protected static ?int $sort = 6;
+    protected static ?int $sort = 7;
+    protected static bool $isLazy = true;
 
     public function getChartData(): array
     {

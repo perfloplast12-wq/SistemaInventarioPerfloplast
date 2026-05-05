@@ -15,6 +15,7 @@ class ProductionByShiftChart extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.production-by-shift-chart';
+    protected static bool $isLazy = true;
     protected static ?int $sort = 9;
     protected static ?string $pollingInterval = '30s';
 

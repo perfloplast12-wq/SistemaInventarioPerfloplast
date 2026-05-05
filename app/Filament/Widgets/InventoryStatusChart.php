@@ -11,7 +11,8 @@ class InventoryStatusChart extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.inventory-status-chart';
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 11;
+    protected static bool $isLazy = true;
 
     public ?int $local_warehouse_id = null;
 

@@ -13,7 +13,8 @@ class TopSellingProductsChart extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.top-selling-products-chart';
-    protected static ?int $sort = 7;
+    protected static ?int $sort = 6;
+    protected static bool $isLazy = true;
 
     public ?int $local_warehouse_id = null;
 

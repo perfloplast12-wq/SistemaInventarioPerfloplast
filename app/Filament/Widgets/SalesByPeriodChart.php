@@ -14,7 +14,8 @@ class SalesByPeriodChart extends Widget
     use InteractsWithPageFilters;
 
     protected static string $view = 'filament.widgets.sales-by-period-chart';
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
+    protected static bool $isLazy = true;
     protected int|string|array $columnSpan = 'full';
 
     public ?int $warehouse_id = null;
