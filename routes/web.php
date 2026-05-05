@@ -35,7 +35,7 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
 // Polling endpoint: get the latest dispatch location for real-time map updates (Shared by Truck)
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
     $sharedDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
-        ->whereDate('created_at', $dispatch->created_at->toDateString())
+        ->where('created_at', '>=', now()->subHours(24))
         ->pluck('id');
 
     $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)

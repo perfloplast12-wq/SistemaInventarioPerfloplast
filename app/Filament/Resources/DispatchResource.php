@@ -402,7 +402,7 @@ class DispatchResource extends Resource
                     ->modalWidth('6xl')
                     ->modalContent(function (Dispatch $record) {
                         $sharedDispatchIds = Dispatch::where('truck_id', $record->truck_id)
-                            ->whereDate('created_at', $record->created_at->toDateString())
+                            ->where('created_at', '>=', now()->subHours(24))
                             ->pluck('id');
                             
                         $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
