@@ -150,16 +150,26 @@ class DebugController extends Controller
     public function viewLog()
     {
         $logPath = storage_path('logs/laravel.log');
-        if (!file_exists($logPath)) {
-            return response('No log file found at ' . $logPath, 200);
+        if (!file_exists($logPath) || !is_readable($logPath)) {
+            return response('No log file found or not readable at ' . $logPath, 200);
         }
         
         try {
-            // Read simply without fseek to avoid stream errors
-            $content = file_get_contents($logPath);
-            if (strlen($content) > 20000) {
-                $content = substr($content, -20000);
+            $file = fopen($logPath, 'r');
+            if (!$file) {
+                return response('Could not open log file.', 200);
             }
+            
+            $filesize = filesize($logPath);
+            $bytesToRead = min(20000, $filesize);
+            
+            if ($bytesToRead > 0) {
+                fseek($file, -$bytesToRead, SEEK_END);
+                $content = fread($file, $bytesToRead);
+            } else {
+                $content = "File is empty.";
+            }
+            fclose($file);
             
             return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars($content) . '</pre>', 200);
         } catch (\Throwable $e) {

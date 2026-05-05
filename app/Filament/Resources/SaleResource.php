@@ -302,8 +302,8 @@ class SaleResource extends Resource
                                         $data['discount_amount'] = 0;
                                         $data['total'] = $data['subtotal'];
                                         
-                                        // Convert string 'null' from select back to actual null for database
-                                        if (isset($data['color_id']) && $data['color_id'] === 'null') {
+                                        // Convert string 'null' or empty strings back to actual null for database
+                                        if (empty($data['color_id']) || $data['color_id'] === 'null') {
                                             $data['color_id'] = null;
                                         }
                                         
