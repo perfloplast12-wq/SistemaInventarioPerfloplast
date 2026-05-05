@@ -146,8 +146,21 @@ class DispatchResource extends Resource
                                         }
                                     }
                                 }
+                                // Autofill ruta y bodega si están vacíos
+                                if (!empty($selectedOrderIds)) {
+                                    $firstOrderId = reset($selectedOrderIds);
+                                    $firstOrder = Order::with('sale')->find($firstOrderId);
+                                    if ($firstOrder) {
+                                        if (empty($get('route')) && !empty($firstOrder->delivery_address)) {
+                                            $set('route', $firstOrder->delivery_address);
+                                        }
+                                        if (empty($get('warehouse_id')) && $firstOrder->sale && $firstOrder->sale->from_warehouse_id) {
+                                            $set('warehouse_id', $firstOrder->sale->from_warehouse_id);
+                                        }
+                                    }
+                                }
 
-                                 $set('items', $currentItems);
+                                $set('items', $currentItems);
                             }),
                     ]),
 
