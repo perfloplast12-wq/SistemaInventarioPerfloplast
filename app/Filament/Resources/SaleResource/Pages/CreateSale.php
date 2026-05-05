@@ -44,12 +44,17 @@ class CreateSale extends CreateRecord
         $subtotal = 0;
         if (isset($data['items'])) {
             foreach ($data['items'] as $key => $item) {
-                $subtotal += (float)($item['subtotal'] ?? 0);
+                $itemSubtotal = (float)($item['subtotal'] ?? 0);
+                $subtotal += $itemSubtotal;
                 
                 // Convert string 'null' from select back to actual null for database
                 if (isset($item['color_id']) && $item['color_id'] === 'null') {
                     $data['items'][$key]['color_id'] = null;
                 }
+                
+                // Ensure sale_items has discount_amount and total (required by DB)
+                $data['items'][$key]['discount_amount'] = 0;
+                $data['items'][$key]['total'] = $itemSubtotal;
             }
         }
 
@@ -79,7 +84,7 @@ class CreateSale extends CreateRecord
         $paymentAmount = (float)($formData['payment_amount'] ?? 0);
         if ($paymentAmount > 0) {
             $this->record->payments()->create([
-                'method' => $formData['payment_method'] ?? 'cash',
+                'payment_method' => $formData['payment_method'] ?? 'cash',
                 'amount' => $paymentAmount,
                 'payment_date' => now(),
             ]);

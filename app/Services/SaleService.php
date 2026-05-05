@@ -93,7 +93,7 @@ class SaleService
                 'delivery_address' => $sale->delivery_address,
                 'phone'            => $sale->phone,
                 'order_date'       => $sale->sale_date,
-                'payment_method'   => $sale->payments->first()?->method ?? 'cash',
+                'payment_method'   => $sale->payments->first()?->payment_method ?? 'cash',
                 'payment_status'   => $sale->balance <= 0 ? 'paid' : 'partial',
                 'notes'            => "Generado automáticamente desde Preventa #{$sale->sale_number}. " . $sale->note,
                 'status'           => $sale->origin_type === 'warehouse' ? 'pending' : 'shipped',
@@ -190,7 +190,7 @@ class SaleService
         }
 
         $sale->payments()->create([
-            'method' => $data['method'],
+            'payment_method' => $data['method'],
             'amount' => $amount,
             'payment_date' => $data['payment_date'] ?? now(),
             'notes' => $data['notes'] ?? null,

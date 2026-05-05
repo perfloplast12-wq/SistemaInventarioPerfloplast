@@ -181,7 +181,7 @@ class ViewSale extends ViewRecord
                             ->label('')
                             ->columns(4)
                             ->schema([
-                                Components\TextEntry::make('method')
+                                Components\TextEntry::make('payment_method')
                                     ->label('Método de Pago')
                                     ->badge()
                                     ->formatStateUsing(fn (string $state) => match ($state) {

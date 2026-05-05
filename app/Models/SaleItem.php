@@ -13,7 +13,9 @@ class SaleItem extends Model
         'color_id',
         'quantity',
         'unit_price',
+        'discount_amount',
         'subtotal',
+        'total',
     ];
 
     protected $casts = [

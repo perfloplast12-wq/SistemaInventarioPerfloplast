@@ -374,14 +374,16 @@ class QuickSale extends Page implements HasForms
                         'color_id' => $colorId,
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
+                        'discount_amount' => 0,
                         'subtotal' => (float)$item['quantity'] * (float)$item['unit_price'],
+                        'total' => (float)$item['quantity'] * (float)$item['unit_price'],
                     ]);
                 }
 
                 // 3. Agregar pago
                 if ((float)$data['payment_amount'] > 0) {
                     $sale->payments()->create([
-                        'method' => $data['payment_method'],
+                        'payment_method' => $data['payment_method'],
                         'amount' => $data['payment_amount'],
                         'payment_date' => now(),
                     ]);
