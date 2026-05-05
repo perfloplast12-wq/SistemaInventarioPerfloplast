@@ -401,11 +401,10 @@ class DispatchResource extends Resource
                     ->modalCancelActionLabel('Cerrar')
                     ->modalWidth('6xl')
                     ->modalContent(function (Dispatch $record) {
-                        $sharedDispatchIds = Dispatch::where('truck_id', $record->truck_id)
-                            ->where('created_at', '>=', now()->subHours(24))
-                            ->pluck('id');
+                        $allTruckDispatchIds = Dispatch::where('truck_id', $record->truck_id)->pluck('id');
                             
-                        $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+                        $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
+                            ->where('created_at', '>=', now()->subHours(18))
                             ->orderBy('created_at', 'asc')
                             ->get();
 

@@ -34,11 +34,10 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
 
 // Polling endpoint: get the latest dispatch location for real-time map updates (Shared by Truck)
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
-    $sharedDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
-        ->where('created_at', '>=', now()->subHours(24))
-        ->pluck('id');
+    $allTruckDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)->pluck('id');
 
-    $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+    $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
+        ->where('created_at', '>=', now()->subHours(18))
         ->latest('id')
         ->first();
 
@@ -49,7 +48,7 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
     $isOfflineSignal = ($lastLocation->speed == -1);
 
     if ($isOfflineSignal) {
-        $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $sharedDispatchIds)
+        $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
             ->where('speed', '!=', -1)
             ->latest('id')
             ->first();
