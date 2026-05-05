@@ -104,70 +104,64 @@ class Dashboard extends Page
 
     public function getStatsData(): array
     {
-        $filters = $this->filters;
-        $userId = auth()->id();
-        $cacheKey = 'dashboard_stats_' . md5(json_encode($filters) . $userId);
+        $start = \Illuminate\Support\Carbon::parse($this->filters['startDate'] ?? now()->startOfMonth())->startOfDay();
+        $end   = \Illuminate\Support\Carbon::parse($this->filters['endDate']   ?? now())->endOfDay();
+        
+        $diffInDays = $start->diffInDays($end) + 1;
+        $prevStart = $start->copy()->subDays($diffInDays);
+        $prevEnd = $end->copy()->subDays($diffInDays);
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($filters) {
-            $start = \Illuminate\Support\Carbon::parse($filters['startDate'] ?? now()->startOfMonth())->startOfDay();
-            $end   = \Illuminate\Support\Carbon::parse($filters['endDate']   ?? now())->endOfDay();
-            
-            $diffInDays = $start->diffInDays($end) + 1;
-            $prevStart = $start->copy()->subDays($diffInDays);
-            $prevEnd = $end->copy()->subDays($diffInDays);
+        $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
+        $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
+        
+        // Fix: Use production_items for quantity sum
+        $prod = (float) ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($start, $end) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$start, $end]);
+            })->sum('quantity');
 
-            $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
-            $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
-            
-            // Fix: Use production_items for quantity sum
-            $prod = (float) ProductionItem::where('type', 'output')
-                ->whereHas('production', function($q) use ($start, $end) {
-                    $q->where('status', 'confirmed')
-                      ->whereBetween('production_date', [$start, $end]);
-                })->sum('quantity');
+        $prevProd = (float) ProductionItem::where('type', 'output')
+            ->whereHas('production', function($q) use ($prevStart, $prevEnd) {
+                $q->where('status', 'confirmed')
+                  ->whereBetween('production_date', [$prevStart, $prevEnd]);
+            })->sum('quantity');
 
-            $prevProd = (float) ProductionItem::where('type', 'output')
-                ->whereHas('production', function($q) use ($prevStart, $prevEnd) {
-                    $q->where('status', 'confirmed')
-                      ->whereBetween('production_date', [$prevStart, $prevEnd]);
-                })->sum('quantity');
+        // OPTIMIZACIÓN: Suma directa en SQL
+        $inventoryVal = (float) \Illuminate\Support\Facades\DB::table('stocks')
+            ->join('products', 'stocks.product_id', '=', 'products.id')
+            ->select(\Illuminate\Support\Facades\DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
+            ->value('total_value') ?? 0;
 
-            // OPTIMIZACIÓN: Suma directa en SQL
-            $inventoryVal = (float) \Illuminate\Support\Facades\DB::table('stocks')
-                ->join('products', 'stocks.product_id', '=', 'products.id')
-                ->select(\Illuminate\Support\Facades\DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
-                ->value('total_value') ?? 0;
+        $pendingSalesVal = (float) \Illuminate\Support\Facades\DB::table('orders')
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.payment_status', 'pending')
+            ->sum('order_items.subtotal');
 
-            $pendingSalesVal = (float) \Illuminate\Support\Facades\DB::table('orders')
-                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-                ->where('orders.payment_status', 'pending')
-                ->sum('order_items.subtotal');
+        $lowStockCount = \Illuminate\Support\Facades\DB::table('stocks')
+            ->whereNotNull('warehouse_id')
+            ->groupBy('product_id')
+            ->havingRaw('SUM(quantity) <= 10')
+            ->get()
+            ->count();
 
-            $lowStockCount = \Illuminate\Support\Facades\DB::table('stocks')
-                ->whereNotNull('warehouse_id')
-                ->groupBy('product_id')
-                ->havingRaw('SUM(quantity) <= 10')
-                ->get()
-                ->count();
+        $pendOrders = Order::where('status', 'pending')->count();
+        $activeDisp = Dispatch::where('status', 'in_progress')->count();
 
-            $pendOrders = Order::where('status', 'pending')->count();
-            $activeDisp = Dispatch::where('status', 'in_progress')->count();
-
-            return [
-                'sales'       => 'Q ' . $this->formatNumber($sales),
-                'salesTrend'  => $this->calculateTrend($sales, $prevSales),
-                'profit'      => 'Q ' . $this->formatNumber($sales * 0.65), 
-                'profitTrend' => $this->calculateTrend($sales * 0.65, $prevSales * 0.65),
-                'profitRaw'   => $sales * 0.65,
-                'production'  => $this->formatNumber($prod),
-                'prodTrend'   => $this->calculateTrend($prod, $prevProd),
-                'inventory'   => $this->formatNumber($inventoryVal),
-                'orders'      => $pendOrders,
-                'efficiency'  => '100%',
-                'dispatches'  => $activeDisp,
-                'lowStock'    => $lowStockCount,
-            ];
-        });
+        return [
+            'sales'       => 'Q ' . $this->formatNumber($sales),
+            'salesTrend'  => $this->calculateTrend($sales, $prevSales),
+            'profit'      => 'Q ' . $this->formatNumber($sales * 0.65), 
+            'profitTrend' => $this->calculateTrend($sales * 0.65, $prevSales * 0.65),
+            'profitRaw'   => $sales * 0.65,
+            'production'  => $this->formatNumber($prod),
+            'prodTrend'   => $this->calculateTrend($prod, $prevProd),
+            'inventory'   => $this->formatNumber($inventoryVal),
+            'orders'      => $pendOrders,
+            'efficiency'  => '100%',
+            'dispatches'  => $activeDisp,
+            'lowStock'    => $lowStockCount,
+        ];
     }
 
     private function formatNumber($v): string {
