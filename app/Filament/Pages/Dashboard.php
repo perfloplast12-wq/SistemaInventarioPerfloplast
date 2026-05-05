@@ -104,52 +104,67 @@ class Dashboard extends Page
 
     public function getStatsData(): array
     {
-        $start = Carbon::parse($this->filters['startDate'] ?? now()->startOfMonth())->startOfDay();
-        $end   = Carbon::parse($this->filters['endDate']   ?? now())->endOfDay();
-        
-        $diffInDays = $start->diffInDays($end) + 1;
-        $prevStart = $start->copy()->subDays($diffInDays);
-        $prevEnd = $end->copy()->subDays($diffInDays);
+        // Usamos una caché corta de 5 minutos solo para los valores numéricos
+        $filters = $this->filters;
+        $cacheKey = 'dashboard_metrics_' . md5(json_encode($filters));
 
-        $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
-        $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
-        
-        $prod = (float) ProductionItem::where('type', 'output')
-            ->whereHas('production', function($q) use ($start, $end) {
-                $q->where('status', 'confirmed')
-                  ->whereBetween('production_date', [$start, $end]);
-            })->sum('quantity');
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($filters) {
+            $start = Carbon::parse($filters['startDate'] ?? now()->startOfMonth())->startOfDay();
+            $end   = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
+            
+            $diffInDays = $start->diffInDays($end) + 1;
+            $prevStart = $start->copy()->subDays($diffInDays);
+            $prevEnd = $end->copy()->subDays($diffInDays);
 
-        $prevProd = (float) ProductionItem::where('type', 'output')
-            ->whereHas('production', function($q) use ($prevStart, $prevEnd) {
-                $q->where('status', 'confirmed')
-                  ->whereBetween('production_date', [$prevStart, $prevEnd]);
-            })->sum('quantity');
+            // Consultas optimizadas con sumatorias directas en BD
+            $sales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$start, $end])->sum('total');
+            $prevSales = (float) Sale::where('status', 'confirmed')->whereBetween('sale_date', [$prevStart, $prevEnd])->sum('total');
+            
+            $prod = (float) ProductionItem::where('type', 'output')
+                ->whereHas('production', function($q) use ($start, $end) {
+                    $q->where('status', 'confirmed')
+                      ->whereBetween('production_date', [$start, $end]);
+                })->sum('quantity');
 
-        $inventoryVal = 0;
-        $stocks = Stock::all();
-        foreach($stocks as $st) {
-            $val = (float)($st->product->cost_price ?? $st->product->purchase_cost ?? 0);
-            $inventoryVal += ($st->quantity * $val);
-        }
+            $prevProd = (float) ProductionItem::where('type', 'output')
+                ->whereHas('production', function($q) use ($prevStart, $prevEnd) {
+                    $q->where('status', 'confirmed')
+                      ->whereBetween('production_date', [$prevStart, $prevEnd]);
+                })->sum('quantity');
 
-        $pendOrders = Order::where('status', 'pending')->count();
-        $activeDisp = Dispatch::where('status', 'in_progress')->count();
+            // VALOR DE INVENTARIO: Join optimizado (Seguro para MySQL Strict)
+            $inventoryVal = (float) DB::table('stocks')
+                ->join('products', 'stocks.product_id', '=', 'products.id')
+                ->select(DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
+                ->value('total_value') ?? 0;
 
-        return [
-            'sales'       => 'Q ' . $this->formatNumber($sales),
-            'salesTrend'  => $this->calculateTrend($sales, $prevSales),
-            'profit'      => 'Q ' . $this->formatNumber($sales * 0.65), 
-            'profitTrend' => $this->calculateTrend($sales * 0.65, $prevSales * 0.65),
-            'profitRaw'   => $sales * 0.65,
-            'production'  => $this->formatNumber($prod),
-            'prodTrend'   => $this->calculateTrend($prod, $prevProd),
-            'inventory'   => $this->formatNumber($inventoryVal),
-            'orders'      => $pendOrders,
-            'efficiency'  => '100%',
-            'dispatches'  => $activeDisp,
-            'lowStock'    => 0,
-        ];
+            // STOCK BAJO: Consulta corregida para MySQL Strict (Seleccionamos solo product_id)
+            $lowStockCount = DB::table('stocks')
+                ->select('product_id')
+                ->whereNotNull('warehouse_id')
+                ->groupBy('product_id')
+                ->havingRaw('SUM(quantity) <= 10')
+                ->get()
+                ->count();
+
+            $pendOrders = Order::where('status', 'pending')->count();
+            $activeDisp = Dispatch::where('status', 'in_progress')->count();
+
+            return [
+                'sales'       => 'Q ' . $this->formatNumber($sales),
+                'salesTrend'  => $this->calculateTrend($sales, $prevSales),
+                'profit'      => 'Q ' . $this->formatNumber($sales * 0.65), 
+                'profitTrend' => $this->calculateTrend($sales * 0.65, $prevSales * 0.65),
+                'profitRaw'   => $sales * 0.65,
+                'production'  => $this->formatNumber($prod),
+                'prodTrend'   => $this->calculateTrend($prod, $prevProd),
+                'inventory'   => $this->formatNumber($inventoryVal),
+                'orders'      => $pendOrders,
+                'efficiency'  => '100%',
+                'dispatches'  => $activeDisp,
+                'lowStock'    => $lowStockCount,
+            ];
+        });
     }
 
     private function formatNumber($v): string {
