@@ -137,7 +137,6 @@ class AdminPanelProvider extends PanelProvider
                         ";
 
                         return new HtmlString("
-                            <link rel=\"manifest\" href=\"/manifest.json\">
                             <meta name=\"theme-color\" content=\"{$p1}\">
                             <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
                             <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
