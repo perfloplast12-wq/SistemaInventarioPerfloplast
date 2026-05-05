@@ -65,9 +65,6 @@ class CreateSale extends CreateRecord
         $data['discount_amount'] = $discountAmount;
         $data['total'] = max(0, $subtotal - $discountAmount);
         
-        $data['origin_type'] = 'truck';
-        $data['from_warehouse_id'] = null;
-
         // Remove non-model fields
         unset($data['payment_method'], $data['payment_amount']);
 
