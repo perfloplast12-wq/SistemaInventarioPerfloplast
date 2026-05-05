@@ -432,28 +432,36 @@ class DispatchResource extends Resource
                                 ->options($record->orders->pluck('order_number', 'id'))
                                 ->required()
                                 ->live(),
-                            Forms\Components\Select::make('product_id')
-                                ->label('Producto Rechazado/Devuelto')
-                                ->options(function (Forms\Get $get) {
-                                    $orderId = $get('order_id');
-                                    if (!$orderId) return [];
-                                    $order = \App\Models\Order::with('items.product', 'items.color')->find($orderId);
-                                    if (!$order) return [];
-                                    return $order->items->mapWithKeys(function ($item) {
-                                        $name = $item->product->name . ($item->color ? " ({$item->color->name})" : "") . ' [Max: ' . $item->quantity . ']';
-                                        // Usamos un key compuesto para pasar el color_id
-                                        $key = $item->product_id . '|' . ($item->color_id ?? '');
-                                        return [$key => $name];
-                                    })->toArray();
-                                })
-                                ->required()
-                                ->live(),
-                            Forms\Components\TextInput::make('quantity')
-                                ->label('Cantidad Devuelta')
-                                ->numeric()
-                                ->step(0.01)
-                                ->required()
-                                ->minValue(0.01),
+                            Forms\Components\Repeater::make('return_items')
+                                ->label('Productos Devueltos')
+                                ->schema([
+                                    Forms\Components\Select::make('product_id')
+                                        ->label('Producto')
+                                        ->options(function (Forms\Get $get) {
+                                            $orderId = $get('../../order_id');
+                                            if (!$orderId) return [];
+                                            $order = \App\Models\Order::with('items.product', 'items.color')->find($orderId);
+                                            if (!$order) return [];
+                                            return $order->items->mapWithKeys(function ($item) {
+                                                $qtyFormatted = number_format($item->quantity, (round($item->quantity) == $item->quantity ? 0 : 2), '.', ',');
+                                                $name = $item->product->name . ($item->color ? " ({$item->color->name})" : "") . " [Max: {$qtyFormatted}]";
+                                                $key = $item->product_id . '|' . ($item->color_id ?? '');
+                                                return [$key => $name];
+                                            })->toArray();
+                                        })
+                                        ->required()
+                                        ->columnSpan(3),
+                                    Forms\Components\TextInput::make('quantity')
+                                        ->label('Cantidad')
+                                        ->numeric()
+                                        ->step(0.01)
+                                        ->required()
+                                        ->minValue(0.01)
+                                        ->columnSpan(1),
+                                ])
+                                ->columns(4)
+                                ->defaultItems(1)
+                                ->addActionLabel('Añadir otro producto'),
                             Forms\Components\Select::make('reason')
                                 ->label('Motivo del Rechazo')
                                 ->options([
@@ -470,25 +478,27 @@ class DispatchResource extends Resource
                         ];
                     })
                     ->action(function (array $data, Dispatch $record): void {
-                        list($productId, $colorId) = explode('|', $data['product_id']);
-                        $colorId = $colorId === '' ? null : $colorId;
+                        foreach ($data['return_items'] as $item) {
+                            list($productId, $colorId) = explode('|', $item['product_id']);
+                            $colorId = $colorId === '' ? null : $colorId;
 
-                        OrderReturn::create([
-                            'dispatch_id' => $record->id,
-                            'order_id' => $data['order_id'],
-                            'product_id' => $productId,
-                            'color_id' => $colorId,
-                            'driver_id' => $record->driver_id ?: auth()->id(),
-                            'truck_id' => $record->truck_id,
-                            'quantity' => $data['quantity'],
-                            'reason' => $data['reason'],
-                            'status' => 'pending',
-                            'notes' => $data['notes'],
-                        ]);
+                            OrderReturn::create([
+                                'dispatch_id' => $record->id,
+                                'order_id' => $data['order_id'],
+                                'product_id' => $productId,
+                                'color_id' => $colorId,
+                                'driver_id' => $record->driver_id ?: auth()->id(),
+                                'truck_id' => $record->truck_id,
+                                'quantity' => $item['quantity'],
+                                'reason' => $data['reason'],
+                                'status' => 'pending',
+                                'notes' => $data['notes'],
+                            ]);
+                        }
                         
                         \Filament\Notifications\Notification::make()
-                            ->title('Devolución Reportada')
-                            ->body('La alerta ha sido enviada al administrador.')
+                            ->title('Devolución(es) Reportada(s)')
+                            ->body('Las alertas han sido enviadas al administrador.')
                             ->success()
                             ->send();
                     }),
