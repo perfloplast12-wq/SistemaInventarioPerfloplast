@@ -104,11 +104,13 @@ class Dashboard extends Page
 
     public function getStatsData(): array
     {
-        $cacheKey = 'dashboard_stats_' . md5(json_encode($this->filters) . auth()->id());
+        $filters = $this->filters;
+        $userId = auth()->id();
+        $cacheKey = 'dashboard_stats_' . md5(json_encode($filters) . $userId);
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () {
-            $start = Carbon::parse($this->filters['startDate'] ?? now()->startOfMonth())->startOfDay();
-            $end   = Carbon::parse($this->filters['endDate']   ?? now())->endOfDay();
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($filters) {
+            $start = \Illuminate\Support\Carbon::parse($filters['startDate'] ?? now()->startOfMonth())->startOfDay();
+            $end   = \Illuminate\Support\Carbon::parse($filters['endDate']   ?? now())->endOfDay();
             
             $diffInDays = $start->diffInDays($end) + 1;
             $prevStart = $start->copy()->subDays($diffInDays);
@@ -131,17 +133,17 @@ class Dashboard extends Page
                 })->sum('quantity');
 
             // OPTIMIZACIÓN: Suma directa en SQL
-            $inventoryVal = (float) DB::table('stocks')
+            $inventoryVal = (float) \Illuminate\Support\Facades\DB::table('stocks')
                 ->join('products', 'stocks.product_id', '=', 'products.id')
-                ->select(DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
+                ->select(\Illuminate\Support\Facades\DB::raw('SUM(stocks.quantity * COALESCE(products.cost_price, products.purchase_cost, 0)) as total_value'))
                 ->value('total_value') ?? 0;
 
-            $pendingSalesVal = (float) DB::table('orders')
+            $pendingSalesVal = (float) \Illuminate\Support\Facades\DB::table('orders')
                 ->join('order_items', 'orders.id', '=', 'order_items.order_id')
                 ->where('orders.payment_status', 'pending')
                 ->sum('order_items.subtotal');
 
-            $lowStockCount = DB::table('stocks')
+            $lowStockCount = \Illuminate\Support\Facades\DB::table('stocks')
                 ->whereNotNull('warehouse_id')
                 ->groupBy('product_id')
                 ->havingRaw('SUM(quantity) <= 10')
