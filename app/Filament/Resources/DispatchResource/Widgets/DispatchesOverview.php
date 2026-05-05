@@ -19,28 +19,30 @@ class DispatchesOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
+        return \Illuminate\Support\Facades\Cache::remember('dispatches_overview_stats', 300, function () {
+            $today = Carbon::today();
+            $thisMonth = Carbon::now()->startOfMonth();
 
-        $dispatchesToday = Dispatch::whereDate('dispatch_date', $today)->count();
-        $completedMonth = Dispatch::where('status', 'delivered')->where('dispatch_date', '>=', $thisMonth)->count();
-        $pendingNow = Dispatch::whereIn('status', ['pending', 'in_transit'])->count();
+            $dispatchesToday = Dispatch::whereDate('dispatch_date', $today)->count();
+            $completedMonth = Dispatch::where('status', 'delivered')->where('dispatch_date', '>=', $thisMonth)->count();
+            $pendingNow = Dispatch::whereIn('status', ['pending', 'in_transit'])->count();
 
-        return [
-            Stat::make('Ruta de Hoy', $dispatchesToday . ' Viajes')
-                ->description('Asignados para fecha de hoy')
-                ->descriptionIcon('heroicon-m-truck')
-                ->color('primary'),
-                
-            Stat::make('Entregas del Mes', $completedMonth . ' Completados')
-                ->description('Rendimiento mensual')
-                ->descriptionIcon('heroicon-m-check-circle')
-                ->color('success'),
-                
-            Stat::make('En Cola o Tránsito', $pendingNow . ' Activos')
-                ->description('Pendientes de entrega')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('warning'),
-        ];
+            return [
+                Stat::make('Ruta de Hoy', $dispatchesToday . ' Viajes')
+                    ->description('Asignados para fecha de hoy')
+                    ->descriptionIcon('heroicon-m-truck')
+                    ->color('primary'),
+                    
+                Stat::make('Entregas del Mes', $completedMonth . ' Completados')
+                    ->description('Rendimiento mensual')
+                    ->descriptionIcon('heroicon-m-check-circle')
+                    ->color('success'),
+                    
+                Stat::make('En Cola o Tránsito', $pendingNow . ' Activos')
+                    ->description('Pendientes de entrega')
+                    ->descriptionIcon('heroicon-m-clock')
+                    ->color('warning'),
+            ];
+        });
     }
 }
