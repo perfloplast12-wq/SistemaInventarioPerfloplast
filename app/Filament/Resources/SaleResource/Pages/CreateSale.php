@@ -40,21 +40,11 @@ class CreateSale extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Calculate totals in backend and normalize color_id
+        // Calculate subtotal from items for the Sale record
         $subtotal = 0;
         if (isset($data['items'])) {
-            foreach ($data['items'] as $key => $item) {
-                $itemSubtotal = (float)($item['subtotal'] ?? 0);
-                $subtotal += $itemSubtotal;
-                
-                // Convert string 'null' from select back to actual null for database
-                if (isset($item['color_id']) && $item['color_id'] === 'null') {
-                    $data['items'][$key]['color_id'] = null;
-                }
-                
-                // Ensure sale_items has discount_amount and total (required by DB)
-                $data['items'][$key]['discount_amount'] = 0;
-                $data['items'][$key]['total'] = $itemSubtotal;
+            foreach ($data['items'] as $item) {
+                $subtotal += (float)($item['subtotal'] ?? ((float)($item['quantity'] ?? 0) * (float)($item['unit_price'] ?? 0)));
             }
         }
 
@@ -70,7 +60,7 @@ class CreateSale extends CreateRecord
         $data['discount_amount'] = $discountAmount;
         $data['total'] = max(0, $subtotal - $discountAmount);
         
-        // Remove non-model fields
+        // Remove non-model fields that are not columns in the sales table
         unset($data['payment_method'], $data['payment_amount']);
 
         return $data;

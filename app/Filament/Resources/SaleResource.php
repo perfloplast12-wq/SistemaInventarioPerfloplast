@@ -292,6 +292,18 @@ class SaleResource extends Resource
                                     ->addActionLabel('Añadir OTRO Producto')
                                     ->reorderable(false)
                                     ->live()
+                                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                                        // Ensure sale_items has discount_amount and total (required by DB but not in form)
+                                        $data['discount_amount'] = 0;
+                                        $data['total'] = (float)($data['subtotal'] ?? ((float)($data['quantity'] ?? 0) * (float)($data['unit_price'] ?? 0)));
+                                        
+                                        // Convert string 'null' from select back to actual null for database
+                                        if (isset($data['color_id']) && $data['color_id'] === 'null') {
+                                            $data['color_id'] = null;
+                                        }
+                                        
+                                        return $data;
+                                    })
                                     ->afterStateUpdated(fn (Set $set, Get $get) => self::recalculateTotalsInForm($set, $get)),
                             ])->columnSpan(['default' => 'full', 'lg' => 8]),
 
