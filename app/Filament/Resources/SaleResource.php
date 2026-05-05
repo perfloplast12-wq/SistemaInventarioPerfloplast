@@ -559,7 +559,6 @@ class SaleResource extends Resource
                         }),
                 ]),
             ])
-            ->simplePagination()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
