@@ -32,7 +32,7 @@ class DebugController extends Controller
                 'trace' => array_slice(array_map(function ($t) {
                     return ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?') . ' ' . ($t['class'] ?? '') . '::' . ($t['function'] ?? '');
                 }, $e->getTrace()), 0, 25),
-            ], 500, [], JSON_PRETTY_PRINT);
+            ], 200, [], JSON_PRETTY_PRINT);
         }
     }
 
@@ -145,7 +145,7 @@ class DebugController extends Controller
                 'trace' => array_slice(array_map(function ($t) {
                     return ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?') . ' ' . ($t['class'] ?? '') . '::' . ($t['function'] ?? '');
                 }, $e->getTrace()), 0, 25),
-            ], 500, [], JSON_PRETTY_PRINT);
+            ], 200, [], JSON_PRETTY_PRINT);
         }
     }
 
