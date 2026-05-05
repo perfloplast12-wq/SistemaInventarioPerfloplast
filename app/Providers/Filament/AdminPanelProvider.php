@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            ->spa() 
+            // ->spa() // Deshabilitado: causa 500 en /livewire/update en DigitalOcean
             ->databaseNotifications() 
             ->databaseNotificationsPolling('60s')
             ->maxContentWidth(null) 
@@ -46,19 +46,23 @@ class AdminPanelProvider extends PanelProvider
                     // Cachear el bloque completo de cabecera por 1 hora
                     // Solo se regenera si se limpia la caché o pasa el tiempo
                     return Cache::remember('admin_panel_head_block', 3600, function () {
-                        $settings = Setting::whereIn('key', [
-                            'primary_color_1',
-                            'primary_color_2',
-                            'border_radius',
-                            'glass_effect',
-                            'mesh_background',
-                            'button_layout',
-                            'shadow_depth',
-                            'bg_color',
-                            'sidebar_bg_color',
-                            'card_bg_color',
-                            'text_color',
-                        ])->pluck('value', 'key')->toArray();
+                        try {
+                            $settings = Setting::whereIn('key', [
+                                'primary_color_1',
+                                'primary_color_2',
+                                'border_radius',
+                                'glass_effect',
+                                'mesh_background',
+                                'button_layout',
+                                'shadow_depth',
+                                'bg_color',
+                                'sidebar_bg_color',
+                                'card_bg_color',
+                                'text_color',
+                            ])->pluck('value', 'key')->toArray();
+                        } catch (\Exception $e) {
+                            $settings = [];
+                        }
 
                         $p1 = $settings['primary_color_1'] ?? '#6366f1';
                         $p2 = $settings['primary_color_2'] ?? '#3b82f6';
