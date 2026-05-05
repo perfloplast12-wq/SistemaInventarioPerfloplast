@@ -24,48 +24,69 @@ class DispatchService
         }
 
         DB::transaction(function () use ($dispatch) {
-            // Verificar si YA existen transferencias vinculadas a este despacho (para evitar duplicados si el usuario cargó manualmente)
+            // Verificar si ya existen movimientos vinculados a este despacho
             $existingMovements = InventoryMovement::where('source_type', 'dispatch')
                 ->where('source_id', $dispatch->id)
-                ->where('type', 'transfer')
                 ->exists();
 
             if (!$existingMovements) {
-                foreach ($dispatch->items as $item) {
-                    // Validar stock en bodega
-                    $stock = Stock::where('product_id', $item->product_id)
-                        ->where('color_id', $item->color_id)
-                        ->where('warehouse_id', $dispatch->warehouse_id)
-                        ->first();
+                $orders = $dispatch->orders()->with('sale', 'items.product', 'items.color')->get();
 
-                    if (!$stock || $stock->quantity < $item->quantity) {
-                        $colorName = $item->color?->name ?: 'Sin Color';
-                        throw ValidationException::withMessages([
-                            'stock' => "Stock insuficiente en bodega para '{$item->product->name}' ($colorName). Disponible: " . ($stock ? $stock->quantity : 0)
-                        ]);
+                foreach ($orders as $order) {
+                    foreach ($order->items as $item) {
+                        if ($order->sale_id !== null) {
+                            // 🚀 CASO PRE-VENTA: El stock ya fue restado de la bodega en la confirmación de la preventa.
+                            // Aquí solo cargamos/ingresamos el stock al camión (sin restar de bodega otra vez)
+                            InventoryMovement::create([
+                                'type' => 'in',
+                                'product_id' => $item->product_id,
+                                'color_id' => $item->color_id,
+                                'quantity' => $item->quantity,
+                                'unit_cost' => $item->product->cost_price ?? 0,
+                                'to_truck_id' => $dispatch->truck_id,
+                                'note' => "Carga de Despacho (Pre-venta #{$order->sale->sale_number}) - Despacho #{$dispatch->dispatch_number}",
+                                'created_by' => auth()->id(),
+                                'source_type' => 'dispatch',
+                                'source_id' => $dispatch->id,
+                            ]);
+                        } else {
+                            // 🚀 CASO PEDIDO DIRECTO / MANUAL: El stock aún no ha sido restado.
+                            // Validar stock en la bodega seleccionada para el despacho
+                            $stock = Stock::where('product_id', $item->product_id)
+                                ->where('color_id', $item->color_id)
+                                ->where('warehouse_id', $dispatch->warehouse_id)
+                                ->first();
+
+                            if (!$stock || $stock->quantity < $item->quantity) {
+                                $colorName = $item->color?->name ?: 'Sin Color';
+                                throw ValidationException::withMessages([
+                                    'stock' => "Stock insuficiente en bodega para '{$item->product->name}' ($colorName). Disponible: " . ($stock ? $stock->quantity : 0) . " (Requerido para Pedido Directo #{$order->order_number}: {$item->quantity})"
+                                ]);
+                            }
+
+                            // Crear movimiento de transferencia (OUT de bodega, IN a camión)
+                            InventoryMovement::create([
+                                'type' => 'transfer',
+                                'product_id' => $item->product_id,
+                                'color_id' => $item->color_id,
+                                'quantity' => $item->quantity,
+                                'unit_cost' => $item->product->cost_price ?? 0,
+                                'from_warehouse_id' => $dispatch->warehouse_id,
+                                'to_truck_id' => $dispatch->truck_id,
+                                'note' => "Carga de Despacho (Pedido Directo #{$order->order_number}) - Despacho #{$dispatch->dispatch_number}",
+                                'created_by' => auth()->id(),
+                                'source_type' => 'dispatch',
+                                'source_id' => $dispatch->id,
+                            ]);
+                        }
                     }
-
-                    // Crear movimiento de transferencia (OUT de bodega, IN a camión)
-                    InventoryMovement::create([
-                        'type' => 'transfer',
-                        'product_id' => $item->product_id,
-                        'color_id' => $item->color_id,
-                        'quantity' => $item->quantity,
-                        'unit_cost' => $item->product->cost_price ?? 0,
-                        'from_warehouse_id' => $dispatch->warehouse_id,
-                        'to_truck_id' => $dispatch->truck_id,
-                        'note' => "Carga de Despacho #{$dispatch->dispatch_number}",
-                        'created_by' => auth()->id(),
-                        'source_type' => 'dispatch',
-                        'source_id' => $dispatch->id,
-                    ]);
                 }
             }
 
             $dispatch->update(['status' => 'in_progress']);
             $dispatch->recalculateTotals();
 
-            // Actualizar estado de los pedidos asociados a 'assigned' (asignado) ya que 'confirmed' no existe en el ENUM
+            // Actualizar estado de los pedidos asociados a 'assigned'
             $dispatch->orders()->update(['status' => 'assigned']);
         });
     }
