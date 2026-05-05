@@ -356,6 +356,7 @@ class QuickSale extends Page implements HasForms
                     'origin_type' => 'warehouse',
                     'from_warehouse_id' => $data['from_warehouse_id'],
                     'status' => 'draft',
+                    'sale_date' => now(),
                     'total' => $data['total'],
                     'discount_type' => $data['discount_type'] ?? 'none',
                     'discount_value' => $data['discount_value'] ?? 0,

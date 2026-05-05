@@ -60,6 +60,11 @@ class CreateSale extends CreateRecord
         $data['discount_amount'] = $discountAmount;
         $data['total'] = max(0, $subtotal - $discountAmount);
         
+        // Ensure required sale_date is set since it has no default in DB
+        if (empty($data['sale_date'])) {
+            $data['sale_date'] = now();
+        }
+        
         // Remove non-model fields that are not columns in the sales table
         unset($data['payment_method'], $data['payment_amount']);
 
