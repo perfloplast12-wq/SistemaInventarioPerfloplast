@@ -154,9 +154,15 @@ class DebugController extends Controller
             return response('No log file found at ' . $logPath, 404);
         }
         
-        $lines = file($logPath);
-        $lastLines = array_slice($lines, -200);
+        // Read safely to avoid memory limit issues
+        $lines = [];
+        $file = escapeshellarg($logPath);
+        $tail = `tail -n 200 {$file}`;
         
-        return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars(implode("", $lastLines)) . '</pre>');
+        if (empty($tail)) {
+            return response('Log is empty or cannot be read.');
+        }
+        
+        return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars($tail) . '</pre>');
     }
 }
