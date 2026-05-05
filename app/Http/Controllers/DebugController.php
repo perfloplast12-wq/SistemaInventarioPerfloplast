@@ -147,6 +147,8 @@ class DebugController extends Controller
                 }, $e->getTrace()), 0, 25),
             ], 500, [], JSON_PRETTY_PRINT);
         }
+    }
+
     public function viewLog()
     {
         $logPath = storage_path('logs/laravel.log');
