@@ -12,19 +12,9 @@ class CreateDispatch extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Calcular totales con redondeo para precisión decimal
-        $totalValue = 0;
-        $totalProducts = 0;
-        $items = $data['items'] ?? [];
-        
-        foreach ($items as $item) {
-            $totalValue += round((float)($item['subtotal'] ?? 0), 2);
-            $totalProducts += round((float)($item['quantity'] ?? 0), 3);
-        }
-
-        $data['total_value'] = round($totalValue, 2);
-        $data['total_products'] = $totalProducts;
-        $data['product_types'] = count($items);
+        $data['total_value'] = 0;
+        $data['total_products'] = 0;
+        $data['product_types'] = 0;
         $data['created_by'] = auth()->id();
         
         // Asegurar que driver_name no sea nulo (columna NOT NULL en DB)
@@ -46,6 +36,11 @@ class CreateDispatch extends CreateRecord
         
         if (!empty($orderIds)) {
             Order::whereIn('id', $orderIds)->update(['dispatch_id' => $record->id]);
+        }
+        
+        // Recalcular los totales AHORA que los items ya fueron guardados en la BD por Filament
+        if (method_exists($record, 'recalculateTotals')) {
+            $record->recalculateTotals();
         }
     }
 

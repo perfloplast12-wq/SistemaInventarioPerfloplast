@@ -21,19 +21,9 @@ class EditDispatch extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Calcular totales con redondeo
-        $totalValue = 0;
-        $totalProducts = 0;
-        $items = $data['items'] ?? [];
-        
-        foreach ($items as $item) {
-            $totalValue += round((float)($item['subtotal'] ?? 0), 2);
-            $totalProducts += round((float)($item['quantity'] ?? 0), 3);
-        }
-
-        $data['total_value'] = round($totalValue, 2);
-        $data['total_products'] = (float) $totalProducts;
-        $data['product_types'] = count($items);
+        $data['total_value'] = 0;
+        $data['total_products'] = 0;
+        $data['product_types'] = 0;
         
         // Asegurar que driver_name no sea nulo (columna NOT NULL en DB)
         if (empty($data['driver_name']) && !empty($data['driver_id'])) {
@@ -60,6 +50,11 @@ class EditDispatch extends EditRecord
         // Vincular nuevos pedidos
         if (!empty($orderIds)) {
             Order::whereIn('id', $orderIds)->update(['dispatch_id' => $record->id]);
+        }
+        
+        // Recalcular totales AHORA que los items fueron guardados por Filament
+        if (method_exists($record, 'recalculateTotals')) {
+            $record->recalculateTotals();
         }
     }
 
