@@ -178,4 +178,22 @@ class DebugController extends Controller
             return response('Error reading log: ' . $e->getMessage(), 200);
         }
     }
+
+    public function runMigrations()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Migraciones ejecutadas correctamente.',
+                'output' => \Illuminate\Support\Facades\Artisan::output()
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 200); // 200 so we can read it
+        }
+    }
 }

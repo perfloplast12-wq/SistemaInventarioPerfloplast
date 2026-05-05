@@ -17,6 +17,7 @@ Route::get('/admin/sales/{sale}/pdf', [\App\Http\Controllers\SalePdfController::
 Route::get('/debug-form', [\App\Http\Controllers\DebugController::class, 'debugSaleCreate']);
 Route::get('/debug-sale-form', [\App\Http\Controllers\DebugController::class, 'debugSaleForm']);
 Route::get('/debug-log', [\App\Http\Controllers\DebugController::class, 'viewLog']);
+Route::get('/run-migrations', [\App\Http\Controllers\DebugController::class, 'runMigrations']);
 
 Route::get('/admin/injection-reports/{report}/pdf', [\App\Http\Controllers\InjectionReportPdfController::class, 'download'])
     ->name('injection-reports.pdf')
