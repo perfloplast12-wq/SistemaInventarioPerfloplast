@@ -147,5 +147,16 @@ class DebugController extends Controller
                 }, $e->getTrace()), 0, 25),
             ], 500, [], JSON_PRETTY_PRINT);
         }
+    public function viewLog()
+    {
+        $logPath = storage_path('logs/laravel.log');
+        if (!file_exists($logPath)) {
+            return response('No log file found at ' . $logPath, 404);
+        }
+        
+        $lines = file($logPath);
+        $lastLines = array_slice($lines, -200);
+        
+        return response('<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:13px;">' . htmlspecialchars(implode("", $lastLines)) . '</pre>');
     }
 }
