@@ -354,6 +354,7 @@ class ProductionResource extends Resource
                             ->when($data['until'], fn ($q, $date) => $q->whereDate('production_date', '<=', $date));
                     }),
             ])
+            ->deferLoading()
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->status === 'draft'),
@@ -414,7 +415,8 @@ class ProductionResource extends Resource
                         );
                     }),
             ])
-            ->poll('15s')
+            ->poll('30s')
+            ->simplePagination()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

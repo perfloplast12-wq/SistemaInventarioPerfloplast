@@ -375,6 +375,7 @@ class DispatchResource extends Resource
                             ->when($data['until'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
             ])
+            ->deferLoading()
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('view_map')
@@ -539,6 +540,7 @@ class DispatchResource extends Resource
                     }),
             ])
             ->poll('30s')
+            ->simplePagination()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
