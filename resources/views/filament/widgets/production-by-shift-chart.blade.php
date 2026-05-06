@@ -31,8 +31,37 @@ $uid = 'pshift-' . uniqid();
         </div>
     </div>
 
+    {{-- Real-time script block to trigger updates when parent page filters change --}}
+    <div wire:key="prod-chart-refresher-{{ time() }}">
+        <script>
+            window.dispatchEvent(new CustomEvent('update-production-chart', { 
+                detail: { data: @js($d) } 
+            }));
+        </script>
+    </div>
+
     @script
     <script>
+        // Avoid duplicate listeners
+        if (!window._prodChartRegistered) {
+            window._prodChartRegistered = true;
+            window.addEventListener('update-production-chart', (event) => {
+                const { data } = event.detail;
+                
+                const cmpEl = document.querySelector('[id$="-cmp"]');
+                const trnEl = document.querySelector('[id$="-trn"]');
+                
+                if (cmpEl && cmpEl._chart) {
+                    cmpEl._chart.updateSeries([{ name: 'Producción', data: data.compValues }]);
+                    cmpEl._chart.updateOptions({ xaxis: { categories: data.compNames } });
+                }
+                if (trnEl && trnEl._chart) {
+                    trnEl._chart.updateSeries(data.trendSeries);
+                    trnEl._chart.updateOptions({ xaxis: { categories: data.trendLabels } });
+                }
+            });
+        }
+
         window.addEventListener('init-production-chart', (event) => {
             const { uid, data } = event.detail;
             

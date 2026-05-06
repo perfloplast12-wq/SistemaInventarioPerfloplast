@@ -29,15 +29,35 @@ class ProductionByShiftChart extends Widget
 
     public function getChartData(): array
     {
-        $filters     = $this->filters ?? [];
+        $filters = [];
+        
+        // Read filters from the table livewire state if rendered inside a ListRecords page
+        if (isset($this->livewire) && isset($this->livewire->tableFilters)) {
+            $tableFilters = $this->livewire->tableFilters;
+            
+            $prodDate = $tableFilters['production_date'] ?? [];
+            $filters['startDate'] = $prodDate['from'] ?? null;
+            $filters['endDate']   = $prodDate['until'] ?? null;
+            
+            $shiftFilter = $tableFilters['shift_id'] ?? [];
+            $filters['shift_id']  = $shiftFilter['value'] ?? null;
+            
+            $statusFilter = $tableFilters['status'] ?? [];
+            $filters['status']    = $statusFilter['value'] ?? null;
+        } else {
+            $filters = $this->filters ?? [];
+        }
+
         $start       = Carbon::parse($filters['startDate'] ?? now()->subDays(30))->startOfDay();
         $end         = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
         $productId   = $filters['product_id']   ?? null;
+        $activeStatus = $filters['status']      ?? 'confirmed';
 
         // Auto-zoom/crop the timeline to focus only on active production dates with a 2-day visual margin
         try {
-            $activeProductionDates = Production::where('status', 'confirmed')
+            $activeProductionDates = Production::where('status', $activeStatus)
                 ->whereBetween('production_date', [$start, $end])
+                ->when(!empty($filters['shift_id']), fn($q) => $q->where('shift_id', $filters['shift_id']))
                 ->pluck('production_date')
                 ->map(fn($d) => Carbon::parse($d))
                 ->sortBy(fn($d) => $d->timestamp);
@@ -59,15 +79,16 @@ class ProductionByShiftChart extends Widget
 
         $cacheKey = 'prod_shift_chart_' . md5(serialize($filters) . $start->toDateString() . $end->toDateString() . $this->mode);
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($start, $end, $productId) {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($start, $end, $productId, $filters, $activeStatus) {
             $shifts = Shift::all();
             $palette = ['#6366f1','#10b981','#f59e0b','#f43f5e','#8b5cf6'];
 
             // ── Comparison data (Joins production_items for output quantity) ─────────────
             $compData = ProductionItem::where('type', 'output')
-                ->whereHas('production', function($q) use ($start, $end) {
-                    $q->where('status', 'confirmed')
-                      ->whereBetween('production_date', [$start, $end]);
+                ->whereHas('production', function($q) use ($start, $end, $filters, $activeStatus) {
+                    $q->where('status', $activeStatus)
+                      ->whereBetween('production_date', [$start, $end])
+                      ->when(!empty($filters['shift_id']), fn($sq) => $sq->where('shift_id', $filters['shift_id']));
                 })
                 ->when($productId, fn($q) => $q->where('product_id', $productId))
                 ->join('productions', 'production_items.production_id', '=', 'productions.id')
@@ -95,9 +116,10 @@ class ProductionByShiftChart extends Widget
 
             // Traer todos los datos del trend en una sola consulta
             $trendRaw = ProductionItem::where('type', 'output')
-                ->whereHas('production', function($q) use ($start, $end) {
-                    $q->where('status', 'confirmed')
-                      ->whereBetween('production_date', [$start, $end]);
+                ->whereHas('production', function($q) use ($start, $end, $filters, $activeStatus) {
+                    $q->where('status', $activeStatus)
+                      ->whereBetween('production_date', [$start, $end])
+                      ->when(!empty($filters['shift_id']), fn($sq) => $sq->where('shift_id', $filters['shift_id']));
                 })
                 ->when($productId, fn($q) => $q->where('product_id', $productId))
                 ->join('productions', 'production_items.production_id', '=', 'productions.id')
