@@ -454,7 +454,6 @@ class InventoryMovementResource extends Resource
                         $record->created_at?->gt(now()->subHours(24))
                     ),
             ])
-            ->simplePagination()
             ->defaultSort('created_at', 'desc');
     }
 
