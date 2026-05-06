@@ -5,8 +5,92 @@ $uid = 'pshift-' . uniqid();
 
 <div x-data="{ 
     tab: 'comparison',
-    uid: '{{ $uid }}'
-}" x-init="$dispatch('init-production-chart', { uid: uid, data: @js($d) })">
+    uid: '{{ $uid }}',
+    chartData: @js($d),
+    cmpChart: null,
+    trnChart: null,
+    init() {
+        // Render charts once DOM is ready
+        this.renderCharts();
+        
+        // Watch for Livewire dataset updates and animate transition
+        this.$watch('chartData', (newData) => {
+            this.updateCharts(newData);
+        });
+    },
+    renderCharts() {
+        if (typeof ApexCharts === 'undefined') {
+            setTimeout(() => this.renderCharts(), 200);
+            return;
+        }
+
+        // 1. Comparison Bar Chart
+        const cmpEl = document.getElementById(this.uid + '-cmp');
+        if (cmpEl && !this.cmpChart) {
+            this.cmpChart = new ApexCharts(cmpEl, {
+                chart: { type: 'bar', height: 350, toolbar: { show: false }, fontFamily: 'Outfit, sans-serif' },
+                series: [{ name: 'Producción', data: this.chartData.compValues }],
+                xaxis: { categories: this.chartData.compNames, labels: { style: { fontWeight: '700' } } },
+                colors: this.chartData.palette,
+                plotOptions: { bar: { borderRadius: 6, columnWidth: '55%', distributed: true } },
+                dataLabels: { enabled: true, style: { fontWeight: '900' }, formatter: v => Number(v).toLocaleString() },
+                grid: { borderColor: 'rgba(148, 163, 184, 0.1)', strokeDashArray: 4 },
+                yaxis: { labels: { formatter: v => Number(v).toLocaleString() } }
+            });
+            this.cmpChart.render();
+        }
+
+        // 2. Trend Line Chart
+        const trnEl = document.getElementById(this.uid + '-trn');
+        if (trnEl && !this.trnChart) {
+            this.trnChart = new ApexCharts(trnEl, {
+                chart: { 
+                    type: 'line', 
+                    height: 350, 
+                    toolbar: { 
+                        show: true,
+                        tools: {
+                            download: false,
+                            selection: true,
+                            zoom: true,
+                            zoomin: true,
+                            zoomout: true,
+                            pan: true,
+                            reset: true
+                        }
+                    }, 
+                    fontFamily: 'Outfit, sans-serif' 
+                },
+                series: this.chartData.trendSeries,
+                xaxis: { categories: this.chartData.trendLabels, labels: { style: { fontWeight: '600' } } },
+                colors: this.chartData.palette,
+                stroke: { curve: 'smooth', width: 3 },
+                dataLabels: {
+                    enabled: true,
+                    style: { fontSize: '9px', fontWeight: '900' },
+                    background: { enabled: true, foreColor: '#fff', padding: 3, borderRadius: 4, borderWidth: 0 },
+                    formatter: v => Number(v).toLocaleString()
+                },
+                legend: { position: 'top', fontWeight: '700' },
+                grid: { borderColor: 'rgba(148, 163, 184, 0.1)', strokeDashArray: 4 },
+                tooltip: { shared: true }
+            });
+            this.trnChart.render();
+        }
+    },
+    updateCharts(data) {
+        if (this.cmpChart) {
+            this.cmpChart.updateSeries([{ name: 'Producción', data: data.compValues }]);
+            this.cmpChart.updateOptions({ xaxis: { categories: data.compNames } });
+        }
+        if (this.trnChart) {
+            this.trnChart.updateSeries(data.trendSeries);
+            this.trnChart.updateOptions({ xaxis: { categories: data.trendLabels } });
+        }
+    }
+}"
+x-effect="chartData = @js($d)"
+>
     {{-- Mode Tabs --}}
     <div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(148, 163, 184, 0.1);flex-wrap:wrap;">
         <button @click="tab = 'comparison'; setTimeout(() => window.dispatchEvent(new Event('resize')), 50)"
@@ -30,104 +114,4 @@ $uid = 'pshift-' . uniqid();
             <div id="{{ $uid }}-trn" style="width:100%;min-height:350px;"></div>
         </div>
     </div>
-
-    {{-- Real-time script block to trigger updates when parent page filters change --}}
-    <div wire:key="prod-chart-refresher-{{ time() }}">
-        <script>
-            window.dispatchEvent(new CustomEvent('update-production-chart', { 
-                detail: { data: @js($d) } 
-            }));
-        </script>
-    </div>
-
-    @script
-    <script>
-        // Avoid duplicate listeners
-        if (!window._prodChartRegistered) {
-            window._prodChartRegistered = true;
-            window.addEventListener('update-production-chart', (event) => {
-                const { data } = event.detail;
-                
-                const cmpEl = document.querySelector('[id$="-cmp"]');
-                const trnEl = document.querySelector('[id$="-trn"]');
-                
-                if (cmpEl && cmpEl._chart) {
-                    cmpEl._chart.updateSeries([{ name: 'Producción', data: data.compValues }]);
-                    cmpEl._chart.updateOptions({ xaxis: { categories: data.compNames } });
-                }
-                if (trnEl && trnEl._chart) {
-                    trnEl._chart.updateSeries(data.trendSeries);
-                    trnEl._chart.updateOptions({ xaxis: { categories: data.trendLabels } });
-                }
-            });
-        }
-
-        window.addEventListener('init-production-chart', (event) => {
-            const { uid, data } = event.detail;
-            
-            const init = () => {
-                if (typeof ApexCharts === 'undefined') {
-                    setTimeout(init, 300);
-                    return;
-                }
-
-                // Comparison
-                const cmpEl = document.getElementById(uid + '-cmp');
-                if (cmpEl && !cmpEl._chart) {
-                    cmpEl._chart = new ApexCharts(cmpEl, {
-                        chart: { type: 'bar', height: 350, toolbar: { show: false }, fontFamily: 'Outfit, sans-serif' },
-                        series: [{ name: 'Producción', data: data.compValues }],
-                        xaxis: { categories: data.compNames, labels: { style: { fontWeight: '700' } } },
-                        colors: data.palette,
-                        plotOptions: { bar: { borderRadius: 6, columnWidth: '55%', distributed: true } },
-                        dataLabels: { enabled: true, style: { fontWeight: '900' }, formatter: v => Number(v).toLocaleString() },
-                        grid: { borderColor: 'rgba(148, 163, 184, 0.1)', strokeDashArray: 4 },
-                        yaxis: { labels: { formatter: v => Number(v).toLocaleString() } }
-                    });
-                    cmpEl._chart.render();
-                }
-
-                // Trend
-                const trnEl = document.getElementById(uid + '-trn');
-                if (trnEl && !trnEl._chart) {
-                    trnEl._chart = new ApexCharts(trnEl, {
-                        chart: { 
-                            type: 'line', 
-                            height: 350, 
-                            toolbar: { 
-                                show: true,
-                                tools: {
-                                    download: false,
-                                    selection: true,
-                                    zoom: true,
-                                    zoomin: true,
-                                    zoomout: true,
-                                    pan: true,
-                                    reset: true
-                                }
-                            }, 
-                            fontFamily: 'Outfit, sans-serif' 
-                        },
-                        series: data.trendSeries,
-                        xaxis: { categories: data.trendLabels, labels: { style: { fontWeight: '600' } } },
-                        colors: data.palette,
-                        stroke: { curve: 'smooth', width: 3 },
-                        dataLabels: {
-                            enabled: true,
-                            style: { fontSize: '9px', fontWeight: '900' },
-                            background: { enabled: true, foreColor: '#fff', padding: 3, borderRadius: 4, borderWidth: 0 },
-                            formatter: v => Number(v).toLocaleString()
-                        },
-                        legend: { position: 'top', fontWeight: '700' },
-                        grid: { borderColor: 'rgba(148, 163, 184, 0.1)', strokeDashArray: 4 },
-                        tooltip: { shared: true }
-                    });
-                    trnEl._chart.render();
-                }
-            };
-            
-            init();
-        });
-    </script>
-    @endscript
 </div>

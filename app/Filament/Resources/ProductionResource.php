@@ -305,16 +305,19 @@ class ProductionResource extends Resource
                             $color = '';
                             
                             if ($o->color) {
-                                $cleanColorName = strtolower($o->color->name ?? '');
-                                $cleanColorDisplay = strtolower($o->color->display_name ?? '');
+                                $colorName = $o->color->display_name ?? $o->color->name ?? '';
+                                if (str_contains($colorName, ' (')) {
+                                    $colorName = explode(' (', $colorName)[0];
+                                }
+                                $colorName = ucfirst($colorName);
+                                
+                                $cleanColorName = strtolower($colorName);
                                 $cleanProdName = strtolower($productName);
                                 
                                 // Only append if color name is not already contained in the product name
                                 if (!str_contains($cleanProdName, "({$cleanColorName})") && 
-                                    !str_contains($cleanProdName, "({$cleanColorDisplay})") &&
-                                    !str_contains($cleanProdName, $cleanColorName) &&
-                                    !str_contains($cleanProdName, $cleanColorDisplay)) {
-                                    $color = " ({$o->color->display_name})";
+                                    !str_contains($cleanProdName, $cleanColorName)) {
+                                    $color = " ({$colorName})";
                                 }
                             }
                             return "• {$productName}{$color}";

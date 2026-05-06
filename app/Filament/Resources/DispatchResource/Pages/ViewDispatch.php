@@ -186,6 +186,13 @@ class ViewDispatch extends ViewRecord
                                     ->label('Color')
                                     ->badge()
                                     ->color('gray')
+                                    ->formatStateUsing(function ($state) {
+                                        if (!$state) return 'N/A';
+                                        if (str_contains($state, ' (')) {
+                                            $state = explode(' (', $state)[0];
+                                        }
+                                        return ucfirst($state);
+                                    })
                                     ->placeholder('N/A'),
                                 Components\TextEntry::make('quantity')
                                     ->label('Cantidad')
