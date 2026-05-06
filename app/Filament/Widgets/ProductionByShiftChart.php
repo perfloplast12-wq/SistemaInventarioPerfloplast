@@ -34,7 +34,30 @@ class ProductionByShiftChart extends Widget
         $end         = Carbon::parse($filters['endDate']   ?? now())->endOfDay();
         $productId   = $filters['product_id']   ?? null;
 
-        $cacheKey = 'prod_shift_chart_' . md5(serialize($filters) . $this->mode);
+        // Auto-zoom/crop the timeline to focus only on active production dates with a 2-day visual margin
+        try {
+            $activeProductionDates = Production::where('status', 'confirmed')
+                ->whereBetween('production_date', [$start, $end])
+                ->pluck('production_date')
+                ->map(fn($d) => Carbon::parse($d))
+                ->sortBy(fn($d) => $d->timestamp);
+
+            if ($activeProductionDates->isNotEmpty()) {
+                $firstActive = $activeProductionDates->first()->copy()->subDays(2)->startOfDay();
+                $lastActive = $activeProductionDates->last()->copy()->addDays(2)->endOfDay();
+
+                if ($firstActive->gt($start)) {
+                    $start = $firstActive;
+                }
+                if ($lastActive->lt($end)) {
+                    $end = $lastActive;
+                }
+            }
+        } catch (\Exception $e) {
+            // Fallback to standard range on error
+        }
+
+        $cacheKey = 'prod_shift_chart_' . md5(serialize($filters) . $start->toDateString() . $end->toDateString() . $this->mode);
 
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($start, $end, $productId) {
             $shifts = Shift::all();

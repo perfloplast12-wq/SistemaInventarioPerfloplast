@@ -62,7 +62,23 @@ $uid = 'pshift-' . uniqid();
                 const trnEl = document.getElementById(uid + '-trn');
                 if (trnEl && !trnEl._chart) {
                     trnEl._chart = new ApexCharts(trnEl, {
-                        chart: { type: 'line', height: 350, toolbar: { show: false }, fontFamily: 'Outfit, sans-serif' },
+                        chart: { 
+                            type: 'line', 
+                            height: 350, 
+                            toolbar: { 
+                                show: true,
+                                tools: {
+                                    download: false,
+                                    selection: true,
+                                    zoom: true,
+                                    zoomin: true,
+                                    zoomout: true,
+                                    pan: true,
+                                    reset: true
+                                }
+                            }, 
+                            fontFamily: 'Outfit, sans-serif' 
+                        },
                         series: data.trendSeries,
                         xaxis: { categories: data.trendLabels, labels: { style: { fontWeight: '600' } } },
                         colors: data.palette,
