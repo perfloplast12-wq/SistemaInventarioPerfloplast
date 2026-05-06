@@ -368,27 +368,27 @@ class InventoryMovementResource extends Resource
 
                 Tables\Columns\TextColumn::make('product.name')
                     ->label('Producto')
-                    ->description(fn (InventoryMovement $record) => $record->color?->display_name)
+                    ->description(fn (?InventoryMovement $record) => $record?->color?->display_name)
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad')
-                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), (round($state) == $state ? 0 : 2), '.', ','))
-                    ->color(fn(InventoryMovement $record) => $record->quantity < 0 ? 'danger' : 'success')
+                    ->formatStateUsing(fn($state) => number_format(abs((float)$state), (round((float)$state) == (float)$state ? 0 : 2), '.', ','))
+                    ->color(fn(?InventoryMovement $record) => $record && $record->quantity < 0 ? 'danger' : 'success')
                     ->weight('black')
                     ->alignment('right'),
 
                 Tables\Columns\TextColumn::make('origen')
                     ->label('📍 Origen')
-                    ->state(fn (InventoryMovement $record) => $record->fromWarehouse?->name ?? $record->fromTruck?->name ?? '—')
+                    ->state(fn (?InventoryMovement $record) => $record?->fromWarehouse?->name ?? $record?->fromTruck?->name ?? '—')
                     ->icon(fn ($record) => $record?->fromWarehouse ? 'heroicon-m-building-office' : ($record?->fromTruck ? 'heroicon-m-truck' : null))
                     ->color(fn ($record) => $record?->fromWarehouse ? 'info' : ($record?->fromTruck ? 'warning' : 'gray')),
 
                 Tables\Columns\TextColumn::make('destino')
                     ->label('🎯 Destino')
-                    ->state(fn (InventoryMovement $record) => $record->toWarehouse?->name ?? $record->toTruck?->name ?? '—')
+                    ->state(fn (?InventoryMovement $record) => $record?->toWarehouse?->name ?? $record?->toTruck?->name ?? '—')
                     ->icon(fn ($record) => $record?->toWarehouse ? 'heroicon-m-building-office' : ($record?->toTruck ? 'heroicon-m-truck' : null))
                     ->color(fn ($record) => $record?->toWarehouse ? 'info' : ($record?->toTruck ? 'warning' : 'gray')),
 
@@ -444,14 +444,14 @@ class InventoryMovementResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => 
-                        $record->source_type === null && 
-                        $record->created_at->gt(now()->subHours(24))
+                    ->visible(fn (?InventoryMovement $record) => 
+                        $record && $record->source_type === null && 
+                        $record->created_at?->gt(now()->subHours(24))
                     ),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record) => 
-                        $record->source_type === null && 
-                        $record->created_at->gt(now()->subHours(24))
+                    ->visible(fn (?InventoryMovement $record) => 
+                        $record && $record->source_type === null && 
+                        $record->created_at?->gt(now()->subHours(24))
                     ),
             ])
             ->simplePagination()
