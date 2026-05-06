@@ -16,6 +16,10 @@ use App\Models\Order;
 use App\Models\Dispatch;
 use App\Models\OrderReturn;
 
+use Filament\Forms\Components\Select;
+use Filament\Forms\Set;
+use Filament\Forms\Get;
+
 class GeneralReports extends Page
 {
     use InteractsWithForms;
@@ -39,6 +43,7 @@ class GeneralReports extends Page
     public function mount(): void
     {
         $this->form->fill([
+            'period' => 'this_month',
             'start_date' => Carbon::now()->startOfMonth()->toDateString(),
             'end_date' => Carbon::now()->toDateString(),
         ]);
@@ -48,22 +53,61 @@ class GeneralReports extends Page
     {
         return $form
             ->schema([
-                Grid::make(2)
+                Grid::make(3)
                     ->schema([
+                        Select::make('period')
+                            ->hiddenLabel()
+                            ->placeholder('Seleccione Período')
+                            ->options([
+                                'today' => 'Hoy',
+                                'this_week' => 'Esta Semana',
+                                'this_month' => 'Este Mes',
+                                'last_month' => 'Mes Pasado',
+                                'custom' => 'Personalizado',
+                            ])
+                            ->default('this_month')
+                            ->native(false)
+                            ->live()
+                            ->afterStateUpdated(function (?string $state, Set $set) {
+                                if (!$state) return;
+                                $now = Carbon::now();
+                                switch ($state) {
+                                    case 'today':
+                                        $set('start_date', $now->toDateString());
+                                        $set('end_date', $now->toDateString());
+                                        break;
+                                    case 'this_week':
+                                        $set('start_date', $now->startOfWeek()->toDateString());
+                                        $set('end_date', $now->endOfWeek()->toDateString());
+                                        break;
+                                    case 'this_month':
+                                        $set('start_date', $now->startOfMonth()->toDateString());
+                                        $set('end_date', $now->toDateString());
+                                        break;
+                                    case 'last_month':
+                                        // Restamos 1 mes de forma segura
+                                        $prevMonth = Carbon::now()->subMonth();
+                                        $set('start_date', $prevMonth->startOfMonth()->toDateString());
+                                        $set('end_date', $prevMonth->endOfMonth()->toDateString());
+                                        break;
+                                }
+                            }),
                         DatePicker::make('start_date')
                             ->hiddenLabel()
                             ->placeholder('Inicio')
                             ->displayFormat('d/m/Y')
                             ->native(false)
                             ->default(now()->startOfMonth())
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('period', 'custom')),
                         DatePicker::make('end_date')
                             ->hiddenLabel()
                             ->placeholder('Fin')
                             ->displayFormat('d/m/Y')
                             ->native(false)
                             ->default(now())
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('period', 'custom')),
                     ])->columnSpanFull(),
             ])
             ->statePath('data');
