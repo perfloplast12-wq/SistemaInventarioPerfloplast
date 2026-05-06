@@ -383,39 +383,41 @@ class InventoryMovementResource extends Resource
                 Tables\Columns\TextColumn::make('origen')
                     ->label('📍 Origen')
                     ->state(fn (InventoryMovement $record) => $record->fromWarehouse?->name ?? $record->fromTruck?->name ?? '—')
-                    ->icon(fn ($record) => $record->fromWarehouse ? 'heroicon-m-building-office' : ($record->fromTruck ? 'heroicon-m-truck' : null))
-                    ->color(fn ($record) => $record->fromWarehouse ? 'info' : ($record->fromTruck ? 'warning' : 'gray')),
+                    ->icon(fn ($record) => $record?->fromWarehouse ? 'heroicon-m-building-office' : ($record?->fromTruck ? 'heroicon-m-truck' : null))
+                    ->color(fn ($record) => $record?->fromWarehouse ? 'info' : ($record?->fromTruck ? 'warning' : 'gray')),
 
                 Tables\Columns\TextColumn::make('destino')
                     ->label('🎯 Destino')
                     ->state(fn (InventoryMovement $record) => $record->toWarehouse?->name ?? $record->toTruck?->name ?? '—')
-                    ->icon(fn ($record) => $record->toWarehouse ? 'heroicon-m-building-office' : ($record->toTruck ? 'heroicon-m-truck' : null))
-                    ->color(fn ($record) => $record->toWarehouse ? 'info' : ($record->toTruck ? 'warning' : 'gray')),
+                    ->icon(fn ($record) => $record?->toWarehouse ? 'heroicon-m-building-office' : ($record?->toTruck ? 'heroicon-m-truck' : null))
+                    ->color(fn ($record) => $record?->toWarehouse ? 'info' : ($record?->toTruck ? 'warning' : 'gray')),
 
                 Tables\Columns\TextColumn::make('source_info')
                     ->label('Referencia')
                     ->badge()
                     ->state(function ($record) {
-                        if ($record->source_type === 'dispatch') {
+                        if (!$record) return '—';
+                        if ($record->source_type === 'dispatch' && $record->source_id) {
                             $dispatch = \App\Models\Dispatch::find($record->source_id);
                             return $dispatch ? "Despacho: {$dispatch->dispatch_number}" : "Despacho #{$record->source_id}";
                         }
-                        if ($record->source_type === 'sale') {
+                        if ($record->source_type === 'sale' && $record->source_id) {
                             $sale = \App\Models\Sale::find($record->source_id);
                             return $sale ? "Venta: {$sale->sale_number}" : "Venta #{$record->source_id}";
                         }
                         return $record->note ? 'Nota' : 'Manual';
                     })
-                    ->color(fn ($record) => match ($record->source_type) {
+                    ->color(fn ($record) => match ($record?->source_type) {
                         'dispatch' => 'primary',
                         'sale' => 'success',
                         default => 'gray',
                     })
                     ->url(function ($record) {
-                        if ($record->source_type === 'dispatch') {
+                        if (!$record) return null;
+                        if ($record->source_type === 'dispatch' && $record->source_id) {
                             return \App\Filament\Resources\DispatchResource::getUrl('view', ['record' => $record->source_id]);
                         }
-                        if ($record->source_type === 'sale') {
+                        if ($record->source_type === 'sale' && $record->source_id) {
                             return \App\Filament\Resources\SaleResource::getUrl('view', ['record' => $record->source_id]);
                         }
                         return null;

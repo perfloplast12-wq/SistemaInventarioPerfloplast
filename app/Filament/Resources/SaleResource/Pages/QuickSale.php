@@ -353,6 +353,7 @@ class QuickSale extends Page implements HasForms
                 $sale = Sale::create([
                     'sale_date' => now(),
                     'customer_name' => $data['customer_name'],
+                    'customer_nit' => $data['customer_nit'] ?? 'C/F',
                     'origin_type' => 'warehouse',
                     'from_warehouse_id' => $data['from_warehouse_id'],
                     'status' => 'draft',

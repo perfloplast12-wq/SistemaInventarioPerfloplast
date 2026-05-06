@@ -89,7 +89,7 @@ class SaleService
             $order = \App\Models\Order::create([
                 'sale_id'          => $sale->id,
                 'customer_name'    => $sale->customer_name,
-                'customer_nit'     => $sale->customer_nit,
+                'customer_nit'     => $sale->customer_nit ?? 'C/F',
                 'delivery_address' => $sale->delivery_address,
                 'phone'            => $sale->phone,
                 'order_date'       => $sale->sale_date,

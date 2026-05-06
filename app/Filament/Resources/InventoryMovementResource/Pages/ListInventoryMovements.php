@@ -22,16 +22,4 @@ class ListInventoryMovements extends ListRecords
             Actions\CreateAction::make()->label('Nuevo Movimiento'),
         ];
     }
-
-    public function mount(): void
-    {
-        parent::mount();
-
-        $type = request()->query('type');
-
-        if ($type) {
-            // ✅ aplica el filtro automáticamente cuando entras desde los botones
-            $this->tableFilters['type'] = ['value' => $type];
-        }
-    }
 }
