@@ -49,6 +49,22 @@
             background: rgba(255, 255, 255, 0.02) !important;
             border-color: rgba(255, 255, 255, 0.05) !important;
         }
+        .rg-badge {
+            font-weight: 900;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 42px;
+            text-align: center;
+        }
+        .rg-badge-gray { background: rgba(148, 163, 184, 0.15); color: #475569; }
+        .dark .rg-badge-gray { background: rgba(148, 163, 184, 0.25); color: #cbd5e1; }
+        .rg-badge-green { background: rgba(16, 185, 129, 0.15); color: #059669; }
+        .dark .rg-badge-green { background: rgba(16, 185, 129, 0.25); color: #34d399; }
+        .rg-badge-yellow { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+        .dark .rg-badge-yellow { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
+        .rg-badge-red { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+        .dark .rg-badge-red { background: rgba(239, 68, 68, 0.25); color: #f87171; }
     </style>
 
     <div class="rg">
@@ -94,7 +110,7 @@
                 <div class="rg-li">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="rg-av" style="background:rgba(79,70,229,.1);color:#6366f1">{{ strtoupper(substr($row->name, 0, 1)) }}</div>
-                        <div class="min-w-0"><div class="rg-nm truncate">{{ $row->name }}</div><div class="text-[9px] font-bold text-slate-400">{{ $row->count }} ventas</div></div>
+                        <div class="min-w-0"><div class="rg-nm truncate">{{ $row->name }}</div><div class="text-[9px] font-bold text-slate-400 dark:text-slate-300">{{ $row->count }} ventas</div></div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-sm font-black text-indigo-600 dark:text-indigo-400">Q {{ number_format($row->total_sales, 0) }}</span>
@@ -113,7 +129,7 @@
                         <div class="rg-av" style="background:rgba(59,130,246,.1);color:#3b82f6">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
                         </div>
-                        <div class="min-w-0"><div class="rg-nm truncate">{{ $row->driver_name }}</div><div class="text-[9px] font-bold text-slate-400">{{ $row->count }} viajes</div></div>
+                        <div class="min-w-0"><div class="rg-nm truncate">{{ $row->driver_name }}</div><div class="text-[9px] font-bold text-slate-400 dark:text-slate-300">{{ $row->count }} viajes</div></div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-sm font-black text-blue-600 dark:text-blue-400">{{ $row->count }}</span>
@@ -192,7 +208,7 @@
                                         <div class="font-extrabold text-slate-800 dark:text-slate-100 truncate" style="font-size: 11px; text-transform: uppercase;">
                                             {{ $row->shift_name }}
                                         </div>
-                                        <div class="text-slate-400 dark:text-slate-500 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
+                                        <div class="text-slate-400 dark:text-slate-400 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
                                             {{ $row->product_name }}
                                         </div>
                                     </div>
@@ -202,11 +218,11 @@
                                         <div class="text-slate-800 dark:text-slate-200 font-extrabold" style="font-size: 13px;">
                                             {{ number_format($row->total_qty) }} <span style="font-size: 8px; font-weight: bold; color: #94a3b8;">u.</span>
                                         </div>
-                                        <div class="text-slate-400" style="font-size: 8px; font-weight: bold;">
+                                        <div class="text-slate-400 dark:text-slate-300" style="font-size: 8px; font-weight: bold;">
                                             {{ $row->operations }} op.
                                         </div>
                                     </div>
-                                    <div style="background: {{ $badgeBg }}; color: {{ $badgeColor }}; font-weight: 900; font-size: 10px; padding: 2px 8px; border-radius: 12px; min-w: 42px; text-align: center;">
+                                    <div class="rg-badge rg-badge-{{ $ef === null ? 'gray' : ($ef >= 100 ? 'green' : ($ef >= 70 ? 'yellow' : 'red')) }}">
                                         {{ $efText }}
                                     </div>
                                 </div>

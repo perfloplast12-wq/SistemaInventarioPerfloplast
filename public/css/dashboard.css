@@ -234,7 +234,7 @@ body,
     font-size: 22px;
     font-weight: 900;
     line-height: 1.1;
-    color: var(--kc, var(--pb-text));
+    color: var(--pb-text);
 }
 
 .pb-kpi-sub {
