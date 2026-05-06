@@ -401,15 +401,27 @@ class DispatchResource extends Resource
                     ->modalCancelActionLabel('Cerrar')
                     ->modalWidth('6xl')
                     ->modalContent(function (Dispatch $record) {
-                        $allTruckDispatchIds = Dispatch::where('truck_id', $record->truck_id)->pluck('id');
-                            
-                        $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
-                            ->where('created_at', '>=', now()->subHours(18))
-                            ->orderBy('created_at', 'desc')
-                            ->limit(100)
-                            ->get()
-                            ->reverse()
-                            ->values();
+                        // Fast: query only this dispatch (perfect index match)
+                        $latest = \App\Models\DispatchLocation::where('dispatch_id', $record->id)
+                            ->orderByDesc('created_at')
+                            ->first();
+
+                        // Fallback: check other recent dispatches for this truck
+                        if (!$latest && $record->truck_id) {
+                            $otherIds = Dispatch::where('truck_id', $record->truck_id)
+                                ->where('id', '!=', $record->id)
+                                ->orderByDesc('id')
+                                ->limit(5)
+                                ->pluck('id');
+                            foreach ($otherIds as $oid) {
+                                $latest = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+                                    ->orderByDesc('created_at')
+                                    ->first();
+                                if ($latest) break;
+                            }
+                        }
+
+                        $locations = $latest ? collect([$latest]) : collect();
 
                         return view('components.leaflet-route-map', [
                             'locations' => $locations,

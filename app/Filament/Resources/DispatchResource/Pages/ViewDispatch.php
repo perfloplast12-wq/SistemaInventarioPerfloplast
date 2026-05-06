@@ -102,20 +102,39 @@ class ViewDispatch extends ViewRecord
                     ->schema([
                         Components\ViewEntry::make('map')
                             ->view('components.leaflet-route-map')
-                            ->viewData([
-                                'locations' => $this->record->locations()
-                                    ->orderBy('created_at', 'desc')
-                                    ->limit(100)
-                                    ->get()
-                                    ->reverse()
-                                    ->values(),
-                                'dispatchId' => $this->record->id,
-                                'dispatchNumber' => $this->record->dispatch_number,
-                                'driverName' => $this->record->driver?->name ?? $this->record->driver_name ?? 'Sin asignar',
-                                'truckName' => $this->record->truck?->name ?? 'Sin asignar',
-                                'routeName' => $this->record->route ?? 'Sin ruta',
-                                'dispatchStatus' => $this->record->status,
-                            ])
+                            ->viewData(function () {
+                                $record = $this->record;
+
+                                // Fast: query this dispatch first (perfect index match)
+                                $latest = \App\Models\DispatchLocation::where('dispatch_id', $record->id)
+                                    ->orderByDesc('created_at')
+                                    ->first();
+
+                                // Fallback: check other recent dispatches for same truck
+                                if (!$latest && $record->truck_id) {
+                                    $otherIds = \App\Models\Dispatch::where('truck_id', $record->truck_id)
+                                        ->where('id', '!=', $record->id)
+                                        ->orderByDesc('id')
+                                        ->limit(5)
+                                        ->pluck('id');
+                                    foreach ($otherIds as $oid) {
+                                        $latest = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+                                            ->orderByDesc('created_at')
+                                            ->first();
+                                        if ($latest) break;
+                                    }
+                                }
+
+                                return [
+                                    'locations' => $latest ? collect([$latest]) : collect(),
+                                    'dispatchId' => $record->id,
+                                    'dispatchNumber' => $record->dispatch_number,
+                                    'driverName' => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
+                                    'truckName' => $record->truck?->name ?? 'Sin asignar',
+                                    'routeName' => $record->route ?? 'Sin ruta',
+                                    'dispatchStatus' => $record->status,
+                                ];
+                            })
                             ->columnSpanFull(),
                     ]),
 

@@ -32,14 +32,28 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
     ->middleware(['web', 'auth'])
     ->name('web.tracking.store');
 
-// Polling endpoint: get the latest dispatch location for real-time map updates (Shared by Truck)
+// Polling endpoint: get the latest dispatch location for real-time map updates
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
-    $allTruckDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)->pluck('id');
-
-    $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
-        ->where('created_at', '>=', now()->subHours(18))
-        ->latest('created_at')
+    // FAST PATH: query this dispatch directly (uses composite index perfectly)
+    $lastLocation = \App\Models\DispatchLocation::where('dispatch_id', $dispatch->id)
+        ->orderByDesc('created_at')
         ->first();
+
+    // FALLBACK: if this dispatch has no locations, check other dispatches for same truck
+    if (!$lastLocation && $dispatch->truck_id) {
+        $otherIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
+            ->where('id', '!=', $dispatch->id)
+            ->orderByDesc('id')
+            ->limit(5)
+            ->pluck('id');
+
+        foreach ($otherIds as $otherId) {
+            $lastLocation = \App\Models\DispatchLocation::where('dispatch_id', $otherId)
+                ->orderByDesc('created_at')
+                ->first();
+            if ($lastLocation) break;
+        }
+    }
 
     if (!$lastLocation) {
         return response()->json(null);
@@ -47,14 +61,13 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
 
     $isOfflineSignal = ($lastLocation->speed == -1);
 
+    $displayLocation = $lastLocation;
     if ($isOfflineSignal) {
-        $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
+        $realLocation = \App\Models\DispatchLocation::where('dispatch_id', $lastLocation->dispatch_id)
             ->where('speed', '!=', -1)
-            ->latest('created_at')
+            ->orderByDesc('created_at')
             ->first();
-        $displayLocation = $realLocation ?? $lastLocation;
-    } else {
-        $displayLocation = $lastLocation;
+        if ($realLocation) $displayLocation = $realLocation;
     }
 
     $secsSince = $displayLocation->created_at ? now()->diffInSeconds($displayLocation->created_at) : 999;
