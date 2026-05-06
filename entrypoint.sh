@@ -11,7 +11,7 @@ fi
 
 # Run database migrations
 echo "🗄️  Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "⚠️ Migration failed but continuing..."
 
 # Optimization (Crucial for Octane)
 echo "⚙️  Optimizing Laravel..."
