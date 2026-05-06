@@ -405,8 +405,11 @@ class DispatchResource extends Resource
                             
                         $locations = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
                             ->where('created_at', '>=', now()->subHours(18))
-                            ->orderBy('created_at', 'asc')
-                            ->get();
+                            ->orderBy('created_at', 'desc')
+                            ->limit(100)
+                            ->get()
+                            ->reverse()
+                            ->values();
 
                         return view('components.leaflet-route-map', [
                             'locations' => $locations,

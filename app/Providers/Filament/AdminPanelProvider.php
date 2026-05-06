@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 function () {
                     // Cachear el bloque completo de cabecera por 1 hora
                     // Solo se regenera si se limpia la caché o pasa el tiempo
-                    return Cache::remember('admin_panel_head_block_v3', 3600, function () {
+                    return Cache::remember('admin_panel_head_block_v4', 3600, function () {
                         try {
                             $settings = Setting::whereIn('key', [
                                 'primary_color_1',
@@ -146,10 +146,10 @@ class AdminPanelProvider extends PanelProvider
                             <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
                             <link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap\" rel=\"stylesheet\">
                             <link href=\"/css/dashboard.css?v={$v}\" rel=\"stylesheet\">
-                            <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css\" integrity=\"sha512-h9FcoyYj3urgWXgNaGpHOTim354vspPyphC3uN9c0yidvngo09A/UdfZAnI0wW0FFWpL9WfW96K8CIdYF0NAtg==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\" />
-                            <script src=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\" integrity=\"sha512-puJW3E/qXDqYp9IfhAI54BJEaWAKf3NRJKKpAl93m415G8n7ToE6dbHdK0FB5ecJDmAovvygCRljHsLfYQPkbw==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\"></script>
+                            <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css\" />
+                            <script src=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\"></script>
                             <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
-                            <script src=\"/js/filament-map.js?v=1.4\"></script>
+                            <script src=\"/js/filament-map.js?v=1.5\"></script>
                             {$styles}
                         ");
                     });
