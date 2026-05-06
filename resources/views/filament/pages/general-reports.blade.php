@@ -110,35 +110,111 @@
             </div>
         </div>
 
-        {{-- PRODUCCIÓN --}}
+        {{-- PRODUCCIÓN POR TURNO --}}
         @if($d['productionDetailed']->count() > 0)
-        <div class="rg-row">
-            <div class="rg-c" style="overflow-x:auto">
-                <div class="rg-ct">Producción por Turno</div>
-                <table style="width:100%;border-collapse:collapse;font-size:12px">
-                    <thead><tr style="border-bottom:2px solid #e2e8f0">
-                        <th style="text-align:left;padding:6px 10px;font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b">Turno</th>
-                        <th style="text-align:left;padding:6px 10px;font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b">Producto</th>
-                        <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b">Cantidad</th>
-                        <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b">Eficiencia</th>
-                    </tr></thead>
-                    <tbody>
-                        @foreach($d['productionDetailed'] as $row)
-                        <tr style="border-bottom:1px solid #f1f5f9">
-                            <td style="padding:6px 10px;font-weight:700" class="dark:text-slate-300">{{ $row->shift_name }}</td>
-                            <td style="padding:6px 10px;color:#64748b" class="dark:text-slate-400">{{ $row->product_name }}</td>
-                            <td style="padding:6px 10px;text-align:right;font-weight:800" class="dark:text-white">{{ number_format($row->total_qty) }}</td>
-                            <td style="padding:6px 10px;text-align:right">
-                                @if($row->eficiencia !== null)
-                                <span style="font-weight:800;font-size:10px;padding:2px 6px;border-radius:6px;{{ $row->eficiencia >= 100 ? 'background:#ecfdf5;color:#059669' : ($row->eficiencia >= 70 ? 'background:#fefce8;color:#ca8a04' : 'background:#fef2f2;color:#dc2626') }}">{{ number_format($row->eficiencia, 0) }}%</span>
-                                @else
-                                <span style="color:#94a3b8;font-size:10px">—</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        <div class="rg-row" style="margin-top: 16px;">
+            <div class="rg-c">
+                <div class="rg-ct" style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #4f46e5; border-bottom: 2px solid rgba(99, 102, 241, 0.1); padding-bottom: 8px;">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3h13.5m-13.5 0v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                    </svg>
+                    <span>Rendimiento y Producción por Turno</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
+                    @foreach($d['productionDetailed'] as $row)
+                        @php
+                            $ef = $row->eficiencia;
+                            if ($ef === null) {
+                                $badgeBg = 'rgba(148, 163, 184, 0.15)';
+                                $badgeColor = '#64748b';
+                                $progressColor = '#64748b';
+                                $efText = 'N/A';
+                            } elseif ($ef >= 100) {
+                                $badgeBg = 'rgba(16, 185, 129, 0.15)';
+                                $badgeColor = '#10b981';
+                                $progressColor = '#10b981';
+                                $efText = number_format($ef, 0) . '%';
+                            } elseif ($ef >= 70) {
+                                $badgeBg = 'rgba(245, 158, 11, 0.15)';
+                                $badgeColor = '#f59e0b';
+                                $progressColor = '#f59e0b';
+                                $efText = number_format($ef, 0) . '%';
+                            } else {
+                                $badgeBg = 'rgba(239, 68, 68, 0.15)';
+                                $badgeColor = '#ef4444';
+                                $progressColor = '#ef4444';
+                                $efText = number_format($ef, 0) . '%';
+                            }
+                            
+                            $shiftNameLower = mb_strtolower($row->shift_name);
+                            if (str_contains($shiftNameLower, 'mañana')) {
+                                $shiftIconBg = 'linear-gradient(135deg, #fef08a, #f97316)';
+                                $shiftIcon = '☀️';
+                            } elseif (str_contains($shiftNameLower, 'tarde')) {
+                                $shiftIconBg = 'linear-gradient(135deg, #38bdf8, #1d4ed8)';
+                                $shiftIcon = '⛅';
+                            } else {
+                                $shiftIconBg = 'linear-gradient(135deg, #475569, #0f172a)';
+                                $shiftIcon = '🌙';
+                            }
+                        @endphp
+                        
+                        <div class="rg-li" style="display: flex; flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; border-radius: 14px; transition: all 0.25s ease; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'; this.style.borderColor='rgba(99,102,241,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='rgba(0,0,0,0.05)';">
+                            
+                            {{-- Top row: Shift Info and Efficiency Badge --}}
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; background: {{$shiftIconBg}}; box-shadow: 0 3px 6px rgba(0,0,0,0.08);">
+                                        {{ $shiftIcon }}
+                                    </div>
+                                    <div>
+                                        <div class="font-extrabold text-slate-800 dark:text-slate-100" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em;">
+                                            {{ $row->shift_name }}
+                                        </div>
+                                        <div class="text-slate-400 dark:text-slate-500" style="font-size: 10px; font-weight: bold;">
+                                            {{ $row->operations }} {{ $row->operations == 1 ? 'operación' : 'operaciones' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: {{ $badgeBg }}; color: {{ $badgeColor }}; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 3px; letter-spacing: -0.02em;">
+                                    {{ $efText }} <span style="font-size: 8px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">Efic.</span>
+                                </div>
+                            </div>
+                            
+                            {{-- Mid row: Product Name & Quantity Produced --}}
+                            <div style="margin: 4px 0; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(0,0,0,0.04); padding-top: 10px;" class="dark:border-white/5">
+                                <div style="max-width: 65%;">
+                                    <div class="text-slate-400 dark:text-slate-500" style="font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">Producto Fabricado</div>
+                                    <div class="text-slate-700 dark:text-slate-200 font-bold" style="font-size: 12px; line-height: 1.3; margin-top: 2px;">
+                                        {{ $row->product_name }}
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="text-slate-400 dark:text-slate-500" style="font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">Volumen Total</div>
+                                    <div class="text-indigo-600 dark:text-indigo-400 font-black" style="font-size: 18px; line-height: 1;">
+                                        {{ number_format($row->total_qty) }} <span style="font-size: 10px; font-weight: bold; opacity: 0.7; color: #64748b;" class="dark:text-slate-400">u.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {{-- Bottom row: Interactive Progress Bar --}}
+                            @if($ef !== null)
+                            <div style="margin-top: 2px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 9px; font-weight: bold; color: #94a3b8;">
+                                    <span>Progreso de Meta</span>
+                                    <span>{{ number_format($ef, 0) }}%</span>
+                                </div>
+                                <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden;" class="dark:bg-white/10">
+                                    <div style="width: {{ min(100, $ef) }}%; height: 100%; background: {{ $progressColor }}; border-radius: 10px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                                </div>
+                            </div>
+                            @endif
+                            
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
         @endif
