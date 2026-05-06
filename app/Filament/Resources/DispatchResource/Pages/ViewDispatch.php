@@ -179,9 +179,14 @@ class ViewDispatch extends ViewRecord
                     ->schema([
                         Components\RepeatableEntry::make('items')
                             ->label('')
-                            ->columns(4)
+                            ->columns(5)
                             ->schema([
                                 Components\TextEntry::make('product.name')->label('Producto'),
+                                Components\TextEntry::make('color.display_name')
+                                    ->label('Color')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->placeholder('N/A'),
                                 Components\TextEntry::make('quantity')
                                     ->label('Cantidad')
                                     ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ',')),

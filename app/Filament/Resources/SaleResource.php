@@ -429,8 +429,23 @@ class SaleResource extends Resource
                     })
                     ->description(function ($record) {
                         return $record->items->take(2)->map(function ($item) {
-                            $color = $item->color ? " ({$item->color->display_name})" : "";
-                            return "• {$item->product->name}{$color}";
+                            $productName = $item->product->name ?? 'Producto';
+                            $color = '';
+                            
+                            if ($item->color) {
+                                $cleanColorName = strtolower($item->color->name ?? '');
+                                $cleanColorDisplay = strtolower($item->color->display_name ?? '');
+                                $cleanProdName = strtolower($productName);
+                                
+                                // Only append if color name is not already contained in the product name
+                                if (!str_contains($cleanProdName, "({$cleanColorName})") && 
+                                    !str_contains($cleanProdName, "({$cleanColorDisplay})") &&
+                                    !str_contains($cleanProdName, $cleanColorName) &&
+                                    !str_contains($cleanProdName, $cleanColorDisplay)) {
+                                    $color = " ({$item->color->display_name})";
+                                }
+                            }
+                            return "• {$productName}{$color}";
                         })->implode("\n");
                     })
                     ->wrap(),

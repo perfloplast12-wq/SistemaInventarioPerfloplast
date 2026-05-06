@@ -299,7 +299,27 @@ class ProductionResource extends Resource
                 Tables\Columns\TextColumn::make('outputs_summary')
                     ->label('Fabricado')
                     ->state(fn ($record) => $record->outputs->count() . " items")
-                    ->description(fn ($record) => $record->outputs->take(1)->map(fn($o) => "• " . (optional($o->product)->name ?? 'Producto Eliminado') . ($o->color ? " ({$o->color->display_name})" : ""))->implode("\n"))
+                    ->description(function ($record) {
+                        return $record->outputs->take(1)->map(function ($o) {
+                            $productName = optional($o->product)->name ?? 'Producto Eliminado';
+                            $color = '';
+                            
+                            if ($o->color) {
+                                $cleanColorName = strtolower($o->color->name ?? '');
+                                $cleanColorDisplay = strtolower($o->color->display_name ?? '');
+                                $cleanProdName = strtolower($productName);
+                                
+                                // Only append if color name is not already contained in the product name
+                                if (!str_contains($cleanProdName, "({$cleanColorName})") && 
+                                    !str_contains($cleanProdName, "({$cleanColorDisplay})") &&
+                                    !str_contains($cleanProdName, $cleanColorName) &&
+                                    !str_contains($cleanProdName, $cleanColorDisplay)) {
+                                    $color = " ({$o->color->display_name})";
+                                }
+                            }
+                            return "• {$productName}{$color}";
+                        })->implode("\n");
+                    })
                     ->badge()
                     ->color('success'),
 
