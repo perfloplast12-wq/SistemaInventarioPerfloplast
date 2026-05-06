@@ -31,6 +31,24 @@
         .rg-empty{text-align:center;padding:20px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase}
         .dark .apexcharts-text{fill:#94a3b8!important}.dark .apexcharts-legend-text{color:#94a3b8!important}
         .dark .apexcharts-gridline{stroke:rgba(255,255,255,.04)!important}
+        
+        /* Premium Chart Inner Boxes & Lists */
+        .rg-ch-box {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        .dark .rg-ch-box {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .rg-li-box {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .dark .rg-li-box {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
     </style>
 
     <div class="rg">
@@ -125,7 +143,7 @@
                 <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 14px;" class="lg:grid-cols-12">
                     
                     {{-- Left Column: Interactive Column Chart --}}
-                    <div style="background: rgba(255,255,255,0.4); border-radius: 12px; padding: 12px; border: 1px solid rgba(0,0,0,0.03);" class="dark:bg-slate-900/40 dark:border-white/5 lg:col-span-7" wire:ignore>
+                    <div class="rg-ch-box lg:col-span-7" style="border-radius: 12px; padding: 12px;" wire:ignore>
                         <div id="rg-ch-production" style="min-height: 250px;"></div>
                     </div>
                     
@@ -165,7 +183,7 @@
                                 }
                             @endphp
                             
-                            <div class="rg-li" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04); background: rgba(255,255,255,0.75); backdrop-filter: blur(4px); transition: all 0.2s ease;" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='translateX(0)'">
+                            <div class="rg-li-box" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; backdrop-filter: blur(4px); transition: all 0.2s ease;" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='translateX(0)'">
                                 <div style="display: flex; align-items: center; gap: 10px; min-w-0;">
                                     <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: {{$shiftIconBg}}; box-shadow: 0 2px 4px rgba(0,0,0,0.06); flex-shrink: 0;">
                                         {{ $shiftIcon }}
