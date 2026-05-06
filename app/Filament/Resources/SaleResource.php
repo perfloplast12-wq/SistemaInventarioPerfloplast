@@ -583,7 +583,7 @@ class SaleResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\Action::make('export_excel')
-                    ->label('Exportar Excel Premium')
+                    ->label('Exportar Excel')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('success')
                     ->action(function ($livewire) {
