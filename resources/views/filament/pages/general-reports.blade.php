@@ -57,14 +57,14 @@
         </div>
 
         {{-- CHARTS --}}
-        <div class="rg-row r2" wire:ignore>
+        <div class="rg-row r2">
             <div class="rg-c">
                 <div class="rg-ct">Flujo de Ventas Diarias</div>
-                <div id="rg-ch-area" style="min-height:260px"></div>
+                <div id="rg-ch-area" style="min-height:260px" wire:ignore></div>
             </div>
             <div class="rg-c">
                 <div class="rg-ct">Top 5 Productos Rentables</div>
-                <div id="rg-ch-bar" style="min-height:260px"></div>
+                <div id="rg-ch-bar" style="min-height:260px" wire:ignore></div>
             </div>
         </div>
 
@@ -202,123 +202,105 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function waitApex(fn) {
-            if (typeof ApexCharts !== 'undefined') { fn(); return; }
-            setTimeout(function(){ waitApex(fn); }, 300);
-        }
+    var areaChart = null;
+    var barChart = null;
+    var productionChart = null;
 
-        waitApex(function() {
-            var isDark = document.documentElement.classList.contains('dark');
-            var gc = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+    window.updateAllCharts = function(salesVal, salesCat, prodNames, prodProfits, pCats, pVals, pEfs, pProds) {
+        var isDark = document.documentElement.classList.contains('dark');
+        var gc = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
 
-            // Area Chart
-            var areaEl = document.getElementById('rg-ch-area');
-            if (areaEl) {
-                new ApexCharts(areaEl, {
-                    series: [{name:'Ventas',data:@json($d['dailySales']->pluck('total'))}],
+        // 1. Area Chart (Ventas Diarias)
+        var areaEl = document.getElementById('rg-ch-area');
+        if (areaEl) {
+            if (!areaChart) {
+                areaChart = new ApexCharts(areaEl, {
+                    series: [{name:'Ventas',data:salesVal}],
                     chart:{type:'area',height:250,toolbar:{show:false},fontFamily:'Outfit',background:'transparent'},
                     theme:{mode:isDark?'dark':'light'},
                     colors:['#6366f1'],
                     stroke:{curve:'smooth',width:3},
                     fill:{type:'gradient',gradient:{opacityFrom:0.4,opacityTo:0.05}},
                     grid:{borderColor:gc,strokeDashArray:3},
-                    xaxis:{categories:@json($d['dailySales']->map(function($v){return \Illuminate\Support\Carbon::parse($v->date)->format('d/m');})),labels:{style:{fontWeight:700,fontSize:'10px'}}},
+                    xaxis:{categories:salesCat,labels:{style:{fontWeight:700,fontSize:'10px'}}},
                     yaxis:{labels:{formatter:function(v){return 'Q '+Math.round(v).toLocaleString()}}},
                     dataLabels:{enabled:false},
                     tooltip:{theme:'dark'}
-                }).render();
+                });
+                areaChart.render();
+            } else {
+                areaChart.updateOptions({
+                    xaxis: {categories: salesCat},
+                    theme: {mode: isDark?'dark':'light'},
+                    grid: {borderColor: gc}
+                });
+                areaChart.updateSeries([{name:'Ventas',data:salesVal}]);
             }
+        }
 
-            // Bar Chart
-            var barEl = document.getElementById('rg-ch-bar');
-            if (barEl) {
-                var cats = @json($d['topProducts']->pluck('name'));
-                var vals = @json($d['topProducts']->pluck('profit'));
-                if (!cats.length) {
-                    barEl.innerHTML = '<div style="text-align:center;padding:60px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase">Sin productos vendidos</div>';
-                } else {
-                    new ApexCharts(barEl, {
-                        series:[{name:'Utilidad',data:vals}],
-                        chart:{type:'bar',height:250,toolbar:{show:false},fontFamily:'Outfit'},
+        // 2. Bar Chart (Top Productos)
+        var barEl = document.getElementById('rg-ch-bar');
+        if (barEl) {
+            if (!prodNames.length) {
+                barEl.innerHTML = '<div style="text-align:center;padding:60px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase">Sin productos vendidos</div>';
+                barChart = null;
+            } else {
+                if (barEl.querySelector('.apexcharts-canvas') === null) {
+                    barEl.innerHTML = '';
+                    barChart = null;
+                }
+                if (!barChart) {
+                    barChart = new ApexCharts(barEl, {
+                        series:[{name:'Utilidad',data:prodProfits}],
+                        chart:{type:'bar',height:250,toolbar:{show:false},fontFamily:'Outfit',background:'transparent'},
                         theme:{mode:isDark?'dark':'light'},
                         colors:['#10b981','#6366f1','#f59e0b','#ef4444','#8b5cf6'],
                         plotOptions:{bar:{horizontal:true,borderRadius:6,barHeight:'50%',distributed:true}},
-                        xaxis:{categories:cats},
+                        xaxis:{categories:prodNames},
                         dataLabels:{enabled:true,formatter:function(v){return 'Q '+Math.round(v).toLocaleString()},style:{fontWeight:900}},
                         grid:{borderColor:gc},
                         legend:{show:false}
-                    }).render();
+                    });
+                    barChart.render();
+                } else {
+                    barChart.updateOptions({
+                        xaxis: {categories: prodNames},
+                        theme: {mode: isDark?'dark':'light'},
+                        grid: {borderColor: gc}
+                    });
+                    barChart.updateSeries([{name:'Utilidad',data:prodProfits}]);
                 }
             }
+        }
 
-            // Production by Shift Column Chart
-            var productionEl = document.getElementById('rg-ch-production');
-            if (productionEl) {
-                var pCats = @json($d['productionDetailed']->pluck('shift_name'));
-                var pVals = @json($d['productionDetailed']->pluck('total_qty'));
-                var pEfs = @json($d['productionDetailed']->map(fn($r) => $r->eficiencia !== null ? round($r->eficiencia) : null));
-                var pProds = @json($d['productionDetailed']->pluck('product_name'));
+        // 3. Production Chart
+        var productionEl = document.getElementById('rg-ch-production');
+        if (productionEl) {
+            var pColors = pCats.map(function(c) {
+                var lower = c.toLowerCase();
+                if (lower.indexOf('mañana') !== -1) return '#f59e0b';
+                if (lower.indexOf('tarde') !== -1) return '#3b82f6';
+                return '#64748b';
+            });
 
-                var pColors = pCats.map(function(c) {
-                    var lower = c.toLowerCase();
-                    if (lower.indexOf('mañana') !== -1) return '#f59e0b'; // Amber Orange
-                    if (lower.indexOf('tarde') !== -1) return '#3b82f6'; // Blue
-                    return '#64748b'; // Slate for Noche/Otro
-                });
-
-                new ApexCharts(productionEl, {
-                    series: [{
-                        name: 'Cantidad Producida',
-                        data: pVals
-                    }],
-                    chart: {
-                        type: 'bar',
-                        height: 250,
-                        toolbar: { show: false },
-                        fontFamily: 'Outfit',
-                        background: 'transparent'
-                    },
+            if (!productionChart) {
+                productionChart = new ApexCharts(productionEl, {
+                    series: [{name: 'Cantidad Producida', data: pVals}],
+                    chart: {type: 'bar', height: 250, toolbar: { show: false }, fontFamily: 'Outfit', background: 'transparent'},
                     theme: { mode: isDark ? 'dark' : 'light' },
                     colors: pColors,
-                    plotOptions: {
-                        bar: {
-                            horizontal: false,
-                            columnWidth: '35%',
-                            borderRadius: 6,
-                            distributed: true
-                        }
-                    },
+                    plotOptions: {bar: {horizontal: false, columnWidth: '35%', borderRadius: 6, distributed: true}},
                     dataLabels: {
                         enabled: true,
                         formatter: function(val, opt) {
                             var ef = pEfs[opt.dataPointIndex];
                             return val.toLocaleString() + ' u.' + (ef ? ' (' + ef + '%)' : '');
                         },
-                        style: {
-                            fontSize: '10px',
-                            fontWeight: '800',
-                            colors: [isDark ? '#f8fafc' : '#0f172a']
-                        }
+                        style: {fontSize: '10px', fontWeight: '800', colors: [isDark ? '#f8fafc' : '#0f172a']}
                     },
-                    grid: {
-                        borderColor: gc,
-                        strokeDashArray: 3
-                    },
-                    xaxis: {
-                        categories: pCats,
-                        labels: {
-                            style: {
-                                fontWeight: 700,
-                                fontSize: '10px'
-                            }
-                        }
-                    },
-                    yaxis: {
-                        labels: {
-                            formatter: function(v) { return Math.round(v).toLocaleString() + ' u.' }
-                        }
-                    },
+                    grid: {borderColor: gc, strokeDashArray: 3},
+                    xaxis: {categories: pCats, labels: {style: {fontWeight: 700, fontSize: '10px'}}},
+                    yaxis: {labels: {formatter: function(v) { return Math.round(v).toLocaleString() + ' u.' }}},
                     tooltip: {
                         theme: 'dark',
                         custom: function({ series, seriesIndex, dataPointIndex, w }) {
@@ -326,7 +308,6 @@
                             var ef = pEfs[dataPointIndex];
                             var prod = pProds[dataPointIndex];
                             var shift = pCats[dataPointIndex];
-                            
                             return '<div style="padding: 10px; font-family: Outfit; font-size: 11px; line-height: 1.4;">' +
                                 '<div style="font-weight: 800; text-transform: uppercase; color: #a5b4fc; margin-bottom: 4px;">' + shift + '</div>' +
                                 '<div><span style="font-weight: bold; color: #94a3b8;">Producto:</span> <span style="font-weight: bold; color: #fff;">' + prod + '</span></div>' +
@@ -336,9 +317,56 @@
                         }
                     },
                     legend: { show: false }
-                }).render();
+                });
+                productionChart.render();
+            } else {
+                productionChart.updateOptions({
+                    xaxis: {categories: pCats},
+                    colors: pColors,
+                    theme: {mode: isDark?'dark':'light'},
+                    grid: {borderColor: gc},
+                    dataLabels: {style: {colors: [isDark ? '#f8fafc' : '#0f172a']}}
+                });
+                productionChart.updateSeries([{name: 'Cantidad Producida', data: pVals}]);
             }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        function waitApex(fn) {
+            if (typeof ApexCharts !== 'undefined') { fn(); return; }
+            setTimeout(function(){ waitApex(fn); }, 300);
+        }
+        waitApex(function() {
+            window.updateAllCharts(
+                @json($d['dailySales']->pluck('total')),
+                @json($d['dailySales']->map(fn($v) => \Illuminate\Support\Carbon::parse($v->date)->format('d/m'))),
+                @json($d['topProducts']->pluck('name')),
+                @json($d['topProducts']->pluck('profit')),
+                @json($d['productionDetailed']->pluck('shift_name')),
+                @json($d['productionDetailed']->pluck('total_qty')),
+                @json($d['productionDetailed']->map(fn($r) => $r->eficiencia !== null ? round($r->eficiencia) : null)),
+                @json($d['productionDetailed']->pluck('product_name'))
+            );
         });
     });
     </script>
+
+    {{-- Refrescador dinámico de Livewire --}}
+    <div wire:key="chart-refresher-{{ time() }}">
+        <script>
+            if (typeof window.updateAllCharts === 'function') {
+                window.updateAllCharts(
+                    @json($d['dailySales']->pluck('total')),
+                    @json($d['dailySales']->map(fn($v) => \Illuminate\Support\Carbon::parse($v->date)->format('d/m'))),
+                    @json($d['topProducts']->pluck('name')),
+                    @json($d['topProducts']->pluck('profit')),
+                    @json($d['productionDetailed']->pluck('shift_name')),
+                    @json($d['productionDetailed']->pluck('total_qty')),
+                    @json($d['productionDetailed']->map(fn($r) => $r->eficiencia !== null ? round($r->eficiencia) : null)),
+                    @json($d['productionDetailed']->pluck('product_name'))
+                );
+            }
+        </script>
+    </div>
 </x-filament-panels::page>
