@@ -38,7 +38,7 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
 
     $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
         ->where('created_at', '>=', now()->subHours(18))
-        ->latest('id')
+        ->latest('created_at')
         ->first();
 
     if (!$lastLocation) {
@@ -50,7 +50,7 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
     if ($isOfflineSignal) {
         $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $allTruckDispatchIds)
             ->where('speed', '!=', -1)
-            ->latest('id')
+            ->latest('created_at')
             ->first();
         $displayLocation = $realLocation ?? $lastLocation;
     } else {

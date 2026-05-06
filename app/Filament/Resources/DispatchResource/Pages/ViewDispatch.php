@@ -103,7 +103,12 @@ class ViewDispatch extends ViewRecord
                         Components\ViewEntry::make('map')
                             ->view('components.leaflet-route-map')
                             ->viewData([
-                                'locations' => $this->record->locations()->orderBy('created_at', 'asc')->get(),
+                                'locations' => $this->record->locations()
+                                    ->orderBy('created_at', 'desc')
+                                    ->limit(100)
+                                    ->get()
+                                    ->reverse()
+                                    ->values(),
                                 'dispatchId' => $this->record->id,
                                 'dispatchNumber' => $this->record->dispatch_number,
                                 'driverName' => $this->record->driver?->name ?? $this->record->driver_name ?? 'Sin asignar',
