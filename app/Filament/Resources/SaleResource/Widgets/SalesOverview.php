@@ -28,9 +28,12 @@ class SalesOverview extends BaseWidget
         $salesMonth = Sale::where('status', 'confirmed')->where('sale_date', '>=', $thisMonth)->sum('total');
         $paidMonth = SalePayment::whereHas('sale', fn($q) => $q->where('status', 'confirmed')->where('sale_date', '>=', $thisMonth))->sum('amount');
         
-        $totalSalesGlobal = Sale::where('status', 'confirmed')->sum('total');
-        $totalPaidGlobal = SalePayment::whereHas('sale', fn($q) => $q->where('status', 'confirmed'))->sum('amount');
-        $pendingTotal = $totalSalesGlobal - $totalPaidGlobal;
+        $sales = Sale::withSum('payments', 'amount')->where('status', 'confirmed')->get();
+        $pendingTotal = $sales->sum(function ($sale) {
+            $paid = $sale->payments_sum_amount ?? 0;
+            $balance = $sale->total - $paid;
+            return $balance > 0 ? $balance : 0;
+        });
 
         return [
             Stat::make('Ventas Hoy', 'Q ' . number_format($salesToday, 2))
