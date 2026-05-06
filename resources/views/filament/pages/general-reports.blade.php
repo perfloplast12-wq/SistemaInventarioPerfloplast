@@ -121,99 +121,80 @@
                     <span>Rendimiento y Producción por Turno</span>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
-                    @foreach($d['productionDetailed'] as $row)
-                        @php
-                            $ef = $row->eficiencia;
-                            if ($ef === null) {
-                                $badgeBg = 'rgba(148, 163, 184, 0.15)';
-                                $badgeColor = '#64748b';
-                                $progressColor = '#64748b';
-                                $efText = 'N/A';
-                            } elseif ($ef >= 100) {
-                                $badgeBg = 'rgba(16, 185, 129, 0.15)';
-                                $badgeColor = '#10b981';
-                                $progressColor = '#10b981';
-                                $efText = number_format($ef, 0) . '%';
-                            } elseif ($ef >= 70) {
-                                $badgeBg = 'rgba(245, 158, 11, 0.15)';
-                                $badgeColor = '#f59e0b';
-                                $progressColor = '#f59e0b';
-                                $efText = number_format($ef, 0) . '%';
-                            } else {
-                                $badgeBg = 'rgba(239, 68, 68, 0.15)';
-                                $badgeColor = '#ef4444';
-                                $progressColor = '#ef4444';
-                                $efText = number_format($ef, 0) . '%';
-                            }
+                {{-- Split Layout: Left Chart, Right Details --}}
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 14px;" class="lg:grid-cols-12">
+                    
+                    {{-- Left Column: Interactive Column Chart --}}
+                    <div style="background: rgba(255,255,255,0.4); border-radius: 12px; padding: 12px; border: 1px solid rgba(0,0,0,0.03);" class="dark:bg-slate-900/40 dark:border-white/5 lg:col-span-7" wire:ignore>
+                        <div id="rg-ch-production" style="min-height: 250px;"></div>
+                    </div>
+                    
+                    {{-- Right Column: Detailed List Sidebar --}}
+                    <div style="display: flex; flex-direction: column; gap: 10px;" class="lg:col-span-5">
+                        @foreach($d['productionDetailed'] as $row)
+                            @php
+                                $ef = $row->eficiencia;
+                                if ($ef === null) {
+                                    $badgeBg = 'rgba(148, 163, 184, 0.15)';
+                                    $badgeColor = '#64748b';
+                                    $efText = 'N/A';
+                                } elseif ($ef >= 100) {
+                                    $badgeBg = 'rgba(16, 185, 129, 0.15)';
+                                    $badgeColor = '#10b981';
+                                    $efText = number_format($ef, 0) . '%';
+                                } elseif ($ef >= 70) {
+                                    $badgeBg = 'rgba(245, 158, 11, 0.15)';
+                                    $badgeColor = '#f59e0b';
+                                    $efText = number_format($ef, 0) . '%';
+                                } else {
+                                    $badgeBg = 'rgba(239, 68, 68, 0.15)';
+                                    $badgeColor = '#ef4444';
+                                    $efText = number_format($ef, 0) . '%';
+                                }
+                                
+                                $shiftNameLower = mb_strtolower($row->shift_name);
+                                if (str_contains($shiftNameLower, 'mañana')) {
+                                    $shiftIconBg = 'linear-gradient(135deg, #fef08a, #f97316)';
+                                    $shiftIcon = '☀️';
+                                } elseif (str_contains($shiftNameLower, 'tarde')) {
+                                    $shiftIconBg = 'linear-gradient(135deg, #38bdf8, #1d4ed8)';
+                                    $shiftIcon = '⛅';
+                                } else {
+                                    $shiftIconBg = 'linear-gradient(135deg, #475569, #0f172a)';
+                                    $shiftIcon = '🌙';
+                                }
+                            @endphp
                             
-                            $shiftNameLower = mb_strtolower($row->shift_name);
-                            if (str_contains($shiftNameLower, 'mañana')) {
-                                $shiftIconBg = 'linear-gradient(135deg, #fef08a, #f97316)';
-                                $shiftIcon = '☀️';
-                            } elseif (str_contains($shiftNameLower, 'tarde')) {
-                                $shiftIconBg = 'linear-gradient(135deg, #38bdf8, #1d4ed8)';
-                                $shiftIcon = '⛅';
-                            } else {
-                                $shiftIconBg = 'linear-gradient(135deg, #475569, #0f172a)';
-                                $shiftIcon = '🌙';
-                            }
-                        @endphp
-                        
-                        <div class="rg-li" style="display: flex; flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; border-radius: 14px; transition: all 0.25s ease; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'; this.style.borderColor='rgba(99,102,241,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='rgba(0,0,0,0.05)';">
-                            
-                            {{-- Top row: Shift Info and Efficiency Badge --}}
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; background: {{$shiftIconBg}}; box-shadow: 0 3px 6px rgba(0,0,0,0.08);">
+                            <div class="rg-li" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.04); background: rgba(255,255,255,0.75); backdrop-filter: blur(4px); transition: all 0.2s ease;" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='translateX(0)'">
+                                <div style="display: flex; align-items: center; gap: 10px; min-w-0;">
+                                    <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: {{$shiftIconBg}}; box-shadow: 0 2px 4px rgba(0,0,0,0.06); flex-shrink: 0;">
                                         {{ $shiftIcon }}
                                     </div>
-                                    <div>
-                                        <div class="font-extrabold text-slate-800 dark:text-slate-100" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em;">
+                                    <div style="min-w-0;">
+                                        <div class="font-extrabold text-slate-800 dark:text-slate-100 truncate" style="font-size: 11px; text-transform: uppercase;">
                                             {{ $row->shift_name }}
                                         </div>
-                                        <div class="text-slate-400 dark:text-slate-500" style="font-size: 10px; font-weight: bold;">
-                                            {{ $row->operations }} {{ $row->operations == 1 ? 'operación' : 'operaciones' }}
+                                        <div class="text-slate-400 dark:text-slate-500 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
+                                            {{ $row->product_name }}
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div style="background: {{ $badgeBg }}; color: {{ $badgeColor }}; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 3px; letter-spacing: -0.02em;">
-                                    {{ $efText }} <span style="font-size: 8px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">Efic.</span>
-                                </div>
-                            </div>
-                            
-                            {{-- Mid row: Product Name & Quantity Produced --}}
-                            <div style="margin: 4px 0; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(0,0,0,0.04); padding-top: 10px;" class="dark:border-white/5">
-                                <div style="max-width: 65%;">
-                                    <div class="text-slate-400 dark:text-slate-500" style="font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">Producto Fabricado</div>
-                                    <div class="text-slate-700 dark:text-slate-200 font-bold" style="font-size: 12px; line-height: 1.3; margin-top: 2px;">
-                                        {{ $row->product_name }}
+                                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                                    <div style="text-align: right;">
+                                        <div class="text-slate-800 dark:text-slate-200 font-extrabold" style="font-size: 13px;">
+                                            {{ number_format($row->total_qty) }} <span style="font-size: 8px; font-weight: bold; color: #94a3b8;">u.</span>
+                                        </div>
+                                        <div class="text-slate-400" style="font-size: 8px; font-weight: bold;">
+                                            {{ $row->operations }} op.
+                                        </div>
                                     </div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="text-slate-400 dark:text-slate-500" style="font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">Volumen Total</div>
-                                    <div class="text-indigo-600 dark:text-indigo-400 font-black" style="font-size: 18px; line-height: 1;">
-                                        {{ number_format($row->total_qty) }} <span style="font-size: 10px; font-weight: bold; opacity: 0.7; color: #64748b;" class="dark:text-slate-400">u.</span>
+                                    <div style="background: {{ $badgeBg }}; color: {{ $badgeColor }}; font-weight: 900; font-size: 10px; padding: 2px 8px; border-radius: 12px; min-w: 42px; text-align: center;">
+                                        {{ $efText }}
                                     </div>
                                 </div>
                             </div>
-                            
-                            {{-- Bottom row: Interactive Progress Bar --}}
-                            @if($ef !== null)
-                            <div style="margin-top: 2px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 9px; font-weight: bold; color: #94a3b8;">
-                                    <span>Progreso de Meta</span>
-                                    <span>{{ number_format($ef, 0) }}%</span>
-                                </div>
-                                <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden;" class="dark:bg-white/10">
-                                    <div style="width: {{ min(100, $ef) }}%; height: 100%; background: {{ $progressColor }}; border-radius: 10px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-                                </div>
-                            </div>
-                            @endif
-                            
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -269,6 +250,93 @@
                         legend:{show:false}
                     }).render();
                 }
+            }
+
+            // Production by Shift Column Chart
+            var productionEl = document.getElementById('rg-ch-production');
+            if (productionEl) {
+                var pCats = @json($d['productionDetailed']->pluck('shift_name'));
+                var pVals = @json($d['productionDetailed']->pluck('total_qty'));
+                var pEfs = @json($d['productionDetailed']->map(fn($r) => $r->eficiencia !== null ? round($r->eficiencia) : null));
+                var pProds = @json($d['productionDetailed']->pluck('product_name'));
+
+                var pColors = pCats.map(function(c) {
+                    var lower = c.toLowerCase();
+                    if (lower.indexOf('mañana') !== -1) return '#f59e0b'; // Amber Orange
+                    if (lower.indexOf('tarde') !== -1) return '#3b82f6'; // Blue
+                    return '#64748b'; // Slate for Noche/Otro
+                });
+
+                new ApexCharts(productionEl, {
+                    series: [{
+                        name: 'Cantidad Producida',
+                        data: pVals
+                    }],
+                    chart: {
+                        type: 'bar',
+                        height: 250,
+                        toolbar: { show: false },
+                        fontFamily: 'Outfit',
+                        background: 'transparent'
+                    },
+                    theme: { mode: isDark ? 'dark' : 'light' },
+                    colors: pColors,
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '35%',
+                            borderRadius: 6,
+                            distributed: true
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function(val, opt) {
+                            var ef = pEfs[opt.dataPointIndex];
+                            return val.toLocaleString() + ' u.' + (ef ? ' (' + ef + '%)' : '');
+                        },
+                        style: {
+                            fontSize: '10px',
+                            fontWeight: '800',
+                            colors: [isDark ? '#f8fafc' : '#0f172a']
+                        }
+                    },
+                    grid: {
+                        borderColor: gc,
+                        strokeDashArray: 3
+                    },
+                    xaxis: {
+                        categories: pCats,
+                        labels: {
+                            style: {
+                                fontWeight: 700,
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function(v) { return Math.round(v).toLocaleString() + ' u.' }
+                        }
+                    },
+                    tooltip: {
+                        theme: 'dark',
+                        custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                            var q = pVals[dataPointIndex];
+                            var ef = pEfs[dataPointIndex];
+                            var prod = pProds[dataPointIndex];
+                            var shift = pCats[dataPointIndex];
+                            
+                            return '<div style="padding: 10px; font-family: Outfit; font-size: 11px; line-height: 1.4;">' +
+                                '<div style="font-weight: 800; text-transform: uppercase; color: #a5b4fc; margin-bottom: 4px;">' + shift + '</div>' +
+                                '<div><span style="font-weight: bold; color: #94a3b8;">Producto:</span> <span style="font-weight: bold; color: #fff;">' + prod + '</span></div>' +
+                                '<div><span style="font-weight: bold; color: #94a3b8;">Cantidad:</span> <span style="font-weight: 800; color: #fff;">' + q.toLocaleString() + ' u.</span></div>' +
+                                (ef ? '<div><span style="font-weight: bold; color: #94a3b8;">Eficiencia:</span> <span style="font-weight: 900; color: #10b981;">' + ef + '%</span></div>' : '') +
+                                '</div>';
+                        }
+                    },
+                    legend: { show: false }
+                }).render();
             }
         });
     });
