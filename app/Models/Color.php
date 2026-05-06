@@ -35,6 +35,18 @@ class Color extends Model
      */
     public function getDisplayNameAttribute(): string
     {
+        if (empty($this->code)) {
+            return $this->name;
+        }
+
+        // Normalize spaces, hyphens, and casing to detect duplicates
+        $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($this->name));
+        $cleanCode = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($this->code));
+
+        if ($cleanName === $cleanCode) {
+            return $this->name;
+        }
+
         return "{$this->name} ({$this->code})";
     }
 
