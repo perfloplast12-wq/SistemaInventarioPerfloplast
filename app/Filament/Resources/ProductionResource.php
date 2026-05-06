@@ -55,6 +55,8 @@ class ProductionResource extends Resource
                                     ->label('Fecha de Producción')
                                     ->default(now())
                                     ->required()
+                                    ->disabled()
+                                    ->dehydrated()
                                     ->live()
                                     ->afterStateUpdated(function ($state, Forms\Set $set) {
                                         if (!$state) return;
@@ -83,6 +85,7 @@ class ProductionResource extends Resource
                                     ->relationship('shift', 'name')
                                     ->options(fn () => \App\Models\Shift::where('is_active', true)->pluck('name', 'id'))
                                     ->required()
+                                    ->disabled()
                                     ->dehydrated(true)
                                     ->hint('Se detecta automáticamente según la hora')
                                     ->default(function () {
