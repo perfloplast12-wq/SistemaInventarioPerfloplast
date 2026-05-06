@@ -34,24 +34,50 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
 
 // Polling endpoint: get the latest dispatch location for real-time map updates
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
-    // FAST PATH: query this dispatch directly (uses composite index perfectly)
-    $lastLocation = \App\Models\DispatchLocation::where('dispatch_id', $dispatch->id)
-        ->orderByDesc('created_at')
-        ->first();
+    // 1. Get all active dispatches for the same truck (in progress)
+    $activeDispatchIds = [];
+    if ($dispatch->truck_id) {
+        $activeDispatchIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
+            ->where('status', 'in_progress')
+            ->pluck('id')
+            ->toArray();
+    }
 
-    // FALLBACK: if this dispatch has no locations, check other dispatches for same truck
+    // Always include the current dispatch ID in our search
+    if (!in_array($dispatch->id, $activeDispatchIds)) {
+        $activeDispatchIds[] = $dispatch->id;
+    }
+
+    // 2. Query each active dispatch ID individually (perfectly indexed, ultra-fast)
+    $lastLocation = null;
+    foreach ($activeDispatchIds as $aid) {
+        $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
+            ->orderByDesc('created_at')
+            ->first();
+        if ($loc) {
+            if (!$lastLocation || $loc->created_at->gt($lastLocation->created_at)) {
+                $lastLocation = $loc;
+            }
+        }
+    }
+
+    // 3. Fallback: if no active dispatches have coordinates, check the 5 most recent dispatches for this truck
     if (!$lastLocation && $dispatch->truck_id) {
         $otherIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
-            ->where('id', '!=', $dispatch->id)
+            ->whereNotIn('id', $activeDispatchIds)
             ->orderByDesc('id')
             ->limit(5)
             ->pluck('id');
 
-        foreach ($otherIds as $otherId) {
-            $lastLocation = \App\Models\DispatchLocation::where('dispatch_id', $otherId)
+        foreach ($otherIds as $oid) {
+            $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
                 ->orderByDesc('created_at')
                 ->first();
-            if ($lastLocation) break;
+            if ($loc) {
+                if (!$lastLocation || $loc->created_at->gt($lastLocation->created_at)) {
+                    $lastLocation = $loc;
+                }
+            }
         }
     }
 
@@ -61,13 +87,39 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
 
     $isOfflineSignal = ($lastLocation->speed == -1);
 
+    // 4. Handle offline signal check across all searched dispatches
     $displayLocation = $lastLocation;
     if ($isOfflineSignal) {
-        $realLocation = \App\Models\DispatchLocation::where('dispatch_id', $lastLocation->dispatch_id)
-            ->where('speed', '!=', -1)
-            ->orderByDesc('created_at')
-            ->first();
-        if ($realLocation) $displayLocation = $realLocation;
+        $realLocation = null;
+        // Search active ones first
+        foreach ($activeDispatchIds as $aid) {
+            $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
+                ->where('speed', '!=', -1)
+                ->orderByDesc('created_at')
+                ->first();
+            if ($loc) {
+                if (!$realLocation || $loc->created_at->gt($realLocation->created_at)) {
+                    $realLocation = $loc;
+                }
+            }
+        }
+        // Then fallback ones if still null
+        if (!$realLocation && $dispatch->truck_id) {
+            foreach ($otherIds as $oid) {
+                $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+                    ->where('speed', '!=', -1)
+                    ->orderByDesc('created_at')
+                    ->first();
+                if ($loc) {
+                    if (!$realLocation || $loc->created_at->gt($realLocation->created_at)) {
+                        $realLocation = $loc;
+                    }
+                }
+            }
+        }
+        if ($realLocation) {
+            $displayLocation = $realLocation;
+        }
     }
 
     $secsSince = $displayLocation->created_at ? now()->diffInSeconds($displayLocation->created_at) : 999;

@@ -105,23 +105,49 @@ class ViewDispatch extends ViewRecord
                             ->viewData(function () {
                                 $record = $this->record;
 
-                                // Fast: query this dispatch first (perfect index match)
-                                $latest = \App\Models\DispatchLocation::where('dispatch_id', $record->id)
-                                    ->orderByDesc('created_at')
-                                    ->first();
+                                // 1. Get all active dispatches for the same truck (in progress)
+                                $activeDispatchIds = [];
+                                if ($record->truck_id) {
+                                    $activeDispatchIds = \App\Models\Dispatch::where('truck_id', $record->truck_id)
+                                        ->where('status', 'in_progress')
+                                        ->pluck('id')
+                                        ->toArray();
+                                }
 
-                                // Fallback: check other recent dispatches for same truck
+                                // Always include the current dispatch ID
+                                if (!in_array($record->id, $activeDispatchIds)) {
+                                    $activeDispatchIds[] = $record->id;
+                                }
+
+                                // 2. Query each active dispatch ID individually (perfectly indexed, ultra-fast)
+                                $latest = null;
+                                foreach ($activeDispatchIds as $aid) {
+                                    $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
+                                        ->orderByDesc('created_at')
+                                        ->first();
+                                    if ($loc) {
+                                        if (!$latest || $loc->created_at->gt($latest->created_at)) {
+                                            $latest = $loc;
+                                        }
+                                    }
+                                }
+
+                                // 3. Fallback: check other recent dispatches for this truck
                                 if (!$latest && $record->truck_id) {
                                     $otherIds = \App\Models\Dispatch::where('truck_id', $record->truck_id)
-                                        ->where('id', '!=', $record->id)
+                                        ->whereNotIn('id', $activeDispatchIds)
                                         ->orderByDesc('id')
                                         ->limit(5)
                                         ->pluck('id');
                                     foreach ($otherIds as $oid) {
-                                        $latest = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+                                        $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
                                             ->orderByDesc('created_at')
                                             ->first();
-                                        if ($latest) break;
+                                        if ($loc) {
+                                            if (!$latest || $loc->created_at->gt($latest->created_at)) {
+                                                $latest = $loc;
+                                            }
+                                        }
                                     }
                                 }
 
