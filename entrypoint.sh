@@ -9,6 +9,10 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi
 
+# Run database migrations
+echo "🗄️  Running database migrations..."
+php artisan migrate --force
+
 # Optimization (Crucial for Octane)
 echo "⚙️  Optimizing Laravel..."
 php artisan filament:optimize --ansi || true

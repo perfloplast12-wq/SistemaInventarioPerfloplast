@@ -152,7 +152,7 @@ class AuditLogResource extends Resource
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i:s', config('app.timezone'))
                     ->sortable()
-                    ->description(fn ($record) => $record->created_at->diffForHumans()),
+                    ->description(fn ($record) => $record->created_at ? $record->created_at->diffForHumans() : ''),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuario')
