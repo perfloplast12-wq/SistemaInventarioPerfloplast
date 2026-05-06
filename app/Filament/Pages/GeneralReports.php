@@ -80,9 +80,23 @@ class GeneralReports extends Page
             ->get();
 
         $totalSales = (float) $sales->sum('total');
+        
+        // Calcular deudas reales y cobros reales imputados a deudas para evitar contaminación por vueltos
+        $totalPending = 0.0;
+        $imputedPaid = 0.0;
+        foreach ($sales as $sale) {
+            $paid = (float) $sale->total_paid;
+            $balance = (float) $sale->total - $paid;
+            if ($balance > 0) {
+                $totalPending += $balance;
+                $imputedPaid += $paid;
+            } else {
+                $imputedPaid += (float) $sale->total;
+            }
+        }
+        
         $totalPaid = (float) $sales->sum('total_paid');
-        $totalPending = $totalSales - $totalPaid;
-        $eficienciaCobranza = $totalSales > 0 ? ($totalPaid / $totalSales) * 100 : 0;
+        $eficienciaCobranza = $totalSales > 0 ? ($imputedPaid / $totalSales) * 100 : 0;
         
         $totalCosts = (float) DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')

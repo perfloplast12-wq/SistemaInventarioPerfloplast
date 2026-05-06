@@ -18,9 +18,10 @@
         .section-title { font-size: 13px; font-weight: 900; margin: 25px 0 15px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px; text-transform: uppercase; color: #1e293b; }
         
         /* KPIs Style Screenshots */
-        .kpi-row { width: 100%; margin-bottom: 25px; white-space: nowrap; }
-        .kpi-card { width: 22%; background: #ffffff; padding: 15px 8px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block; vertical-align: top; margin-right: 1.5%; border-left-width: 5px; box-sizing: border-box; white-space: normal; }
-        .kpi-card:last-child { margin-right: 0; }
+        .kpi-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+        .kpi-td { width: 25%; padding: 0 8px 0 0; vertical-align: top; box-sizing: border-box; }
+        .kpi-td:last-child { padding-right: 0; }
+        .kpi-card { background: #ffffff; padding: 15px 8px; border-radius: 6px; border: 1px solid #e2e8f0; border-left-width: 5px; box-sizing: border-box; }
         .kpi-label { font-size: 8px; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
         .kpi-value { font-size: 16px; font-weight: 900; color: #0f172a; }
 
@@ -53,24 +54,34 @@
     <div class="gen-date">Documento Oficial Generado: {{ now()->format('d/m/Y H:i:s') }}</div>
 
     <div class="section-title">1. RESUMEN EJECUTIVO (KPIS)</div>
-    <div class="kpi-row">
-        <div class="kpi-card border-emerald">
-            <div class="kpi-label">INGRESOS BRUTOS</div>
-            <div class="kpi-value">Q {{ number_format($totalSales, 2) }}</div>
-        </div>
-        <div class="kpi-card border-red">
-            <div class="kpi-label">COSTOS DIRECTOS EST.</div>
-            <div class="kpi-value">Q {{ number_format($totalCosts, 2) }}</div>
-        </div>
-        <div class="kpi-card border-blue">
-            <div class="kpi-label">UTILIDAD NETA</div>
-            <div class="kpi-value">Q {{ number_format($earnings, 2) }}</div>
-        </div>
-        <div class="kpi-card border-purple">
-            <div class="kpi-label">MARGEN DE RENTABILIDAD</div>
-            <div class="kpi-value">{{ number_format($margenBruto, 2) }}%</div>
-        </div>
-    </div>
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-td">
+                <div class="kpi-card border-emerald">
+                    <div class="kpi-label">INGRESOS BRUTOS</div>
+                    <div class="kpi-value">Q {{ number_format($totalSales, 2) }}</div>
+                </div>
+            </td>
+            <td class="kpi-td">
+                <div class="kpi-card border-red">
+                    <div class="kpi-label">COSTOS DIRECTOS EST.</div>
+                    <div class="kpi-value">Q {{ number_format($totalCosts, 2) }}</div>
+                </div>
+            </td>
+            <td class="kpi-td">
+                <div class="kpi-card border-blue">
+                    <div class="kpi-label">UTILIDAD NETA</div>
+                    <div class="kpi-value">Q {{ number_format($earnings, 2) }}</div>
+                </div>
+            </td>
+            <td class="kpi-td">
+                <div class="kpi-card border-purple">
+                    <div class="kpi-label">MARGEN DE RENTABILIDAD</div>
+                    <div class="kpi-value">{{ number_format($margenBruto, 2) }}%</div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <div class="section-title">2. DETALLES FINANCIEROS Y RENDIMIENTO DE CARTERA</div>
     <table>
