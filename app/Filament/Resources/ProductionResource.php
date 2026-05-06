@@ -242,7 +242,7 @@ class ProductionResource extends Resource
                                                     $isMatch = $s->warehouse_id == $selectedWarehouseId;
                                                     $colorInfo = $s->color_id ? " (" . ($s->color?->name ?? 'Color') . ")" : "";
                                                     
-                                                    $colorClass = $isMatch ? 'text-success-600 font-bold' : 'text-gray-500 dark:text-gray-400';
+                                                    $colorClass = $isMatch ? 'text-success-600 dark:text-success-400 font-bold' : 'text-gray-500 dark:text-gray-400';
                                                     $indicator = $isMatch ? '➔' : '•';
                                                     
                                                     $html .= "<div class='{$colorClass}'>{$indicator} {$locName}{$colorInfo}: " . number_format($s->quantity, 2) . "</div>";

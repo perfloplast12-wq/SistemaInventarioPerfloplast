@@ -208,7 +208,7 @@
                                         <div class="font-extrabold text-slate-800 dark:text-slate-100 truncate" style="font-size: 11px; text-transform: uppercase;">
                                             {{ $row->shift_name }}
                                         </div>
-                                        <div class="text-slate-400 dark:text-slate-400 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
+                                        <div class="text-slate-400 dark:text-slate-300 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
                                             {{ $row->product_name }}
                                         </div>
                                     </div>

@@ -244,7 +244,7 @@ class SaleResource extends Resource
 
                                                         $stock = (float) $query->sum('quantity');
                                                         
-                                                        $color = $stock > 0 ? 'text-success-600' : 'text-danger-600';
+                                                        $color = $stock > 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400';
                                                         $label = $stock > 0 ? '✅ Disponible: ' : '❌ Agotado: ';
 
                                                         return new \Illuminate\Support\HtmlString("<span class='font-bold {$color}'>{$label} " . number_format($stock, 2) . "</span>");
@@ -269,7 +269,7 @@ class SaleResource extends Resource
                                                 Forms\Components\Placeholder::make('unit_price_display')
                                                     ->label('Precio Q')
                                                     ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
-                                                        <div class='bg-gray-100 border-2 border-gray-300 rounded-lg p-2 text-center text-2xl font-black text-gray-950 shadow-sm'>
+                                                        <div class='bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg p-2 text-center text-2xl font-black text-gray-950 dark:text-gray-50 shadow-sm'>
                                                             Q " . number_format((float)($get('unit_price') ?? 0), 2, '.', ',') . "
                                                         </div>
                                                     "))
@@ -278,7 +278,7 @@ class SaleResource extends Resource
                                                 Forms\Components\Placeholder::make('subtotal_display')
                                                     ->label('Subtotal')
                                                     ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
-                                                        <div class='bg-primary-50 border-2 border-primary-200 rounded-lg p-2 text-right text-2xl font-black text-primary-700 shadow-sm'>
+                                                        <div class='bg-primary-50 dark:bg-primary-950/30 border-2 border-primary-200 dark:border-primary-800/80 rounded-lg p-2 text-right text-2xl font-black text-primary-700 dark:text-primary-300 shadow-sm'>
                                                             Q " . number_format((float)($get('subtotal') ?? 0), 2, '.', ',') . "
                                                         </div>
                                                     "))
@@ -319,7 +319,8 @@ class SaleResource extends Resource
                                     ->schema([
                                         Forms\Components\Placeholder::make('subtotal_venta_display')
                                             ->label('Subtotal Bruto')
-                                            ->content(fn (Get $get) => 'Q ' . number_format(self::calculateSubtotalInForm($get), 2, '.', ',')),
+                                            ->content(fn (Get $get) => 'Q ' . number_format(self::calculateSubtotalInForm($get), 2, '.', ','))
+                                            ->extraAttributes(['class' => 'text-xl font-bold text-gray-900 dark:text-gray-100']),
 
                                         Forms\Components\Group::make([
                                             Forms\Components\Select::make('discount_type')
@@ -348,7 +349,7 @@ class SaleResource extends Resource
                                         Forms\Components\Placeholder::make('total_final_display')
                                             ->label('TOTAL A PAGAR')
                                             ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2, '.', ','))
-                                            ->extraAttributes(['class' => 'text-2xl font-black text-primary-600']),
+                                            ->extraAttributes(['class' => 'text-2xl font-black text-primary-600 dark:text-primary-400']),
 
                                         Forms\Components\Group::make([
                                             Forms\Components\Select::make('payment_method')
@@ -377,7 +378,7 @@ class SaleResource extends Resource
                                                     $change = max(0, $received - $total);
                                                     return 'Q ' . number_format($change, 2, '.', ',');
                                                 })
-                                                ->extraAttributes(['class' => 'text-xl font-bold text-success-600']),
+                                                ->extraAttributes(['class' => 'text-xl font-bold text-success-600 dark:text-success-400']),
                                         ])->columnSpan(2)->columns(2),
                                     ]),
                                 

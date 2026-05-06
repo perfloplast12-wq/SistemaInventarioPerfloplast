@@ -217,7 +217,7 @@ class QuickSale extends Page implements HasForms
                                                 Placeholder::make('subtotal_item_display')
                                                     ->label('Subtotal')
                                                     ->content(fn (Get $get) => 'Q ' . number_format((float)($get('subtotal') ?? 0), 2))
-                                                    ->extraAttributes(['class' => 'font-bold pt-2 text-right'])
+                                                    ->extraAttributes(['class' => 'font-bold pt-2 text-right text-gray-900 dark:text-gray-100'])
                                                     ->columnSpan(['default' => 4, 'md' => 2]),
 
                                                 \Filament\Forms\Components\Hidden::make('subtotal'),
@@ -237,7 +237,8 @@ class QuickSale extends Page implements HasForms
                             ->schema([
                                 Placeholder::make('gross_subtotal')
                                     ->label('Subtotal Bruto')
-                                    ->content(fn (Get $get) => 'Q ' . number_format($this->getGrossSubtotal($get), 2)),
+                                    ->content(fn (Get $get) => 'Q ' . number_format($this->getGrossSubtotal($get), 2))
+                                    ->extraAttributes(['class' => 'text-xl font-bold text-gray-900 dark:text-gray-100']),
 
                                 \Filament\Forms\Components\Group::make([
                                     Select::make('discount_type')
@@ -263,7 +264,7 @@ class QuickSale extends Page implements HasForms
                                 Placeholder::make('total_to_pay')
                                     ->label('TOTAL FINAL')
                                     ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2))
-                                    ->extraAttributes(['class' => 'text-3xl font-black text-primary-600']),
+                                    ->extraAttributes(['class' => 'text-3xl font-black text-primary-600 dark:text-primary-400']),
 
                                 \Filament\Forms\Components\Group::make([
                                     Select::make('payment_method')
@@ -291,20 +292,21 @@ class QuickSale extends Page implements HasForms
                                 Grid::make(3)->schema([
                                     Placeholder::make('summary_total')
                                         ->label('Total a Cobrar')
-                                        ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2)),
+                                        ->content(fn (Get $get) => 'Q ' . number_format((float)($get('total') ?? 0), 2))
+                                        ->extraAttributes(['class' => 'font-bold text-gray-900 dark:text-gray-100']),
                                     
                                     Placeholder::make('summary_balance')
                                         ->label('Saldo Pendiente')
                                         ->content(fn (Get $get) => 'Q ' . number_format((float)($get('balance') ?? 0), 2))
                                         ->extraAttributes(fn (Get $get) => [
-                                            'class' => (float)$get('balance') > 0.01 ? 'text-danger-600 font-bold' : 'text-success-600 font-bold'
+                                            'class' => (float)$get('balance') > 0.01 ? 'text-danger-600 dark:text-danger-400 font-bold' : 'text-success-600 dark:text-success-400 font-bold'
                                         ]),
 
                                     Placeholder::make('summary_change')
                                         ->label('Cambio / Vuelto')
                                         ->visible(fn (Get $get) => (float)($get('payment_amount') ?? 0) > (float)($get('total') ?? 0))
                                         ->content(fn (Get $get) => 'Q ' . number_format(max(0, (float)($get('payment_amount') ?? 0) - (float)($get('total') ?? 0)), 2))
-                                        ->extraAttributes(['class' => 'text-success-600 font-bold']),
+                                        ->extraAttributes(['class' => 'text-success-600 dark:text-success-400 font-bold']),
                                 ]),
                             ])->compact(),
                         
