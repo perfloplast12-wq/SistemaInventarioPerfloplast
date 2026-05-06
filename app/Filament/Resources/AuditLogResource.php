@@ -231,7 +231,6 @@ class AuditLogResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Ver Detalle')->icon('heroicon-o-eye')->color('gray'),
             ])
-            ->simplePagination()
             ->bulkActions([]);
     }
 
