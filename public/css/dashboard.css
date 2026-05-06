@@ -806,3 +806,47 @@ html.dark .fi-logo {
     overflow: visible !important;
 }
 
+/* Custom Global High Contrast Styling for Forms & Reports in Dark Mode */
+.dark .text-success-600,
+.dark .text-success-500 {
+    color: #4ade80 !important; /* light neon green in dark mode */
+}
+.dark .text-danger-600,
+.dark .text-danger-500 {
+    color: #f87171 !important; /* bright neon red in dark mode */
+}
+.dark .text-primary-600,
+.dark .text-primary-500 {
+    color: #818cf8 !important; /* bright indigo/purple in dark mode */
+}
+.dark .text-warning-600,
+.dark .text-warning-500 {
+    color: #fbbf24 !important; /* bright amber in dark mode */
+}
+
+/* Specific Dark Mode overrides for Sale Form custom placeholders */
+.dark .unit-price-placeholder-box {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #f9fafb !important;
+}
+.dark .subtotal-placeholder-box {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    color: #a5b4fc !important;
+}
+
+/* General Reports specific dark mode contrast fixes */
+.dark .rg-prod-name {
+    color: #cbd5e1 !important; /* bright light gray for product names in lists */
+}
+.dark .rg-shift-title {
+    color: #f8fafc !important;
+}
+.dark .rg-prod-qty {
+    color: #e2e8f0 !important;
+}
+.dark .rg-prod-ops {
+    color: #94a3b8 !important;
+}
+

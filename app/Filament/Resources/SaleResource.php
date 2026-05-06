@@ -269,7 +269,7 @@ class SaleResource extends Resource
                                                 Forms\Components\Placeholder::make('unit_price_display')
                                                     ->label('Precio Q')
                                                     ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
-                                                        <div class='bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg p-2 text-center text-2xl font-black text-gray-950 dark:text-gray-50 shadow-sm'>
+                                                        <div class='bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg p-2 text-center text-2xl font-black text-gray-950 dark:text-gray-50 shadow-sm unit-price-placeholder-box'>
                                                             Q " . number_format((float)($get('unit_price') ?? 0), 2, '.', ',') . "
                                                         </div>
                                                     "))
@@ -278,7 +278,7 @@ class SaleResource extends Resource
                                                 Forms\Components\Placeholder::make('subtotal_display')
                                                     ->label('Subtotal')
                                                     ->content(fn (Get $get) => new \Illuminate\Support\HtmlString("
-                                                        <div class='bg-primary-50 dark:bg-primary-950/30 border-2 border-primary-200 dark:border-primary-800/80 rounded-lg p-2 text-right text-2xl font-black text-primary-700 dark:text-primary-300 shadow-sm'>
+                                                        <div class='bg-primary-50 dark:bg-primary-950/30 border-2 border-primary-200 dark:border-primary-800/80 rounded-lg p-2 text-right text-2xl font-black text-primary-700 dark:text-primary-300 shadow-sm subtotal-placeholder-box'>
                                                             Q " . number_format((float)($get('subtotal') ?? 0), 2, '.', ',') . "
                                                         </div>
                                                     "))

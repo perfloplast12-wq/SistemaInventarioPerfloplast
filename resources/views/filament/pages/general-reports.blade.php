@@ -205,20 +205,20 @@
                                         {{ $shiftIcon }}
                                     </div>
                                     <div style="min-w-0;">
-                                        <div class="font-extrabold text-slate-800 dark:text-slate-100 truncate" style="font-size: 11px; text-transform: uppercase;">
+                                        <div class="font-extrabold text-slate-800 dark:text-slate-100 rg-shift-title truncate" style="font-size: 11px; text-transform: uppercase;">
                                             {{ $row->shift_name }}
                                         </div>
-                                        <div class="text-slate-400 dark:text-slate-300 truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
+                                        <div class="text-slate-400 dark:text-slate-300 rg-prod-name truncate" style="font-size: 10px; font-weight: 700; margin-top: 1px;">
                                             {{ $row->product_name }}
                                         </div>
                                     </div>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                                     <div style="text-align: right;">
-                                        <div class="text-slate-800 dark:text-slate-200 font-extrabold" style="font-size: 13px;">
+                                        <div class="text-slate-800 dark:text-slate-200 rg-prod-qty font-extrabold" style="font-size: 13px;">
                                             {{ number_format($row->total_qty) }} <span style="font-size: 8px; font-weight: bold; color: #94a3b8;">u.</span>
                                         </div>
-                                        <div class="text-slate-400 dark:text-slate-300" style="font-size: 8px; font-weight: bold;">
+                                        <div class="text-slate-400 dark:text-slate-300 rg-prod-ops" style="font-size: 8px; font-weight: bold;">
                                             {{ $row->operations }} op.
                                         </div>
                                     </div>

@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 function () {
                     // Cachear el bloque completo de cabecera por 1 hora
                     // Solo se regenera si se limpia la caché o pasa el tiempo
-                    return Cache::remember('admin_panel_head_block_v4', 3600, function () {
+                    return Cache::remember('admin_panel_head_block_v5', 3600, function () {
                         try {
                             $settings = Setting::whereIn('key', [
                                 'primary_color_1',
@@ -92,7 +92,7 @@ class AdminPanelProvider extends PanelProvider
                             default => $br,
                         };
 
-                        $v = '1.5.3'; // Versión estática para caché del navegador
+                        $v = '1.5.4'; // Versión estática para caché del navegador
 
                         $styles = "
                             <style>
