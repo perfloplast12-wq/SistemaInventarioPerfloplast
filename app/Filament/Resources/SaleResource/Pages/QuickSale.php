@@ -104,12 +104,20 @@ class QuickSale extends Page implements HasForms
                                 TextInput::make('customer_name')
                                     ->label('Nombre del Cliente')
                                     ->required()
-                                    ->minLength(3),
+                                    ->minLength(3)
+                                    ->regex('/^[^0-9]+$/')
+                                    ->validationMessages([
+                                        'regex' => 'El nombre del cliente no debe contener números.',
+                                    ]),
                                 
                                 TextInput::make('customer_nit')
                                     ->label('NIT')
                                     ->maxLength(20)
-                                    ->default('C/F'),
+                                    ->default('C/F')
+                                    ->regex('/^(C\/F|CF|[0-9\-Kk]+)$/i')
+                                    ->validationMessages([
+                                        'regex' => 'El NIT debe ser C/F o un número de NIT válido.',
+                                    ]),
                                 
                                 TextInput::make('factory_name')
                                     ->label('Bodega Origen (Fábrica)')

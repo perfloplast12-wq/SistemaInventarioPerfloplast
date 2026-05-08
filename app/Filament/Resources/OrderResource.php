@@ -61,15 +61,28 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('customer_name')
                             ->label('Nombre del Cliente')
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->regex('/^[^0-9]+$/')
+                            ->validationMessages([
+                                'regex' => 'El nombre del cliente no debe contener números.',
+                            ]),
                         Forms\Components\TextInput::make('customer_nit')
                             ->label('NIT')
                             ->default('C/F')
-                            ->maxLength(20),
+                            ->maxLength(20)
+                            ->regex('/^(C\/F|CF|[0-9\-Kk]+)$/i')
+                            ->validationMessages([
+                                'regex' => 'El NIT debe ser C/F o un número de NIT válido.',
+                            ]),
                         Forms\Components\TextInput::make('phone')
                             ->label('Teléfono')
                             ->tel()
-                            ->maxLength(20),
+                            ->nullable()
+                            ->maxLength(8)
+                            ->regex('/^[0-9]{8}$/')
+                            ->validationMessages([
+                                'regex' => 'El teléfono de contacto debe contener exactamente 8 dígitos.',
+                            ]),
                         Forms\Components\Textarea::make('delivery_address')
                             ->label('Dirección de Entrega')
                             ->required()

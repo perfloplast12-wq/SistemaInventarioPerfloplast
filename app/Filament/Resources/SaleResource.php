@@ -77,12 +77,20 @@ class SaleResource extends Resource
                                     ->label('Nombre del Cliente')
                                     ->required()
                                     ->minLength(3)
-                                    ->default('Consumidor Final'),
+                                    ->default('Consumidor Final')
+                                    ->regex('/^[^0-9]+$/')
+                                    ->validationMessages([
+                                        'regex' => 'El nombre del cliente no debe contener números.',
+                                    ]),
 
                                 Forms\Components\TextInput::make('customer_nit')
                                     ->label('NIT')
                                     ->maxLength(20)
-                                    ->default('C/F'),
+                                    ->default('C/F')
+                                    ->regex('/^(C\/F|CF|[0-9\-Kk]+)$/i')
+                                    ->validationMessages([
+                                        'regex' => 'El NIT debe ser C/F o un número de NIT válido.',
+                                    ]),
 
                                 Forms\Components\TextInput::make('delivery_address')
                                     ->label('Dirección de Entrega')
@@ -93,8 +101,14 @@ class SaleResource extends Resource
                                 Forms\Components\TextInput::make('phone')
                                     ->label('Teléfono de Contacto')
                                     ->tel()
+                                    ->nullable()
+                                    ->maxLength(8)
                                     ->placeholder('44556677')
-                                    ->prefixIcon('heroicon-m-phone'),
+                                    ->prefixIcon('heroicon-m-phone')
+                                    ->regex('/^[0-9]{8}$/')
+                                    ->validationMessages([
+                                        'regex' => 'El teléfono de contacto debe contener exactamente 8 dígitos.',
+                                    ]),
 
                                 Forms\Components\ToggleButtons::make('origin_type')
                                     ->label('Tipo de Operación')
