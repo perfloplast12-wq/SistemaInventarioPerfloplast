@@ -25,6 +25,8 @@ class Order extends Model
         'notes',
         'status',
         'dispatch_id',
+        'lat',
+        'lng',
         'created_by',
     ];
 
@@ -35,6 +37,8 @@ class Order extends Model
 
     protected $casts = [
         'order_date' => 'datetime',
+        'lat' => 'float',
+        'lng' => 'float',
     ];
 
     public function items(): HasMany

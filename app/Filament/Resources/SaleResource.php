@@ -110,6 +110,78 @@ class SaleResource extends Resource
                                         'regex' => 'El teléfono de contacto debe contener exactamente 8 dígitos.',
                                     ]),
 
+                                Forms\Components\Grid::make(2)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('lat')
+                                            ->label('Latitud GPS')
+                                            ->readOnly()
+                                            ->id('sale_lat')
+                                            ->dehydrated(true)
+                                            ->placeholder('Esperando...'),
+                                        Forms\Components\TextInput::make('lng')
+                                            ->label('Longitud GPS')
+                                            ->readOnly()
+                                            ->id('sale_lng')
+                                            ->dehydrated(true)
+                                            ->placeholder('Esperando...'),
+                                    ]),
+
+                                Forms\Components\Placeholder::make('gps_capture')
+                                    ->label('📍 Ubicación de Preventa')
+                                    ->visible(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
+                                    ->content(new \Illuminate\Support\HtmlString('
+                                        <div class="flex items-center gap-2 p-3 bg-primary-50/50 dark:bg-primary-950/20 border border-primary-200 dark:border-primary-800 rounded-xl text-sm text-primary-700 dark:text-primary-300">
+                                            <svg class="animate-bounce w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            </svg>
+                                            <span id="gps-status-text" class="font-medium">Obteniendo coordenadas GPS de preventa...</span>
+                                        </div>
+                                        <script>
+                                            (function() {
+                                                function captureGPS() {
+                                                    if (navigator.geolocation) {
+                                                        navigator.geolocation.getCurrentPosition(
+                                                            function(position) {
+                                                                const lat = position.coords.latitude;
+                                                                const lng = position.coords.longitude;
+                                                                
+                                                                const latInput = document.getElementById("sale_lat");
+                                                                const lngInput = document.getElementById("sale_lng");
+                                                                const statusText = document.getElementById("gps-status-text");
+                                                                
+                                                                if (latInput && lngInput) {
+                                                                    latInput.value = lat;
+                                                                    latInput.dispatchEvent(new Event("input"));
+                                                                    lngInput.value = lng;
+                                                                    lngInput.dispatchEvent(new Event("input"));
+                                                                    
+                                                                    if (statusText) {
+                                                                        statusText.innerHTML = "✅ Ubicación capturada con éxito: " + lat.toFixed(5) + ", " + lng.toFixed(5);
+                                                                    }
+                                                                }
+                                                            },
+                                                            function(error) {
+                                                                console.error("Error al obtener GPS:", error);
+                                                                const statusText = document.getElementById("gps-status-text");
+                                                                if (statusText) {
+                                                                    statusText.innerHTML = "❌ No se pudo capturar el GPS (" + error.message + "). Ingrese dirección de entrega manualmente.";
+                                                                }
+                                                            },
+                                                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                                                        );
+                                                    } else {
+                                                        const statusText = document.getElementById("gps-status-text");
+                                                        if (statusText) {
+                                                            statusText.innerHTML = "❌ Su navegador no soporta geolocalización GPS.";
+                                                        }
+                                                    }
+                                                }
+                                                setTimeout(captureGPS, 1000);
+                                            })();
+                                        </script>
+                                    ')),
+
                                 Forms\Components\ToggleButtons::make('origin_type')
                                     ->label('Tipo de Operación')
                                     ->options([

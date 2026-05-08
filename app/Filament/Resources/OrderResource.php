@@ -10,6 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
@@ -170,6 +172,96 @@ class OrderResource extends Resource
                                   (($state['color_id'] ?? null) ? ' (' . \App\Models\Color::find($state['color_id'])?->name . ')' : '') .
                                   ' (' . ($state['quantity'] ?? 0) . ')' 
                                 : null),
+                    ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Components\Section::make('Información del Pedido')
+                    ->columns(3)
+                    ->schema([
+                        Components\TextEntry::make('order_number')
+                            ->label('Nro. Pedido')
+                            ->badge()
+                            ->color('info')
+                            ->weight('bold'),
+                        Components\TextEntry::make('order_date')
+                            ->label('Fecha del Pedido')
+                            ->dateTime('d/m/Y H:i'),
+                        Components\TextEntry::make('status')
+                            ->label('Estado Actual')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => match($state) {
+                                'pending' => 'Pendiente',
+                                'shipped' => 'Despachado',
+                                'completed' => 'Entregado',
+                                'cancelled' => 'Cancelado',
+                                'returned' => 'Devuelto',
+                                'completed_with_return' => 'Cerrado con Novedad',
+                                default => $state
+                            })
+                            ->color(fn ($state) => match($state) {
+                                'pending' => 'gray',
+                                'shipped' => 'info',
+                                'completed' => 'success',
+                                'cancelled' => 'danger',
+                                'returned' => 'warning',
+                                'completed_with_return' => 'warning',
+                                default => 'gray'
+                            }),
+                        Components\TextEntry::make('customer_name')
+                            ->label('Cliente'),
+                        Components\TextEntry::make('customer_nit')
+                            ->label('NIT'),
+                        Components\TextEntry::make('phone')
+                            ->label('Teléfono de Contacto')
+                            ->placeholder('N/A'),
+                        Components\TextEntry::make('delivery_address')
+                            ->label('Dirección de Entrega')
+                            ->columnSpanFull()
+                            ->icon('heroicon-o-map-pin'),
+                    ]),
+
+                Components\Section::make('Ubicación Geográfica de la Pre-venta')
+                    ->collapsible()
+                    ->schema([
+                        Components\ViewEntry::make('map_location')
+                            ->view('components.order-delivery-map')
+                            ->columnSpanFull(),
+                    ]),
+
+                Components\Section::make('Productos del Pedido')
+                    ->schema([
+                        Components\RepeatableEntry::make('items')
+                            ->label('')
+                            ->columns(4)
+                            ->schema([
+                                Components\TextEntry::make('product.name')
+                                    ->label('Producto')
+                                    ->weight('bold'),
+                                Components\TextEntry::make('color.display_name')
+                                    ->label('Color')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->formatStateUsing(function ($state) {
+                                        if (!$state) return 'N/A';
+                                        if (str_contains($state, ' (')) {
+                                            $state = explode(' (', $state)[0];
+                                        }
+                                        return ucfirst($state);
+                                    })
+                                    ->placeholder('N/A'),
+                                Components\TextEntry::make('quantity')
+                                    ->label('Cantidad')
+                                    ->formatStateUsing(fn ($state) => number_format($state, (round($state) == $state ? 0 : 2), '.', ',')),
+                                Components\TextEntry::make('subtotal')
+                                    ->label('Subtotal')
+                                    ->formatStateUsing(fn ($state) => 'Q ' . number_format($state, 2, '.', ','))
+                                    ->weight('bold'),
+                            ]),
                     ]),
             ]);
     }

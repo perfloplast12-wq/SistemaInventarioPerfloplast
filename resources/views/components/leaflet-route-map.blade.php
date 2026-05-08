@@ -54,6 +54,21 @@
     }
 
     $locations = $latest ? collect([$latest]) : collect();
+
+    $ordersData = $record->orders()
+        ->whereNotNull('lat')
+        ->whereNotNull('lng')
+        ->get(['id', 'order_number', 'customer_name', 'delivery_address', 'lat', 'lng'])
+        ->map(function ($o) {
+            return [
+                'number' => $o->order_number,
+                'customer' => $o->customer_name,
+                'address' => $o->delivery_address,
+                'lat' => (float)$o->lat,
+                'lng' => (float)$o->lng,
+            ];
+        })
+        ->toArray();
 @endphp
 
 <div class="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" style="min-height: 550px;" 
@@ -64,7 +79,8 @@
         truckName: '{{ $truckName ?? 'Sin asignar' }}',
         routeName: '{{ $routeName ?? 'Sin ruta' }}',
         dispatchStatus: '{{ $dispatchStatus ?? 'pending' }}',
-        locations: '{{ base64_encode(json_encode($locations)) }}'
+        locations: '{{ base64_encode(json_encode($locations)) }}',
+        orders: '{{ base64_encode(json_encode($ordersData)) }}'
      })"
      x-init="$nextTick(() => { init(); })"
 >

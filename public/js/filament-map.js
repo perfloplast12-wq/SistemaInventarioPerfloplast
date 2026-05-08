@@ -13,6 +13,7 @@
             dispatchStatus: config.dispatchStatus,
             truckMarker: null,
             allPoints: [],
+            orders: config.orders ? JSON.parse(atob(config.orders)) : [],
             isOnline: true,
             lastSignal: null,
             lastSignalTime: null,
@@ -111,7 +112,30 @@
                     L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
                     this.drawPosition();
-                    setTimeout(() => this.map.invalidateSize(), 300);
+                    this.drawOrders();
+
+                    if (this.orders && this.orders.length > 0) {
+                        const bounds = [];
+                        if (this.allPoints.length > 0) {
+                            bounds.push(this.allPoints[this.allPoints.length - 1]);
+                        } else {
+                            bounds.push(center);
+                        }
+                        this.orders.forEach(o => {
+                            if (this.isValidCoord(o.lat, o.lng)) {
+                                bounds.push([o.lat, o.lng]);
+                            }
+                        });
+                        if (bounds.length > 1) {
+                            setTimeout(() => {
+                                if (this.map) this.map.fitBounds(bounds, { padding: [50, 50] });
+                            }, 500);
+                        }
+                    }
+
+                    setTimeout(() => {
+                        if (this.map) this.map.invalidateSize();
+                    }, 300);
                 } catch (e) { console.error('Render Fail:', e); }
             },
 
@@ -187,6 +211,49 @@
                 }
                 
                 if (fitBounds) this.map.setView([lat, lng], 15);
+            },
+
+            drawOrders() {
+                if (!this.map || !this.orders || this.orders.length === 0) return;
+
+                this.orders.forEach(o => {
+                    if (!this.isValidCoord(o.lat, o.lng)) return;
+
+                    const iconHtml = `
+                        <div class="flex flex-col items-center" style="transform: translateY(-50%);">
+                            <div class="relative flex items-center justify-center">
+                                <div class="relative w-[30px] h-[30px] rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center z-10 animate-pulse"
+                                     style="background: linear-gradient(135deg, #10b981, #059669); border: 1.5px solid white; animation-duration: 4s;">
+                                    <span style="font-size: 13px;">🏠</span>
+                                </div>
+                            </div>
+                            <div class="mt-1 px-1.5 py-[1px] bg-emerald-950/90 border border-emerald-500/20 text-white text-[9px] font-bold rounded shadow-sm whitespace-nowrap">
+                                ${o.number}
+                            </div>
+                        </div>
+                    `;
+
+                    const popupHtml = `
+                        <div style="min-width:180px;padding:8px;font-family:-apple-system,sans-serif;">
+                            <h4 style="margin:0 0 4px 0;font-weight:bold;color:#10b981;font-size:12px;">Punto de Entrega</h4>
+                            <p style="margin:0;font-size:11px;font-weight:600;color:#111827;">${o.customer}</p>
+                            <p style="margin:2px 0 0 0;font-size:10px;color:#4b5563;line-height:1.4;">${o.address}</p>
+                            <p style="margin:4px 0 0 0;font-size:9px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:4px;">Pedido: ${o.number}</p>
+                        </div>
+                    `;
+
+                    const orderIcon = L.divIcon({
+                        className: '',
+                        html: iconHtml,
+                        iconSize: [32, 45],
+                        iconAnchor: [16, 22],
+                        popupAnchor: [0, -22]
+                    });
+
+                    L.marker([o.lat, o.lng], { icon: orderIcon })
+                        .addTo(this.map)
+                        .bindPopup(popupHtml);
+                });
             },
             
             async pollLatestPosition() {

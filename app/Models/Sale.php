@@ -48,6 +48,8 @@ class Sale extends Model
         'discount_amount',
         'receipt_number',
         'receipt_path',
+        'lat',
+        'lng',
         'created_by',
     ];
 
@@ -56,6 +58,8 @@ class Sale extends Model
         'total' => 'decimal:3',
         'discount_value' => 'decimal:3',
         'discount_amount' => 'decimal:3',
+        'lat' => 'float',
+        'lng' => 'float',
     ];
 
     public function items(): HasMany

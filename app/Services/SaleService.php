@@ -97,6 +97,8 @@ class SaleService
                 'payment_status'   => $sale->balance <= 0 ? 'paid' : 'partial',
                 'notes'            => "Generado automáticamente desde Preventa #{$sale->sale_number}. " . $sale->note,
                 'status'           => $sale->origin_type === 'warehouse' ? 'pending' : 'shipped',
+                'lat'              => $sale->lat,
+                'lng'              => $sale->lng,
                 'created_by'       => $sale->created_by,
             ]);
 
