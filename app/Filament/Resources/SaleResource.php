@@ -738,8 +738,17 @@ class SaleResource extends Resource
         $query = parent::getEloquentQuery()
             ->with(['payments', 'creator']);
 
-        if (!auth()->user()?->hasRole(['super_admin', 'admin', 'accounting', 'viewer'])) {
-            $query->where('created_by', auth()->id());
+        $user = auth()->user();
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasRole('conductor')) {
+            return $query->whereRaw('1 = 0'); // Conductor role cannot see any sales
+        }
+
+        if (!$user->hasRole(['super_admin', 'admin', 'accounting', 'viewer'])) {
+            $query->where('created_by', $user->id);
         }
 
         return $query;

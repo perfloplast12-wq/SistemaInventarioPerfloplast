@@ -219,15 +219,28 @@
                 this.orders.forEach(o => {
                     if (!this.isValidCoord(o.lat, o.lng)) return;
 
+                    const isCompleted = o.status === 'completed';
+                    const gradientColors = isCompleted 
+                        ? 'linear-gradient(135deg, #10b981, #059669)' // Green for completed/delivered
+                        : 'linear-gradient(135deg, #2563eb, #1d4ed8)'; // Blue for assigned/pending delivery
+                    
+                    const borderAndBadgeBg = isCompleted
+                        ? 'bg-emerald-950/90 border-emerald-500/20'
+                        : 'bg-blue-950/90 border-blue-500/20';
+
+                    const statusBadgeHtml = isCompleted
+                        ? `<span style="display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#dcfce7;color:#15803d;margin-top:6px;">🟢 Entregado</span>`
+                        : `<span style="display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af;margin-top:6px;">🔵 Pendiente</span>`;
+
                     const iconHtml = `
-                        <div class="flex flex-col items-center" style="transform: translateY(-50%);">
-                            <div class="relative flex items-center justify-center">
+                        <div style="position: relative; width: 32px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                            <div class="relative flex items-center justify-center" style="height: 30px;">
                                 <div class="relative w-[30px] h-[30px] rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center z-10 animate-pulse"
-                                     style="background: linear-gradient(135deg, #10b981, #059669); border: 1.5px solid white; animation-duration: 4s;">
+                                     style="background: ${gradientColors}; border: 1.5px solid white; animation-duration: 4s;">
                                     <span style="font-size: 13px;">🏠</span>
                                 </div>
                             </div>
-                            <div class="mt-1 px-1.5 py-[1px] bg-emerald-950/90 border border-emerald-500/20 text-white text-[9px] font-bold rounded shadow-sm whitespace-nowrap">
+                            <div class="mt-1 px-1 py-[1px] ${borderAndBadgeBg} border text-white text-[9px] font-bold rounded shadow-sm whitespace-nowrap text-center" style="width: auto; min-width: 28px;">
                                 ${o.number}
                             </div>
                         </div>
@@ -235,19 +248,20 @@
 
                     const popupHtml = `
                         <div style="min-width:180px;padding:8px;font-family:-apple-system,sans-serif;">
-                            <h4 style="margin:0 0 4px 0;font-weight:bold;color:#10b981;font-size:12px;">Punto de Entrega</h4>
+                            <h4 style="margin:0 0 4px 0;font-weight:bold;color:${isCompleted ? '#10b981' : '#2563eb'};font-size:12px;">Punto de Entrega</h4>
                             <p style="margin:0;font-size:11px;font-weight:600;color:#111827;">${o.customer}</p>
                             <p style="margin:2px 0 0 0;font-size:10px;color:#4b5563;line-height:1.4;">${o.address}</p>
-                            <p style="margin:4px 0 0 0;font-size:9px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:4px;">Pedido: ${o.number}</p>
+                            ${statusBadgeHtml}
+                            <p style="margin:6px 0 0 0;font-size:9px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:4px;">Pedido: ${o.number}</p>
                         </div>
                     `;
 
                     const orderIcon = L.divIcon({
                         className: '',
                         html: iconHtml,
-                        iconSize: [32, 45],
-                        iconAnchor: [16, 22],
-                        popupAnchor: [0, -22]
+                        iconSize: [32, 48],
+                        iconAnchor: [16, 48],
+                        popupAnchor: [0, -48]
                     });
 
                     L.marker([o.lat, o.lng], { icon: orderIcon })

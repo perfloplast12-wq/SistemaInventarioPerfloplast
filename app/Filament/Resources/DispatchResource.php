@@ -631,8 +631,21 @@ class DispatchResource extends Resource
             ->with(['truck', 'driver', 'orderReturns'])
             ->withCount('orderReturns');
 
-        if (auth()->user()?->hasRole('conductor')) {
-            $query->where('driver_id', auth()->id());
+        $user = auth()->user();
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Si es conductor, solo ve los despachos asignados a él
+        if ($user->hasRole('conductor')) {
+            $query->where('driver_id', $user->id);
+        }
+
+        // Si es vendedor, solo ve los despachos que contienen pedidos creados por él
+        if ($user->hasRole('sales')) {
+            $query->whereHas('orders', function ($q) use ($user) {
+                $q->where('created_by', $user->id);
+            });
         }
 
         return $query;

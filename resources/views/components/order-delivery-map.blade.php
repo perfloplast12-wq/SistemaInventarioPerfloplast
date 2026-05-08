@@ -17,14 +17,16 @@
                     maxZoom: 20
                 }).addTo(this.map);
                 L.control.zoom({ position: 'bottomright' }).addTo(this.map);
-
                 const iconHtml = `
-                    <div class='flex flex-col items-center justify-end' style='transform: translateY(-100%); margin-top: 12px;'>
-                        <!-- Elegant Soft Radial Pulse -->
-                        <div class='absolute w-[60px] h-[60px] bg-red-500/25 rounded-full animate-ping' style='animation-duration: 2.5s; pointer-events: none;'></div>
+                    <div style='position: relative; width: 46px; height: 56px;'>
+                        <!-- Elegant Soft Radial Pulse exactly centered at coordinates tip (23px, 56px) -->
+                        <div class='absolute bg-red-500/25 rounded-full animate-ping' style='width: 60px; height: 60px; position: absolute; left: 23px; top: 56px; margin-left: -30px; margin-top: -30px; pointer-events: none; animation-duration: 2.5s;'></div>
                         
+                        <!-- Small anchor shadow dot exactly at coordinates tip -->
+                        <div class='absolute bg-red-600 rounded-full' style='width: 6px; height: 6px; position: absolute; left: 23px; top: 56px; margin-left: -3px; margin-top: -3px; border: 1.5px solid white; z-index: 5;'></div>
+
                         <!-- Premium Teardrop SVG Pin -->
-                        <div class='relative transition-transform duration-300 hover:scale-115 cursor-pointer' style='filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.4));'>
+                        <div class='relative transition-transform duration-300 hover:scale-115 cursor-pointer' style='position: absolute; left: 0; top: 0; width: 46px; height: 56px; filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.35)); z-index: 10;'>
                             <svg width='46' height='56' viewBox='0 0 24 30' fill='none' xmlns='http://www.w3.org/2000/svg'>
                                 <!-- Teardrop shape with premium gradient border and fill -->
                                 <path d='M12 0C5.37258 0 0 5.37258 0 12C0 19.5 12 30 12 30C12 30 24 19.5 24 12C24 5.37258 18.6274 0 12 0Z' fill='url(#premiumPinGradient)' stroke='#ffffff' stroke-width='1.8' stroke-linejoin='round'/>
@@ -52,10 +54,10 @@
                     className: '',
                     html: iconHtml,
                     iconSize: [46, 56],
-                    iconAnchor: [23, 44]
+                    iconAnchor: [23, 56]
                 });
 
-                L.marker([{{ $lat }}, {{ $lng }}], { icon: markerIcon })
+                const marker = L.marker([{{ $lat }}, {{ $lng }}], { icon: markerIcon })
                     .addTo(this.map)
                     .bindPopup(`
                         <div style='padding: 10px; font-family: system-ui, sans-serif; min-width: 200px;'>
@@ -63,8 +65,15 @@
                             <p style='margin: 0; font-size: 13px; font-weight: 700; color: #111827;'>{{ addslashes($record->customer_name) }}</p>
                             <p style='margin: 6px 0 0 0; font-size: 11px; color: #4b5563; line-height: 1.5; background: #f3f4f6; padding: 6px 8px; border-radius: 6px;'>{{ addslashes($record->delivery_address) }}</p>
                         </div>
-                    `)
-                    .openPopup();
+                    `);
+
+                // Fly and zoom to level 18 when the marker pin is clicked
+                marker.on('click', () => {
+                    this.map.setView([{{ $lat }}, {{ $lng }}], 18, { animate: true });
+                });
+
+                // Auto-open popup on load
+                marker.openPopup();
 
                 // Recalculate size to avoid layout bugs
                 this.map.invalidateSize();

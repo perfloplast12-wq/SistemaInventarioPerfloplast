@@ -58,7 +58,7 @@
     $ordersData = $record->orders()
         ->whereNotNull('lat')
         ->whereNotNull('lng')
-        ->get(['id', 'order_number', 'customer_name', 'delivery_address', 'lat', 'lng'])
+        ->get(['id', 'order_number', 'customer_name', 'delivery_address', 'lat', 'lng', 'status'])
         ->map(function ($o) {
             return [
                 'number' => $o->order_number,
@@ -66,6 +66,7 @@
                 'address' => $o->delivery_address,
                 'lat' => (float)$o->lat,
                 'lng' => (float)$o->lng,
+                'status' => $o->status,
             ];
         })
         ->toArray();

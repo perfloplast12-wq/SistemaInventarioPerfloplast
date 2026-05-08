@@ -374,13 +374,22 @@ class OrderResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->with(['items', 'creator', 'dispatch', 'sale']);
+        $user = auth()->user();
 
-        if (auth()->user()?->hasRole('conductor')) {
-            $query->where(function (Builder $q) {
-                $q->whereHas('dispatch', function (Builder $dq) {
-                    $dq->where('driver_id', auth()->id());
-                })->orWhereNull('dispatch_id');
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Si es conductor, solo ve los pedidos asignados a sus propios despachos
+        if ($user->hasRole('conductor')) {
+            $query->whereHas('dispatch', function (Builder $dq) use ($user) {
+                $dq->where('driver_id', $user->id);
             });
+        }
+
+        // Si es vendedor, solo ve los pedidos creados por él
+        if ($user->hasRole('sales')) {
+            $query->where('created_by', $user->id);
         }
 
         return $query;
