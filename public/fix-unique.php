@@ -75,6 +75,18 @@ try {
         }
     }
 
+    echo "\n=== BYPASSING CONFLICTING MIGRATIONS ===\n";
+    $auditLogsTableExists = $db->select("SHOW TABLES LIKE 'audit_logs'");
+    if (!empty($auditLogsTableExists)) {
+        $migrated = $db->select("SELECT id FROM migrations WHERE migration = '2026_05_06_120000_create_audit_logs_table'");
+        if (empty($migrated)) {
+            $db->insert("INSERT INTO migrations (migration, batch) VALUES ('2026_05_06_120000_create_audit_logs_table', 4)");
+            echo "✅ audit_logs: Marked migration as already executed to bypass SQLSTATE[42S01] blocker.\n";
+        } else {
+            echo "✓ audit_logs: Migration is already marked as executed.\n";
+        }
+    }
+
     echo "\n=== RUNNING PENDING MIGRATIONS ===\n";
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
     echo \Illuminate\Support\Facades\Artisan::output();
