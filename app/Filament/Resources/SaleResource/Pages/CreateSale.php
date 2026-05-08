@@ -64,7 +64,14 @@ class CreateSale extends CreateRecord
         if (empty($data['sale_date'])) {
             $data['sale_date'] = now();
         }
-        
+        // Clean empty GPS strings to prevent invalid decimal DB exceptions
+        if (isset($data['lat']) && $data['lat'] === '') {
+            $data['lat'] = null;
+        }
+        if (isset($data['lng']) && $data['lng'] === '') {
+            $data['lng'] = null;
+        }
+
         // Remove non-model fields that are not columns in the sales table
         unset($data['payment_method'], $data['payment_amount']);
 

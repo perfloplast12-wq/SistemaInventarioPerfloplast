@@ -52,6 +52,14 @@ class EditSale extends EditRecord
                 }
             }
         }
+        // Clean empty GPS strings to prevent invalid decimal DB exceptions
+        if (isset($data['lat']) && $data['lat'] === '') {
+            $data['lat'] = null;
+        }
+        if (isset($data['lng']) && $data['lng'] === '') {
+            $data['lng'] = null;
+        }
+
         return $data;
     }
 

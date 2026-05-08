@@ -114,12 +114,16 @@ class SaleResource extends Resource
                                     ->schema([
                                         Forms\Components\TextInput::make('lat')
                                             ->label('Latitud GPS')
+                                            ->nullable()
+                                            ->default(null)
                                             ->readOnly()
                                             ->id('sale_lat')
                                             ->dehydrated(true)
                                             ->placeholder('Esperando...'),
                                         Forms\Components\TextInput::make('lng')
                                             ->label('Longitud GPS')
+                                            ->nullable()
+                                            ->default(null)
                                             ->readOnly()
                                             ->id('sale_lng')
                                             ->dehydrated(true)
