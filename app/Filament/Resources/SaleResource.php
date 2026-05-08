@@ -143,36 +143,49 @@ class SaleResource extends Resource
                                         </div>
                                         <script>
                                             (function() {
+                                                function setCoordinates(lat, lng, isHigh) {
+                                                    const latInput = document.getElementById("sale_lat");
+                                                    const lngInput = document.getElementById("sale_lng");
+                                                    const statusText = document.getElementById("gps-status-text");
+                                                    
+                                                    if (latInput && lngInput) {
+                                                        latInput.value = lat;
+                                                        latInput.dispatchEvent(new Event("input"));
+                                                        lngInput.value = lng;
+                                                        lngInput.dispatchEvent(new Event("input"));
+                                                        
+                                                        if (statusText) {
+                                                            const precisionStr = isHigh ? " (Alta Precisión)" : " (Precisión Estándar)";
+                                                            statusText.innerHTML = "✅ Ubicación capturada con éxito" + precisionStr + ": " + lat.toFixed(5) + ", " + lng.toFixed(5);
+                                                        }
+                                                    }
+                                                }
+
                                                 function captureGPS() {
                                                     if (navigator.geolocation) {
+                                                        // 1. Intentar primero con alta precisión (GPS) y un timeout de 4 segundos
                                                         navigator.geolocation.getCurrentPosition(
                                                             function(position) {
-                                                                const lat = position.coords.latitude;
-                                                                const lng = position.coords.longitude;
-                                                                
-                                                                const latInput = document.getElementById("sale_lat");
-                                                                const lngInput = document.getElementById("sale_lng");
-                                                                const statusText = document.getElementById("gps-status-text");
-                                                                
-                                                                if (latInput && lngInput) {
-                                                                    latInput.value = lat;
-                                                                    latInput.dispatchEvent(new Event("input"));
-                                                                    lngInput.value = lng;
-                                                                    lngInput.dispatchEvent(new Event("input"));
-                                                                    
-                                                                    if (statusText) {
-                                                                        statusText.innerHTML = "✅ Ubicación capturada con éxito: " + lat.toFixed(5) + ", " + lng.toFixed(5);
-                                                                    }
-                                                                }
+                                                                setCoordinates(position.coords.latitude, position.coords.longitude, true);
                                                             },
                                                             function(error) {
-                                                                console.error("Error al obtener GPS:", error);
-                                                                const statusText = document.getElementById("gps-status-text");
-                                                                if (statusText) {
-                                                                    statusText.innerHTML = "❌ No se pudo capturar el GPS (" + error.message + "). Ingrese dirección de entrega manualmente.";
-                                                                }
+                                                                console.warn("Alta precisión falló o expiró. Intentando precisión estándar...", error);
+                                                                // 2. Reintento inmediato con precisión estándar (Wi-Fi/IP) para evitar timeouts en PCs o interiores
+                                                                navigator.geolocation.getCurrentPosition(
+                                                                    function(position) {
+                                                                        setCoordinates(position.coords.latitude, position.coords.longitude, false);
+                                                                    },
+                                                                    function(fallbackError) {
+                                                                        console.error("Geolocalización falló completamente:", fallbackError);
+                                                                        const statusText = document.getElementById("gps-status-text");
+                                                                        if (statusText) {
+                                                                            statusText.innerHTML = "❌ No se pudo capturar el GPS (" + fallbackError.message + "). Ingrese dirección de entrega manualmente.";
+                                                                        }
+                                                                    },
+                                                                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                                                                );
                                                             },
-                                                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                                                            { enableHighAccuracy: true, timeout: 4000, maximumAge: 10000 }
                                                         );
                                                     } else {
                                                         const statusText = document.getElementById("gps-status-text");
