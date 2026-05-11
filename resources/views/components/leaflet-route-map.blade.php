@@ -1,5 +1,5 @@
 @php
-    $record = $getRecord();
+    $record = (isset($getRecord) && is_callable($getRecord)) ? $getRecord() : ($record ?? \App\Models\Dispatch::find($dispatchId ?? null));
     $dispatchId = $record->id;
     $dispatchNumber = $record->dispatch_number;
     $driverName = $record->driver?->name ?? $record->driver_name ?? 'Sin asignar';

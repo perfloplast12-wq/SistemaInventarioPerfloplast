@@ -450,6 +450,7 @@ class DispatchResource extends Resource
                         $locations = $latest ? collect([$latest]) : collect();
 
                         return view('components.leaflet-route-map', [
+                            'record' => $record,
                             'locations' => $locations,
                             'dispatchId' => $record->id,
                             'dispatchNumber' => $record->dispatch_number,
