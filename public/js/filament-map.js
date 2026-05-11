@@ -232,13 +232,19 @@
                         : `<span style="display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af;margin-top:6px;">🔵 Pendiente</span>`;
 
                     const iconHtml = `
-                        <div style="position: relative; width: 44px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
-                            <!-- Pulsing glowing background -->
+                        <div style="position: relative; width: 44px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                            <!-- Premium Order Number Label at the TOP -->
+                            <div class="px-1.5 py-[1px] ${badgeClass} text-[9px] font-bold rounded shadow-sm whitespace-nowrap text-center" 
+                                 style="z-index: 3; font-family: 'Outfit', sans-serif; backdrop-filter: blur(4px); margin-bottom: 2px;">
+                                ${o.number}
+                            </div>
+
+                            <!-- Pulsing glowing background centered around pin head -->
                             <div class="absolute w-[34px] h-[34px] rounded-full animate-ping" 
-                                 style="background: ${glowColor}; opacity: 0.75; top: 2px; animation-duration: 3s; z-index: 1;"></div>
+                                 style="background: ${glowColor}; opacity: 0.65; top: 20px; animation-duration: 3s; z-index: 1;"></div>
                             
-                            <!-- Elegant SVG Pin -->
-                            <div style="position: relative; width: 34px; height: 44px; z-index: 2; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.25));">
+                            <!-- Elegant SVG Pin pointing exactly to the bottom anchor -->
+                            <div style="position: relative; width: 34px; height: 44px; z-index: 2; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.2));">
                                 <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
                                     <!-- Pin body with dynamic gradient id -->
                                     <path d="M17 0C7.61116 0 0 7.61116 0 17C0 27.5 17 44 17 44C17 44 34 27.5 34 17C34 7.61116 26.3888 0 17 0Z" fill="url(#pinGrad-${o.number})"/>
@@ -256,12 +262,6 @@
                                 <div style="position: absolute; top: 9px; left: 9px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height:1;">
                                     ${isCompleted ? '✅' : '🏠'}
                                 </div>
-                            </div>
-                            
-                            <!-- Premium Order Number Label -->
-                            <div class="mt-1 px-1.5 py-[2px] ${badgeClass} text-[9px] font-bold rounded shadow-sm whitespace-nowrap text-center" 
-                                 style="z-index: 3; font-family: 'Outfit', sans-serif; backdrop-filter: blur(4px);">
-                                ${o.number}
                             </div>
                         </div>
                     `;
@@ -286,7 +286,10 @@
 
                     L.marker([o.lat, o.lng], { icon: orderIcon })
                         .addTo(this.map)
-                        .bindPopup(popupHtml);
+                        .bindPopup(popupHtml)
+                        .on('click', (e) => {
+                            this.map.setView(e.latlng, 17, { animate: true, duration: 1 });
+                        });
                 });
             },
             
