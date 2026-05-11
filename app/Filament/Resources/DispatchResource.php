@@ -458,6 +458,7 @@ class DispatchResource extends Resource
                             'truckName' => $record->truck?->name ?? 'Sin asignar',
                             'routeName' => $record->route ?? 'Sin ruta',
                             'dispatchStatus' => $record->status,
+                            'hideOrders' => true,
                         ]);
                     }),
                 Tables\Actions\EditAction::make()

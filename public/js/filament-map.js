@@ -162,18 +162,32 @@
                 const iconHtml = `
                     <div class="flex flex-col items-center" style="transform: translateY(-50%);">
                         <div class="relative flex items-center justify-center">
+                            <!-- Dual-ring high-tech pulsing sonar animation -->
                             ${pulseHtml}
-                            <div class="relative w-[36px] h-[36px] rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.3)] flex items-center justify-center z-10"
-                                 style="background: linear-gradient(135deg, #ef4444, #dc2626); border: 2px solid white;">
-                                <span style="font-size: 16px;">🚚</span>
+                            <div class="absolute w-[44px] h-[44px] rounded-full bg-rose-500/10 border border-rose-500/20 animate-ping" style="animation-duration: 2.5s; z-index: 1;"></div>
+                            
+                            <!-- Premium Glossy circular container with deep shadows -->
+                            <div class="relative w-[42px] h-[42px] rounded-full flex items-center justify-center z-10"
+                                 style="background: linear-gradient(135deg, #ff1e56, #ffac41); border: 2px solid #ffffff; box-shadow: 0 4px 12px rgba(255, 30, 86, 0.4), inset 0 2px 4px rgba(255,255,255,0.4);">
+                                
+                                <!-- Sharp Vector Truck Icon flipped to face forward -->
+                                <span style="font-size: 19px; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.25)); transform: scaleX(-1); display: inline-block;">🚚</span>
                             </div>
-                            <div class="absolute -top-1 -right-1 w-[12px] h-[12px] rounded-full border-2 border-white z-20"
-                                 style="background-color: ${dotColor};"></div>
+                            
+                            <!-- Status dot glowing pulse -->
+                            <div class="absolute -top-1 -right-1 w-[14px] h-[14px] rounded-full border-2 border-white z-20 shadow-sm flex items-center justify-center animate-pulse"
+                                 style="background-color: ${dotColor};">
+                                <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                            </div>
                         </div>
-                        <div class="mt-1 px-2 py-[2px] bg-black/80 text-white text-[10px] font-bold rounded-full shadow-sm whitespace-nowrap flex items-center gap-1">
-                            ${this.truckName}
-                            <span class="text-[8px] uppercase tracking-wider" style="color: ${isOffline ? '#fca5a5' : '#86efac'};">
-                                ⚠️ ${stateText}
+                        
+                        <!-- Sleek Glassmorphic information plate -->
+                        <div class="mt-1.5 px-2.5 py-[3px] text-white text-[10px] font-extrabold rounded-md shadow-lg whitespace-nowrap flex items-center gap-1.5 border"
+                             style="background: rgba(15, 23, 42, 0.9); border-color: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px); font-family: 'Outfit', sans-serif;">
+                            <span style="color: #ffac41; text-shadow: 0 0 4px rgba(255,172,65,0.4);">🚛 ${this.truckName}</span>
+                            <span style="width: 1px; height: 8px; background: rgba(255,255,255,0.2);"></span>
+                            <span class="text-[8px] uppercase tracking-wider font-black" style="color: ${isOffline ? '#f87171' : '#4ade80'};">
+                                ${isOffline ? 'SIN SEÑAL' : 'EN LÍNEA'}
                             </span>
                         </div>
                     </div>
@@ -200,14 +214,14 @@
                         </div>
                     </div>`;
 
-                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [40, 60], iconAnchor: [20, 30], popupAnchor: [0, -30] });
+                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [44, 64], iconAnchor: [22, 32], popupAnchor: [0, -32] });
 
                 if (this.truckMarker) {
                     this.truckMarker.setLatLng([lat, lng]);
                     this.truckMarker.setIcon(newIcon);
                     this.truckMarker.setPopupContent(popupHtml);
                 } else {
-                    this.truckMarker = L.marker([lat, lng], { icon: newIcon }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
+                    this.truckMarker = L.marker([lat, lng], { icon: newIcon, zIndexOffset: 1000 }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
                     this.truckMarker.openPopup();
                 }
 
