@@ -75,11 +75,11 @@
 <div class="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" style="min-height: 550px;" 
      x-data="leafletRouteMap({
         dispatchId: {{ $dispatchId }},
-        dispatchNumber: '{{ $dispatchNumber ?? '' }}',
-        driverName: '{{ $driverName ?? 'Sin asignar' }}',
-        truckName: '{{ $truckName ?? 'Sin asignar' }}',
-        routeName: '{{ $routeName ?? 'Sin ruta' }}',
-        dispatchStatus: '{{ $dispatchStatus ?? 'pending' }}',
+        dispatchNumber: {!! json_encode($dispatchNumber ?? '') !!},
+        driverName: {!! json_encode($driverName ?? 'Sin asignar') !!},
+        truckName: {!! json_encode($truckName ?? 'Sin asignar') !!},
+        routeName: {!! json_encode($routeName ?? 'Sin ruta') !!},
+        dispatchStatus: {!! json_encode($dispatchStatus ?? 'pending') !!},
         locations: '{{ base64_encode(json_encode($locations)) }}',
         orders: '{{ base64_encode(json_encode($ordersData)) }}'
      })"

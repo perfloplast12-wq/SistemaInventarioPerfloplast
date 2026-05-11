@@ -220,27 +220,47 @@
                     if (!this.isValidCoord(o.lat, o.lng)) return;
 
                     const isCompleted = o.status === 'completed';
-                    const gradientColors = isCompleted 
-                        ? 'linear-gradient(135deg, #10b981, #059669)' // Green for completed/delivered
-                        : 'linear-gradient(135deg, #2563eb, #1d4ed8)'; // Blue for assigned/pending delivery
-                    
-                    const borderAndBadgeBg = isCompleted
-                        ? 'bg-emerald-950/90 border-emerald-500/20'
-                        : 'bg-blue-950/90 border-blue-500/20';
+                    const pinColorStart = isCompleted ? '#10b981' : '#3b82f6';
+                    const pinColorEnd = isCompleted ? '#047857' : '#1d4ed8';
+                    const glowColor = isCompleted ? 'rgba(16, 185, 129, 0.35)' : 'rgba(59, 130, 246, 0.35)';
+                    const badgeClass = isCompleted
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/30';
 
                     const statusBadgeHtml = isCompleted
                         ? `<span style="display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#dcfce7;color:#15803d;margin-top:6px;">🟢 Entregado</span>`
                         : `<span style="display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af;margin-top:6px;">🔵 Pendiente</span>`;
 
                     const iconHtml = `
-                        <div style="position: relative; width: 32px; height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
-                            <div class="relative flex items-center justify-center" style="height: 30px;">
-                                <div class="relative w-[30px] h-[30px] rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center z-10 animate-pulse"
-                                     style="background: ${gradientColors}; border: 1.5px solid white; animation-duration: 4s;">
-                                    <span style="font-size: 13px;">🏠</span>
+                        <div style="position: relative; width: 44px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                            <!-- Pulsing glowing background -->
+                            <div class="absolute w-[34px] h-[34px] rounded-full animate-ping" 
+                                 style="background: ${glowColor}; opacity: 0.75; top: 2px; animation-duration: 3s; z-index: 1;"></div>
+                            
+                            <!-- Elegant SVG Pin -->
+                            <div style="position: relative; width: 34px; height: 44px; z-index: 2; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.25));">
+                                <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                                    <!-- Pin body with dynamic gradient id -->
+                                    <path d="M17 0C7.61116 0 0 7.61116 0 17C0 27.5 17 44 17 44C17 44 34 27.5 34 17C34 7.61116 26.3888 0 17 0Z" fill="url(#pinGrad-${o.number})"/>
+                                    <!-- Inner white circle -->
+                                    <circle cx="17" cy="17" r="10" fill="#FFFFFF"/>
+                                    
+                                    <defs>
+                                        <linearGradient id="pinGrad-${o.number}" x1="17" y1="0" x2="17" y2="44" gradientUnits="userSpaceOnUse">
+                                            <stop offset="0%" stop-color="${pinColorStart}"/>
+                                            <stop offset="100%" stop-color="${pinColorEnd}"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <!-- Home Emoji / Icon centered inside white circle -->
+                                <div style="position: absolute; top: 9px; left: 9px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; line-height:1;">
+                                    ${isCompleted ? '✅' : '🏠'}
                                 </div>
                             </div>
-                            <div class="mt-1 px-1 py-[1px] ${borderAndBadgeBg} border text-white text-[9px] font-bold rounded shadow-sm whitespace-nowrap text-center" style="width: auto; min-width: 28px;">
+                            
+                            <!-- Premium Order Number Label -->
+                            <div class="mt-1 px-1.5 py-[2px] ${badgeClass} text-[9px] font-bold rounded shadow-sm whitespace-nowrap text-center" 
+                                 style="z-index: 3; font-family: 'Outfit', sans-serif; backdrop-filter: blur(4px);">
                                 ${o.number}
                             </div>
                         </div>
@@ -259,9 +279,9 @@
                     const orderIcon = L.divIcon({
                         className: '',
                         html: iconHtml,
-                        iconSize: [32, 48],
-                        iconAnchor: [16, 48],
-                        popupAnchor: [0, -48]
+                        iconSize: [44, 64],
+                        iconAnchor: [22, 64],
+                        popupAnchor: [0, -64]
                     });
 
                     L.marker([o.lat, o.lng], { icon: orderIcon })
