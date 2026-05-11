@@ -95,9 +95,8 @@ class ViewDispatch extends ViewRecord
                             ->columnSpanFull(),
                     ]),
 
-                // MAPA DE SEGUIMIENTO EN TIEMPO REAL (Solo visible en progreso para admins)
-                Components\Section::make('Mapa de Seguimiento en Tiempo Real')
-                    ->visible(fn ($record) => $record->status === 'in_progress' && !auth()->user()?->hasRole('conductor'))
+                // MAPA DE SEGUIMIENTO Y UBICACIONES DE PREVENTAS (Siempre visible para facilitar la ruta)
+                Components\Section::make(fn ($record) => $record->status === 'in_progress' ? 'Mapa de Seguimiento en Tiempo Real y Entregas' : 'Ubicación Geográfica de las Preventas')
                     ->collapsible()
                     ->schema([
                         Components\ViewEntry::make('map')
