@@ -16,7 +16,16 @@
                     <span>Dashboard</span>
                 </div>
                 <div class="pb-title">Dashboard <em>Gerencial</em></div>
-                <div class="pb-meta">Perflo-Plast ERP &bull; Datos en tiempo real &bull; {{ now()->translatedFormat('l, d F Y') }}</div>
+                <div class="pb-meta">
+                    <span>Perflo-Plast ERP</span>
+                    <span class="pb-divider">&bull;</span>
+                    <span class="pb-live-indicator">
+                        <span class="pb-ping"></span>
+                        Datos en tiempo real
+                    </span>
+                    <span class="pb-divider">&bull;</span>
+                    <span>{{ now()->translatedFormat('l, d F Y') }}</span>
+                </div>
             </div>
             <div class="pb-slicer">
                 <span class="pb-slicer-lbl">Período</span>
