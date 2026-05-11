@@ -55,21 +55,26 @@
 
     $locations = $latest ? collect([$latest]) : collect();
 
-    $ordersData = $record->orders()
-        ->whereNotNull('lat')
-        ->whereNotNull('lng')
-        ->get(['id', 'order_number', 'customer_name', 'delivery_address', 'lat', 'lng', 'status'])
-        ->map(function ($o) {
-            return [
-                'number' => $o->order_number,
-                'customer' => $o->customer_name,
-                'address' => $o->delivery_address,
-                'lat' => (float)$o->lat,
-                'lng' => (float)$o->lng,
-                'status' => $o->status,
-            ];
-        })
-        ->toArray();
+    $hideOrders = $hideOrders ?? false;
+    $ordersData = [];
+
+    if (!$hideOrders) {
+        $ordersData = $record->orders()
+            ->whereNotNull('lat')
+            ->whereNotNull('lng')
+            ->get(['id', 'order_number', 'customer_name', 'delivery_address', 'lat', 'lng', 'status'])
+            ->map(function ($o) {
+                return [
+                    'number' => $o->order_number,
+                    'customer' => $o->customer_name,
+                    'address' => $o->delivery_address,
+                    'lat' => (float)$o->lat,
+                    'lng' => (float)$o->lng,
+                    'status' => $o->status,
+                ];
+            })
+            ->toArray();
+    }
 @endphp
 
 <div class="relative w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" style="min-height: 550px;" 
@@ -91,6 +96,18 @@
             100% { transform: scale(2.2); opacity: 0; }
         }
     </style>
+
+    @if($hideOrders && $locations->isEmpty())
+        <div class="absolute top-4 left-4 z-[1000] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-amber-500/30 max-w-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-xl animate-pulse">
+                📡
+            </div>
+            <div>
+                <h5 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Esperando GPS</h5>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">El piloto aún no ha iniciado el viaje o se encuentra en una zona sin señal celular.</p>
+            </div>
+        </div>
+    @endif
 
     <div x-ref="mapContainer" class="w-full h-[550px]" style="height: 550px;" wire:ignore></div>
 </div>

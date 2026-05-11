@@ -12,6 +12,7 @@
             routeName: config.routeName,
             dispatchStatus: config.dispatchStatus,
             truckMarker: null,
+            routeLine: null,
             allPoints: [],
             orders: config.orders ? JSON.parse(atob(config.orders)) : [],
             isOnline: true,
@@ -208,6 +209,21 @@
                 } else {
                     this.truckMarker = L.marker([lat, lng], { icon: newIcon }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
                     this.truckMarker.openPopup();
+                }
+
+                // Draw/Update route tracking polyline
+                if (this.allPoints.length > 1) {
+                    if (this.routeLine) {
+                        this.routeLine.setLatLngs(this.allPoints);
+                    } else {
+                        this.routeLine = L.polyline(this.allPoints, {
+                            color: '#ef4444',
+                            weight: 4,
+                            opacity: 0.75,
+                            dashArray: '5, 8',
+                            lineJoin: 'round'
+                        }).addTo(this.map);
+                    }
                 }
                 
                 if (fitBounds) this.map.setView([lat, lng], 15);
