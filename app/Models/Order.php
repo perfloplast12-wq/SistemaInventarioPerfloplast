@@ -56,6 +56,16 @@ class Order extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
+    }
+
+    public function orderReturns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($order) {
