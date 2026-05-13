@@ -4,11 +4,18 @@ namespace App\Events;
 use App\Models\Dispatch;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DispatchStatusUpdated implements ShouldBroadcast
+/**
+ * Evento que se dispara cuando el estado de un despacho cambia.
+ * 
+ * NOTA: Se removió ShouldBroadcast porque el servidor de WebSockets
+ * (Pusher/Reverb) no está configurado en producción, lo cual causaba
+ * errores 500 al intentar transmitir. Cuando se configure un servicio
+ * de broadcasting, se puede volver a agregar `implements ShouldBroadcast`.
+ */
+class DispatchStatusUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
