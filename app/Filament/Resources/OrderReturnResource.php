@@ -163,40 +163,57 @@ class OrderReturnResource extends Resource
                             ->rows(2),
                     ])
                     ->action(function (OrderReturn $record, array $data): void {
-                        $adminNotes = $data['admin_notes'] ?? '';
-                        // Crear el movimiento
-                        InventoryMovement::create([
-                            'type' => 'return',
-                            'motive' => 'return',
-                            'product_id' => $record->product_id,
-                            'color_id' => $record->color_id,
-                            'from_truck_id' => $record->truck_id,
-                            'to_warehouse_id' => $data['warehouse_id'],
-                            'quantity' => $record->quantity,
-                            'note' => 'Retorno por Devolución de Pedido '.$record->order?->order_number. ' | ' . $adminNotes,
-                            'created_by' => auth()->id(),
-                            'source_type' => OrderReturn::class,
-                            'source_id' => $record->id,
-                        ]);
+                        try {
+                            $adminNotes = $data['admin_notes'] ?? '';
+                            // Crear el movimiento
+                            InventoryMovement::create([
+                                'type' => 'return',
+                                'motive' => 'return',
+                                'product_id' => $record->product_id,
+                                'color_id' => $record->color_id,
+                                'from_truck_id' => $record->truck_id,
+                                'to_warehouse_id' => $data['warehouse_id'],
+                                'quantity' => $record->quantity,
+                                'note' => 'Retorno por Devolución de Pedido '.$record->order?->order_number. ' | ' . $adminNotes,
+                                'created_by' => auth()->id(),
+                                'source_type' => OrderReturn::class,
+                                'source_id' => $record->id,
+                            ]);
 
-                        $record->update([
-                            'status' => 'returned_to_warehouse',
-                            'resolved_by' => auth()->id(),
-                            'notes' => trim($record->notes . "\n[Resolución a Bodega]: " . $adminNotes),
-                        ]);
+                            $record->update([
+                                'status' => 'returned_to_warehouse',
+                                'resolved_by' => auth()->id(),
+                                'notes' => trim(($record->notes ?? '') . "\n[Resolución a Bodega]: " . $adminNotes),
+                            ]);
 
-                        // Actualizar el estado del pedido vinculado
-                        $record->order?->update(['status' => 'returned']);
+                            // Actualizar el estado del pedido vinculado
+                            try {
+                                $record->order?->update(['status' => 'returned']);
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('Error updating order status: ' . $e->getMessage());
+                            }
 
-                        // Sincronizar estado del despacho
-                        if ($record->dispatch) {
-                            static::syncDispatchStatus($record->dispatch);
+                            // Sincronizar estado del despacho
+                            try {
+                                if ($record->dispatch) {
+                                    static::syncDispatchStatus($record->dispatch);
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('Error syncing dispatch: ' . $e->getMessage());
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Producto Retornado al Inventario')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Error en resolve_warehouse: ' . $e->getMessage() . ' | File: ' . $e->getFile() . ':' . $e->getLine());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error al procesar devolución')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Producto Retornado al Inventario')
-                            ->success()
-                            ->send();
                     }),
                 Tables\Actions\Action::make('resolve_other')
                     ->label('Reasignar / Cerrar')
@@ -210,25 +227,42 @@ class OrderReturnResource extends Resource
                             ->helperText('Ej: Se cambió producto a cliente en ruta.'),
                     ])
                     ->action(function (OrderReturn $record, array $data): void {
-                        $adminNotes = $data['admin_notes'] ?? '';
-                        $record->update([
-                            'status' => 'reassigned',
-                            'resolved_by' => auth()->id(),
-                            'notes' => trim($record->notes . "\n[Solución Manual]: " . $adminNotes),
-                        ]);
+                        try {
+                            $adminNotes = $data['admin_notes'] ?? '';
+                            $record->update([
+                                'status' => 'reassigned',
+                                'resolved_by' => auth()->id(),
+                                'notes' => trim(($record->notes ?? '') . "\n[Solución Manual]: " . $adminNotes),
+                            ]);
 
-                        // Actualizar el estado del pedido vinculado (como completado pero con novedad)
-                        $record->order?->update(['status' => 'completed_with_return']);
+                            // Actualizar el estado del pedido vinculado (como completado pero con novedad)
+                            try {
+                                $record->order?->update(['status' => 'completed_with_return']);
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('Error updating order: ' . $e->getMessage());
+                            }
 
-                        // Sincronizar estado del despacho
-                        if ($record->dispatch) {
-                            static::syncDispatchStatus($record->dispatch);
+                            // Sincronizar estado del despacho
+                            try {
+                                if ($record->dispatch) {
+                                    static::syncDispatchStatus($record->dispatch);
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('Error syncing dispatch: ' . $e->getMessage());
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Caso Resuelto')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Error en resolve_other: ' . $e->getMessage());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Caso Resuelto')
-                            ->success()
-                            ->send();
                     }),
             ])
             ->bulkActions([
@@ -250,36 +284,40 @@ class OrderReturnResource extends Resource
 
     protected static function syncDispatchStatus(\App\Models\Dispatch $dispatch): void
     {
-        // 1. Si el despacho ya no está 'in_progress', no hacemos nada
-        if ($dispatch->status !== 'in_progress') {
-            return;
-        }
+        try {
+            // 1. Si el despacho ya no está 'in_progress', no hacemos nada
+            if ($dispatch->status !== 'in_progress') {
+                return;
+            }
 
-        // 2. Verificar devoluciones pendientes
-        $hasPendingReturns = $dispatch->orderReturns()->where('status', 'pending')->exists();
-        if ($hasPendingReturns) {
-            return;
-        }
+            // 2. Verificar devoluciones pendientes
+            $hasPendingReturns = $dispatch->orderReturns()->where('status', 'pending')->exists();
+            if ($hasPendingReturns) {
+                return;
+            }
 
-        // 3. Verificar si hay pedidos que aún no han sido reportados ni completados
-        // Un pedido bloquea el cierre si está en 'assigned' y no tiene devoluciones
-        $blockingOrders = $dispatch->orders()
-            ->where('status', 'assigned')
-            ->whereDoesntHave('returns')
-            ->exists();
+            // 3. Verificar si hay pedidos que aún no han sido reportados ni completados
+            // Un pedido bloquea el cierre si está en 'assigned' y no tiene devoluciones
+            $blockingOrders = $dispatch->orders()
+                ->where('status', 'assigned')
+                ->whereDoesntHave('returns')
+                ->exists();
 
-        // 4. Si no hay bloqueos (todos los pedidos o están completados/devueltos o tienen su devolución resuelta)
-        if (!$blockingOrders) {
-            $hasAnyReturns = $dispatch->orderReturns()->exists();
-            $newStatus = $hasAnyReturns ? 'completed' : 'delivered';
-            
-            $dispatch->update(['status' => $newStatus]);
+            // 4. Si no hay bloqueos (todos los pedidos o están completados/devueltos o tienen su devolución resuelta)
+            if (!$blockingOrders) {
+                $hasAnyReturns = $dispatch->orderReturns()->exists();
+                $newStatus = $hasAnyReturns ? 'completed' : 'delivered';
+                
+                $dispatch->update(['status' => $newStatus]);
 
-            \Filament\Notifications\Notification::make()
-                ->title('Viaje Finalizado Automáticamente')
-                ->body("El despacho {$dispatch->dispatch_number} se ha cerrado porque se resolvieron todas las novedades.")
-                ->success()
-                ->send();
+                \Filament\Notifications\Notification::make()
+                    ->title('Viaje Finalizado Automáticamente')
+                    ->body("El despacho {$dispatch->dispatch_number} se ha cerrado porque se resolvieron todas las novedades.")
+                    ->success()
+                    ->send();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('syncDispatchStatus failed: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
         }
     }
 
