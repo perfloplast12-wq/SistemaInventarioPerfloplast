@@ -161,8 +161,8 @@ class OrderReturnResource extends Resource
                         Forms\Components\Textarea::make('admin_notes')
                             ->label('Nota Adicional')
                             ->rows(2),
-                    ])
-                    ->action(function (OrderReturn $record, array $data): void {
+                             ->action(function (OrderReturn $record, array $data): void {
+                        $adminNotes = $data['admin_notes'] ?? '';
                         // Crear el movimiento
                         InventoryMovement::create([
                             'type' => 'return',
@@ -172,7 +172,7 @@ class OrderReturnResource extends Resource
                             'from_truck_id' => $record->truck_id,
                             'to_warehouse_id' => $data['warehouse_id'],
                             'quantity' => $record->quantity,
-                            'note' => 'Retorno por Devolución de Pedido '.$record->order?->order_number. ' | ' . $data['admin_notes'],
+                            'note' => 'Retorno por Devolución de Pedido '.$record->order?->order_number. ' | ' . $adminNotes,
                             'created_by' => auth()->id(),
                             'source_type' => OrderReturn::class,
                             'source_id' => $record->id,
@@ -181,7 +181,7 @@ class OrderReturnResource extends Resource
                         $record->update([
                             'status' => 'returned_to_warehouse',
                             'resolved_by' => auth()->id(),
-                            'notes' => trim($record->notes . "\n[Resolución a Bodega]: " . $data['admin_notes']),
+                            'notes' => trim($record->notes . "\n[Resolución a Bodega]: " . $adminNotes),
                         ]);
 
                         // Actualizar el estado del pedido vinculado
@@ -197,7 +197,6 @@ class OrderReturnResource extends Resource
                             ->success()
                             ->send();
                     }),
-
                 Tables\Actions\Action::make('resolve_other')
                     ->label('Reasignar / Cerrar')
                     ->icon('heroicon-o-check-badge')
@@ -210,10 +209,11 @@ class OrderReturnResource extends Resource
                             ->helperText('Ej: Se cambió producto a cliente en ruta.'),
                     ])
                     ->action(function (OrderReturn $record, array $data): void {
+                        $adminNotes = $data['admin_notes'] ?? '';
                         $record->update([
                             'status' => 'reassigned',
                             'resolved_by' => auth()->id(),
-                            'notes' => trim($record->notes . "\n[Solución Manual]: " . $data['admin_notes']),
+                            'notes' => trim($record->notes . "\n[Solución Manual]: " . $adminNotes),
                         ]);
 
                         // Actualizar el estado del pedido vinculado (como completado pero con novedad)
