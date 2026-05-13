@@ -93,7 +93,11 @@ class Dispatch extends Model
 
         static::updated(function ($dispatch) {
             if ($dispatch->wasChanged('status')) {
-                event(new \App\Events\DispatchStatusUpdated($dispatch));
+                try {
+                    event(new \App\Events\DispatchStatusUpdated($dispatch));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Error broadcasting DispatchStatusUpdated: ' . $e->getMessage());
+                }
             }
         });
     }
