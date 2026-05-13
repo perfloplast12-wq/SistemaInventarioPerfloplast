@@ -165,8 +165,10 @@ class OrderReturnResource extends Resource
                     ->action(function (OrderReturn $record, array $data): void {
                         // Crear el movimiento
                         InventoryMovement::create([
-                            'type' => 'transfer',
+                            'type' => 'return',
+                            'motive' => 'return',
                             'product_id' => $record->product_id,
+                            'color_id' => $record->color_id,
                             'from_truck_id' => $record->truck_id,
                             'to_warehouse_id' => $data['warehouse_id'],
                             'quantity' => $record->quantity,

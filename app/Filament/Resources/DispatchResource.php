@@ -577,7 +577,7 @@ class DispatchResource extends Resource
                     ->modalHeading('¿Finalizar el viaje de despacho?')
                     ->modalDescription('Esto marcará el despacho como finalizado. Si hay devoluciones pendientes, por favor resuélvalas primero en el módulo de Inventario.')
                     ->modalSubmitActionLabel('Sí, finalizar')
-                    ->visible(fn ($record) => $record->status === 'in_progress')
+                    ->visible(fn ($record) => $record->status === 'in_progress' && !$record->orderReturns()->where('status', 'pending')->exists())
                     ->action(function (Dispatch $record): void {
                         $hasPendingReturns = $record->orderReturns()->where('status', 'pending')->exists();
                         

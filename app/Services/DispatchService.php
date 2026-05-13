@@ -117,20 +117,31 @@ class DispatchService
             $dispatch->update(['status' => 'delivered']);
             $dispatch->recalculateTotals();
 
-            // 🚀 REBAJAR STOCK DEL CAMIÓ Al ENTREGAR (Resumido por ítem)
+            // 🚀 REBAJAR STOCK DEL CAMIÓN Al ENTREGAR (Resumido por ítem)
             foreach ($dispatch->items as $item) {
-                InventoryMovement::create([
-                    'type' => 'out',
-                    'product_id' => $item->product_id,
-                    'color_id' => $item->color_id,
-                    'quantity' => $item->quantity,
-                    'unit_cost' => $item->unit_price,
-                    'from_truck_id' => $dispatch->truck_id,
-                    'note' => "Entrega Finalizada - Despacho #{$dispatch->dispatch_number}",
-                    'created_by' => auth()->id(),
-                    'source_type' => 'dispatch',
-                    'source_id' => $dispatch->id,
-                ]);
+                // Calcular cantidad devuelta a bodega para este producto y color
+                $returnedQty = $dispatch->orderReturns()
+                    ->where('product_id', $item->product_id)
+                    ->where('color_id', $item->color_id)
+                    ->where('status', 'returned_to_warehouse')
+                    ->sum('quantity');
+
+                $actualDeliverQty = (float) $item->quantity - (float) $returnedQty;
+
+                if ($actualDeliverQty > 0) {
+                    InventoryMovement::create([
+                        'type' => 'out',
+                        'product_id' => $item->product_id,
+                        'color_id' => $item->color_id,
+                        'quantity' => $actualDeliverQty,
+                        'unit_cost' => $item->unit_price,
+                        'from_truck_id' => $dispatch->truck_id,
+                        'note' => "Entrega Finalizada - Despacho #{$dispatch->dispatch_number}",
+                        'created_by' => auth()->id(),
+                        'source_type' => 'dispatch',
+                        'source_id' => $dispatch->id,
+                    ]);
+                }
             }
             
             // Marcar pedidos como entregados/completados
