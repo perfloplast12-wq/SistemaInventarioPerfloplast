@@ -161,7 +161,8 @@ class OrderReturnResource extends Resource
                         Forms\Components\Textarea::make('admin_notes')
                             ->label('Nota Adicional')
                             ->rows(2),
-                             ->action(function (OrderReturn $record, array $data): void {
+                    ])
+                    ->action(function (OrderReturn $record, array $data): void {
                         $adminNotes = $data['admin_notes'] ?? '';
                         // Crear el movimiento
                         InventoryMovement::create([
