@@ -216,6 +216,21 @@ body,
 }
 
 /* PREMIUM KPIs */
+.pb-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+@media(max-width: 1200px) {
+    .pb-kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media(max-width: 768px) {
+    .pb-kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width: 480px) {
+    .pb-kpi-row { grid-template-columns: 1fr; }
+}
+
 .pb-kpi {
     background: var(--pb-card);
     border: 1px solid var(--pb-border);
