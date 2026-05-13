@@ -89,7 +89,8 @@ class DispatchResource extends Resource
                             ->options(Warehouse::pluck('name', 'id'))
                             ->required(),
                         Forms\Components\TextInput::make('route')
-                            ->label('Ruta / Destino')
+                            ->label('Zona / Ruta General')
+                            ->helperText('Zona general del recorrido del piloto (ej: Zona 12 - Cobán).')
                             ->required(),
                     ]),
 
@@ -102,7 +103,7 @@ class DispatchResource extends Resource
                                 if (method_exists($livewire, 'getRecord') && $livewire->getRecord()) {
                                     $query->orWhere('dispatch_id', $livewire->getRecord()->id);
                                 }
-                                return $query->pluck('order_number', 'id');
+                                return $query->get()->mapWithKeys(fn ($o) => [$o->id => "{$o->order_number} — {$o->customer_name}"]);
                             })
                             ->dehydrated(false)
                             ->multiple()
@@ -146,14 +147,11 @@ class DispatchResource extends Resource
                                         }
                                     }
                                 }
-                                // Autofill ruta y bodega si están vacíos
+                                // Autofill bodega si está vacío
                                 if (!empty($selectedOrderIds)) {
                                     $firstOrderId = reset($selectedOrderIds);
                                     $firstOrder = Order::with('sale')->find($firstOrderId);
                                     if ($firstOrder) {
-                                        if (empty($get('route')) && !empty($firstOrder->delivery_address)) {
-                                            $set('route', $firstOrder->delivery_address);
-                                        }
                                         if (empty($get('warehouse_id')) && $firstOrder->sale && $firstOrder->sale->from_warehouse_id) {
                                             $set('warehouse_id', $firstOrder->sale->from_warehouse_id);
                                         }
@@ -161,6 +159,39 @@ class DispatchResource extends Resource
                                 }
 
                                 $set('items', $currentItems);
+                            }),
+                        Forms\Components\Placeholder::make('selected_orders_summary')
+                            ->label('Detalle de Entrega por Pedido')
+                            ->content(function (Forms\Get $get) {
+                                $orderIds = (array) $get('selected_orders');
+                                if (empty($orderIds)) {
+                                    return new \Illuminate\Support\HtmlString('<p class="text-gray-500 italic">No hay pedidos seleccionados.</p>');
+                                }
+
+                                $orders = Order::whereIn('id', $orderIds)->get();
+                                $html = '<div class="overflow-x-auto my-2"><table class="w-full text-left border-collapse text-sm">
+                                    <thead>
+                                        <tr class="border-b bg-gray-100 dark:bg-gray-800 font-semibold">
+                                            <th class="p-2">Pedido</th>
+                                            <th class="p-2">Cliente</th>
+                                            <th class="p-2">Dirección de Entrega</th>
+                                            <th class="p-2 text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">';
+                                foreach ($orders as $o) {
+                                    $total = number_format((float) $o->total, 2);
+                                    $addr = htmlspecialchars((string) $o->delivery_address);
+                                    $name = htmlspecialchars((string) $o->customer_name);
+                                    $html .= "<tr>
+                                        <td class='p-2 font-mono'>{$o->order_number}</td>
+                                        <td class='p-2 font-medium'>{$name}</td>
+                                        <td class='p-2 text-gray-600 dark:text-gray-300'>{$addr}</td>
+                                        <td class='p-2 text-right font-semibold'>Q {$total}</td>
+                                    </tr>";
+                                }
+                                $html .= '</tbody></table></div>';
+                                return new \Illuminate\Support\HtmlString($html);
                             }),
                     ]),
 
