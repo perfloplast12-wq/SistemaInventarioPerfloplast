@@ -535,7 +535,7 @@ class DispatchResource extends Resource
                                 'quantity' => $item['quantity'],
                                 'reason' => $data['reason'],
                                 'status' => 'pending',
-                                'notes' => $data['notes'],
+                                'notes' => $data['notes'] ?? null,
                             ]);
                         }
                         

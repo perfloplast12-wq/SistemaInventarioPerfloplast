@@ -29,4 +29,15 @@ class OrderReturn extends Model
     public function driver() { return $this->belongsTo(User::class, 'driver_id'); }
     public function truck() { return $this->belongsTo(Truck::class); }
     public function resolver() { return $this->belongsTo(User::class, 'resolved_by'); }
+
+    protected static function booted()
+    {
+        static::creating(function ($return) {
+            if (empty($return->return_number)) {
+                $lastReturn = static::orderBy('id', 'desc')->first();
+                $nextId = $lastReturn ? $lastReturn->id + 1 : 1;
+                $return->return_number = 'DEV-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 }
