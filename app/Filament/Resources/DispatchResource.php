@@ -293,6 +293,45 @@ class DispatchResource extends Resource
                                     ]),
                             ])->columns(1),
                     ]),
+
+                \Filament\Infolists\Components\Section::make('Novedades y Devoluciones')
+                    ->description('Historial de devoluciones y su estado de resolución por parte de administración.')
+                    ->schema([
+                        \Filament\Infolists\Components\RepeatableEntry::make('orderReturns')
+                            ->label('')
+                            ->schema([
+                                \Filament\Infolists\Components\Grid::make(4)
+                                    ->schema([
+                                        \Filament\Infolists\Components\TextEntry::make('product.name')->label('Producto')->weight('bold'),
+                                        \Filament\Infolists\Components\TextEntry::make('quantity')
+                                            ->label('Cantidad Devuelta')
+                                            ->badge()
+                                            ->color('danger'),
+                                        \Filament\Infolists\Components\TextEntry::make('status')
+                                            ->label('Estado')
+                                            ->badge()
+                                            ->formatStateUsing(fn ($state) => match ($state) {
+                                                'pending' => 'Pendiente Admin',
+                                                'returned_to_warehouse' => 'Devuelto a Bodega',
+                                                'reassigned' => 'Solucionado / Reasignado',
+                                                default => $state,
+                                            })
+                                            ->color(fn ($state) => match ($state) {
+                                                'pending' => 'warning',
+                                                'returned_to_warehouse' => 'success',
+                                                'reassigned' => 'info',
+                                                default => 'gray',
+                                            }),
+                                        \Filament\Infolists\Components\TextEntry::make('resolver.name')
+                                            ->label('Resuelto Por')
+                                            ->placeholder('Aún no resuelto'),
+                                        \Filament\Infolists\Components\TextEntry::make('notes')
+                                            ->label('Notas de Administración')
+                                            ->columnSpanFull()
+                                            ->placeholder('Sin notas'),
+                                    ]),
+                            ])->columns(1),
+                    ])->visible(fn ($record) => $record->orderReturns()->exists()),
             ]);
     }
 
