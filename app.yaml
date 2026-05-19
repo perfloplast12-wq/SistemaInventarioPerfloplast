@@ -9,7 +9,7 @@ services:
       branch: main
       deploy_on_push: true
     instance_count: 1
-    instance_size_slug: basic-xxs # $5.00/mo
+    instance_size_slug: basic-xs # 1GB RAM, $10.00/mo
     http_port: 8080
     dockerfile_path: Dockerfile
     envs:
