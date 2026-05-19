@@ -207,7 +207,7 @@ class InvoiceResource extends Resource
                         }),
                 ])
             ])
-            ->poll('10s');
+            ->poll('120s');
     }
 
     public static function infolist(Infolist $infolist): Infolist

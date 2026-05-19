@@ -17,7 +17,7 @@ class ProductionByShiftChart extends Widget
     protected static string $view = 'filament.widgets.production-by-shift-chart';
     protected static bool $isLazy = true;
     protected static ?int $sort = 9;
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '120s';
 
     /** Current display mode: gauge | comparison | trend */
     public string $mode = 'comparison';

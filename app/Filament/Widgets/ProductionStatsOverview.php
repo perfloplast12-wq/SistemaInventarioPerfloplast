@@ -7,11 +7,12 @@ use App\Models\ProductionItem;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class ProductionStatsOverview extends BaseWidget
 {
     protected static bool $isLazy = true;
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '120s';
 
     protected function getColumns(): int
     {
@@ -20,6 +21,7 @@ class ProductionStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
+        return Cache::remember('production_stats_overview', 120, function () {
         $todayStart = Carbon::today();
         $todayEnd = Carbon::today()->endOfDay();
         $monthStart = Carbon::now()->startOfMonth();
@@ -84,5 +86,6 @@ class ProductionStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($draftCount > 0 ? 'warning' : 'gray'),
         ];
+        }); // end Cache::remember
     }
 }
