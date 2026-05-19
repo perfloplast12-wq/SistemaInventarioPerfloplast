@@ -736,7 +736,7 @@ class SaleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['payments', 'creator']);
+            ->with(['payments', 'creator', 'items.product', 'items.color', 'fromWarehouse', 'fromTruck']);
 
         $user = auth()->user();
         if (!$user) {

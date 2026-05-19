@@ -923,3 +923,81 @@ html.dark .fi-logo {
     color: #94a3b8 !important;
 }
 
+/* ============================================
+   🚀 INSTANT FEEDBACK SYSTEM (Next.js-like UX)
+   ============================================ */
+
+/* 1. TOP PROGRESS BAR — aparece al instante al hacer clic */
+#perfloplast-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--p-1, #6366f1), var(--p-2, #3b82f6), #06b6d4);
+    z-index: 999999;
+    pointer-events: none;
+    width: 0%;
+    opacity: 0;
+    transition: none;
+    box-shadow: 0 0 10px var(--p-1, #6366f1), 0 0 5px var(--p-2, #3b82f6);
+}
+
+#perfloplast-progress-bar.active {
+    opacity: 1;
+    animation: progressBarGrow 8s cubic-bezier(0.1, 0.5, 0.3, 1) forwards;
+}
+
+#perfloplast-progress-bar.done {
+    width: 100% !important;
+    opacity: 0;
+    transition: opacity 0.3s ease 0.1s;
+}
+
+@keyframes progressBarGrow {
+    0%   { width: 0%; }
+    10%  { width: 30%; }
+    30%  { width: 55%; }
+    50%  { width: 70%; }
+    70%  { width: 82%; }
+    90%  { width: 90%; }
+    100% { width: 95%; }
+}
+
+/* 2. SIDEBAR INSTANT CLICK FEEDBACK */
+.fi-sidebar-item-button:active {
+    transform: scale(0.96) !important;
+    opacity: 0.7 !important;
+    transition: all 0.05s ease !important;
+}
+
+/* 3. CONTENT AREA SMOOTH TRANSITIONS */
+.fi-main.navigating {
+    opacity: 0.5 !important;
+    transition: opacity 0.05s ease !important;
+}
+
+/* 4. ALL CLICKABLE ELEMENTS — instant press feedback */
+.fi-ta-row:active,
+.fi-btn:active,
+.fi-dropdown-trigger:active,
+.fi-tabs-tab:active,
+button[type="submit"]:active {
+    transform: scale(0.98) !important;
+    opacity: 0.8 !important;
+}
+
+/* 5. SKELETON SHIMMER for lazy widgets */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.fi-wi-loading {
+    background: linear-gradient(90deg, 
+        var(--pb-card) 25%, 
+        color-mix(in srgb, var(--pb-card), var(--pb-accent) 8%) 50%, 
+        var(--pb-card) 75%
+    ) !important;
+    background-size: 200% 100% !important;
+    animation: shimmer 1.5s infinite !important;
+}

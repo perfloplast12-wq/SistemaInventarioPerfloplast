@@ -150,6 +150,7 @@ class AdminPanelProvider extends PanelProvider
                             <script src=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\"></script>
                             <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
                             <script src=\"/js/filament-map.js?v=2.5\"></script>
+                            <script src=\"/js/instant-nav.js?v=1.0\" defer></script>
                             {$styles}
                         ");
                     });
