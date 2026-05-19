@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 // ThemesPlugin::make(),
                 FilamentApexChartsPlugin::make(),
             ])
-            // ->spa() // Deshabilitado: causa 500 en /livewire/update en DigitalOcean
+            ->spa() // SPA habilitado para navegación instantánea
             ->databaseNotifications() 
             ->databaseNotificationsPolling('60s')
             ->maxContentWidth(null) 
