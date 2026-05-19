@@ -27,13 +27,13 @@ services:
         value: mysql
       - key: SESSION_DRIVER
         scope: RUN_TIME
-        value: redis
+        value: database
       - key: CACHE_STORE
         scope: RUN_TIME
-        value: redis
+        value: database
       - key: QUEUE_CONNECTION
         scope: RUN_TIME
-        value: redis
+        value: database
       - key: APP_URL
         scope: RUN_AND_BUILD_TIME
         value: https://perfloplast-app-6t3dz.ondigitalocean.app
@@ -47,11 +47,11 @@ workers:
     instance_count: 1
     instance_size_slug: basic-xxs
     dockerfile_path: Dockerfile
-    run_command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+    run_command: php artisan queue:work database --sleep=3 --tries=3 --timeout=90
     envs:
       - key: QUEUE_CONNECTION
         scope: RUN_TIME
-        value: redis
+        value: database
       - key: DB_CONNECTION
         scope: RUN_TIME
         value: mysql
