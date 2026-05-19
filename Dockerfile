@@ -46,7 +46,8 @@ RUN install-php-extensions \
     intl \
     xml \
     opcache \
-    pcntl
+    pcntl \
+    redis
 
 # Copy custom opcache configuration
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini

@@ -64,57 +64,12 @@ class SaleService
                 }
             }
 
-            // 4. Crear movimientos de inventario (OUT)
-            foreach ($sale->items as $item) {
-                InventoryMovement::create([
-                    'type'              => 'out',
-                    'product_id'        => $item->product_id,
-                    'color_id'          => $item->color_id,
-                    'quantity'          => $item->quantity,
-                    'unit_cost'         => $item->product->cost_price ?? 0,
-                    'from_warehouse_id' => $sale->from_warehouse_id,
-                    'from_truck_id'     => $sale->from_truck_id,
-                    'note'              => ($sale->origin_type === 'warehouse' ? "Pre-venta de Bodega" : "Venta Directa de Camión") . " - #{$sale->sale_number}",
-                    'created_by'        => auth()->id(),
-                    'source_type'       => 'sale',
-                    'source_id'         => $sale->id,
-                ]);
-            }
-
-            // 5. Actualizar estado
+            // 4. Actualizar estado inmediatamente para que el usuario no espere
             $sale->update(['status' => 'confirmed']);
 
-            // 6. GENERACIÓN AUTOMÁTICA DE PEDIDO (Logística)
-            // Esto permite que el área de despachos vea la venta como un pedido pendiente
-            $order = \App\Models\Order::create([
-                'sale_id'          => $sale->id,
-                'customer_name'    => $sale->customer_name,
-                'customer_nit'     => $sale->customer_nit ?? 'C/F',
-                'delivery_address' => $sale->delivery_address,
-                'phone'            => $sale->phone,
-                'order_date'       => $sale->sale_date,
-                'payment_method'   => $sale->payments->first()?->payment_method ?? 'cash',
-                'payment_status'   => $sale->balance <= 0 ? 'paid' : 'partial',
-                'notes'            => "Generado automáticamente desde Preventa #{$sale->sale_number}. " . $sale->note,
-                'status'           => $sale->origin_type === 'warehouse' ? 'pending' : 'shipped',
-                'lat'              => $sale->lat,
-                'lng'              => $sale->lng,
-                'created_by'       => $sale->created_by,
-            ]);
-
-            foreach ($sale->items as $item) {
-                OrderItem::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $item->product_id,
-                    'color_id'   => $item->color_id,
-                    'quantity'   => $item->quantity,
-                    'unit_price' => $item->unit_price,
-                    'subtotal'   => $item->subtotal,
-                ]);
-            }
-
-            // 7. Generar Factura
-            app(InvoiceService::class)->generateFromSale($sale);
+            // 5. Enviar lógica pesada (Movimientos, Pedidos, Factura) a la cola de Redis
+            // Se ejecutará después de que se confirme esta transacción en DB.
+            \App\Jobs\ConfirmSaleJob::dispatch($sale)->afterCommit();
         });
     }
 

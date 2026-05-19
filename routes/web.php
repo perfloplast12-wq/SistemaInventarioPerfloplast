@@ -48,36 +48,25 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
         $activeDispatchIds[] = $dispatch->id;
     }
 
-    // 2. Query each active dispatch ID individually (perfectly indexed, ultra-fast)
-    $lastLocation = null;
-    foreach ($activeDispatchIds as $aid) {
-        $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
-            ->orderByDesc('created_at')
-            ->first();
-        if ($loc) {
-            if (!$lastLocation || $loc->created_at->gt($lastLocation->created_at)) {
-                $lastLocation = $loc;
-            }
-        }
-    }
+    // 2. Query con whereIn para eliminar el foreach N+1
+    $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $activeDispatchIds)
+        ->orderByDesc('created_at')
+        ->first();
 
     // 3. Fallback: if no active dispatches have coordinates, check the 5 most recent dispatches for this truck
+    $otherIds = [];
     if (!$lastLocation && $dispatch->truck_id) {
         $otherIds = \App\Models\Dispatch::where('truck_id', $dispatch->truck_id)
             ->whereNotIn('id', $activeDispatchIds)
             ->orderByDesc('id')
             ->limit(5)
-            ->pluck('id');
+            ->pluck('id')
+            ->toArray();
 
-        foreach ($otherIds as $oid) {
-            $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+        if (!empty($otherIds)) {
+            $lastLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $otherIds)
                 ->orderByDesc('created_at')
                 ->first();
-            if ($loc) {
-                if (!$lastLocation || $loc->created_at->gt($lastLocation->created_at)) {
-                    $lastLocation = $loc;
-                }
-            }
         }
     }
 
@@ -87,36 +76,22 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
 
     $isOfflineSignal = ($lastLocation->speed == -1);
 
-    // 4. Handle offline signal check across all searched dispatches
+    // 4. Handle offline signal check
     $displayLocation = $lastLocation;
     if ($isOfflineSignal) {
-        $realLocation = null;
-        // Search active ones first
-        foreach ($activeDispatchIds as $aid) {
-            $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
+        $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $activeDispatchIds)
+            ->where('speed', '!=', -1)
+            ->orderByDesc('created_at')
+            ->first();
+            
+        // Then fallback ones if still null
+        if (!$realLocation && !empty($otherIds)) {
+            $realLocation = \App\Models\DispatchLocation::whereIn('dispatch_id', $otherIds)
                 ->where('speed', '!=', -1)
                 ->orderByDesc('created_at')
                 ->first();
-            if ($loc) {
-                if (!$realLocation || $loc->created_at->gt($realLocation->created_at)) {
-                    $realLocation = $loc;
-                }
-            }
         }
-        // Then fallback ones if still null
-        if (!$realLocation && $dispatch->truck_id) {
-            foreach ($otherIds as $oid) {
-                $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
-                    ->where('speed', '!=', -1)
-                    ->orderByDesc('created_at')
-                    ->first();
-                if ($loc) {
-                    if (!$realLocation || $loc->created_at->gt($realLocation->created_at)) {
-                        $realLocation = $loc;
-                    }
-                }
-            }
-        }
+        
         if ($realLocation) {
             $displayLocation = $realLocation;
         }
@@ -138,23 +113,35 @@ Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dis
 // Ruta para obtener ubicaciones de vendedores (actualización silenciosa del mapa)
 Route::get('/api/sales-locations', function () {
     try {
-        $userIdsWithLocation = \App\Models\UserLocation::select('user_id')->distinct()->pluck('user_id');
+        $latestLocationIds = \App\Models\UserLocation::selectRaw('MAX(id) as id')
+            ->groupBy('user_id')
+            ->pluck('id');
+            
+        $latestLocations = \App\Models\UserLocation::whereIn('id', $latestLocationIds)
+            ->get()
+            ->keyBy('user_id');
+            
+        $realLocationIds = \App\Models\UserLocation::selectRaw('MAX(id) as id')
+            ->where('accuracy', '!=', -1)
+            ->groupBy('user_id')
+            ->pluck('id');
+            
+        $realLocations = \App\Models\UserLocation::whereIn('id', $realLocationIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $userIdsWithLocation = $latestLocations->keys();
         $salesUsers = \App\Models\User::whereIn('id', $userIdsWithLocation)->get();
 
-        $locations = $salesUsers->map(function ($user) {
+        $locations = $salesUsers->map(function ($user) use ($latestLocations, $realLocations) {
             try {
-                $lastLocation = \App\Models\UserLocation::where('user_id', $user->id)
-                    ->latest('id')
-                    ->first();
+                $lastLocation = $latestLocations->get($user->id);
                 if (!$lastLocation || !$lastLocation->lat || !$lastLocation->lng) return null;
 
                 $isOfflineSignal = ($lastLocation->accuracy == -1);
                 
                 if ($isOfflineSignal) {
-                    $realLocation = \App\Models\UserLocation::where('user_id', $user->id)
-                        ->where('accuracy', '!=', -1)
-                        ->latest('id')
-                        ->first();
+                    $realLocation = $realLocations->get($user->id);
                     $displayLocation = $realLocation ?? $lastLocation;
                 } else {
                     $displayLocation = $lastLocation;
@@ -175,8 +162,8 @@ Route::get('/api/sales-locations', function () {
                     'lat' => (float) $displayLocation->lat,
                     'lng' => (float) $displayLocation->lng,
                     'speed' => (float) ($displayLocation->speed ?? 0),
-                    'updated_at' => $localTime ? $localTime->diffForHumans() : 'Desconocido',
-                    'last_seen_exact' => $localTime ? $localTime->format('d/m/Y h:i:s A') : 'Desconocido',
+                    'updated_at' => $createdAt ? $createdAt->diffForHumans() : 'Desconocido',
+                    'last_seen_exact' => $createdAt ? $createdAt->format('d/m/Y h:i:s A') : 'Desconocido',
                     'accuracy' => $isOfflineSignal ? 0 : round((float) ($displayLocation->accuracy ?? 0), 1),
                     'is_online' => $isOnline,
                 ];

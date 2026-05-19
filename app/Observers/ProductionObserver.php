@@ -16,7 +16,6 @@ class ProductionObserver
     {
         InventoryMovement::where('source_type', 'production')
             ->where('source_id', $production->id)
-            ->get()
-            ->each(fn ($movement) => $movement->delete());
+            ->delete();
     }
 }

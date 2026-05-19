@@ -27,10 +27,34 @@ services:
         value: mysql
       - key: SESSION_DRIVER
         scope: RUN_TIME
-        value: file
+        value: redis
+      - key: CACHE_STORE
+        scope: RUN_TIME
+        value: redis
+      - key: QUEUE_CONNECTION
+        scope: RUN_TIME
+        value: redis
       - key: APP_URL
         scope: RUN_AND_BUILD_TIME
         value: https://perfloplast-app-6t3dz.ondigitalocean.app
+
+workers:
+  - name: perfloplast-worker
+    github:
+      repo: perfloplast12-wq/SistemaInventarioPerfloplast
+      branch: main
+      deploy_on_push: true
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    dockerfile_path: Dockerfile
+    run_command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+    envs:
+      - key: QUEUE_CONNECTION
+        scope: RUN_TIME
+        value: redis
+      - key: DB_CONNECTION
+        scope: RUN_TIME
+        value: mysql
 
 jobs:
   - name: migrate-and-seed
