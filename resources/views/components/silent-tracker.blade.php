@@ -57,6 +57,12 @@
                 style="width: 100%; background: #ef4444; color: white; font-weight: 700; padding: 1.25rem; border-radius: 1rem; border: none; cursor: pointer; font-size: 1.1rem; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4); transition: transform 0.2s;">
             Activar Ubicación
         </button>
+
+        <button type="button" 
+                onclick="window.dismissGpsLock(event)" 
+                style="margin-top: 1rem; width: 100%; background: transparent; color: #fca5a5; font-weight: 600; padding: 1rem; border-radius: 1rem; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; font-size: 1rem; transition: background 0.2s;">
+            Continuar sin GPS (Modo PC)
+        </button>
     </div>
 </div>
 

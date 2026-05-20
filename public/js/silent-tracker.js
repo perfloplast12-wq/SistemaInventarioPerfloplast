@@ -126,6 +126,14 @@
             }, { enableHighAccuracy: true, timeout: 5000 });
             return false;
         };
+
+        window.dismissGpsLock = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            config.shouldTrack = false;
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            updateLockUI(false);
+            setStorageTime(Date.now() + 86400000); // 1 día en el futuro para que no vuelva a molestar
+        };
     };
 
     if (document.readyState === 'loading') {
