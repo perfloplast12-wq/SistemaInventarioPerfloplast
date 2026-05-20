@@ -65,7 +65,9 @@
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi || true",
             "@php artisan filament:upgrade || true",
-            "@php artisan optimize || true"
+            "@php artisan optimize || true",
+            "@php artisan view:cache || true",
+            "@php artisan filament:cache-components || true"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
