@@ -146,6 +146,73 @@
             background: rgba(15, 23, 42, 0.82);
         }
 
+        .leaflet-control-zoom a {
+            width: 36px;
+            height: 36px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.96);
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+            line-height: 36px;
+            font-size: 1.25rem;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: linear-gradient(135deg, #2563eb, #8b5cf6) !important;
+            color: #ffffff !important;
+        }
+
+        .leaflet-control-zoom a.leaflet-disabled {
+            opacity: 0.55;
+        }
+
+        .leaflet-control-attribution,
+        .leaflet-control-container .leaflet-control-layers-toggle {
+            color: rgba(241, 245, 249, 0.85) !important;
+        }
+
+        .leaflet-control-layers-toggle {
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background: rgba(15, 23, 42, 0.92) !important;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.32) !important;
+        }
+
+        .leaflet-container {
+            background: #020617;
+        }
+
+        .dispatch-map-buttons {
+            display: inline-flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .dispatch-map-buttons button {
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.85);
+            color: #e2e8f0;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .dispatch-map-buttons button:hover {
+            background: rgba(59, 130, 246, 0.95);
+            border-color: rgba(59, 130, 246, 0.75);
+            transform: translateY(-1px);
+            color: #ffffff;
+        }
+
+        .dispatch-map-buttons button.active {
+            background: linear-gradient(135deg, #22c55e, #06b6d4);
+            border-color: rgba(34, 197, 94, 0.75);
+            color: white;
+        }
+
         .dispatch-empty {
             min-height: 12rem;
             border: 1px dashed rgba(148, 163, 184, 0.2);
@@ -289,7 +356,7 @@
                 <div class="dispatch-map relative w-full shadow-xl">
                     <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
 
-                    <div class="absolute left-4 top-4 z-[999] flex flex-wrap items-center gap-2">
+                    <div class="absolute left-4 top-4 z-[999] flex flex-col gap-2">
                         <div class="rounded-xl border border-slate-700/70 bg-slate-950/88 px-3 py-2 shadow-2xl backdrop-blur-md">
                             <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cobertura GPS</p>
                             <p class="text-xs font-bold text-white">Guatemala / Rutas activas</p>
@@ -297,6 +364,12 @@
                         <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 shadow-2xl backdrop-blur-md">
                             <p class="text-[10px] font-black uppercase tracking-wider text-emerald-300">{{ $stats['in_progress'] ?? 0 }} en ruta</p>
                             <p class="text-[10px] font-semibold text-emerald-100/80">Actualizacion cada 8s</p>
+                        </div>
+                        <div class="dispatch-map-buttons">
+                            <button type="button" wire:click="setTab('todos')" class="{{ $activeTab === 'todos' ? 'active' : '' }}">Todos</button>
+                            <button type="button" wire:click="setTab('in_progress')" class="{{ $activeTab === 'in_progress' ? 'active' : '' }}">En ruta</button>
+                            <button type="button" wire:click="setTab('completed')" class="{{ $activeTab === 'completed' ? 'active' : '' }}">Completados</button>
+                            <button type="button" wire:click="setTab('pending')" class="{{ $activeTab === 'pending' ? 'active' : '' }}">Pendientes</button>
                         </div>
                     </div>
 
@@ -307,7 +380,7 @@
                                 🚚
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-xs font-black text-indigo-400 tracking-wider uppercase" x-text="selectedPilot.dispatch_number"></span>
+                                <span class="text-xs font-black text-indigo-400 tracking-wider uppercase" x-text="selectedPilot.dispatch_count + ' despachos'"></span>
                                 <span class="text-sm font-bold text-white leading-tight" x-text="selectedPilot.driver_name"></span>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -372,13 +445,13 @@
                             <div class="w-full mt-8 flex flex-col gap-3">
                                 <div class="flex items-center justify-between gap-3">
                                     <h4 class="text-[10px] font-black text-slate-400 tracking-wider uppercase text-left">Pilotos disponibles</h4>
-                                    <span class="text-[10px] font-bold text-slate-500">{{ count($dispatches) }} rutas</span>
+                                    <span class="text-[10px] font-bold text-slate-500">{{ count($dispatches) }} pilotos</span>
                                 </div>
                                 <div class="flex flex-col gap-2 overflow-y-auto max-h-[250px]">
                                     @forelse($dispatches as $d)
                                         <div 
-                                            wire:click="selectDispatch({{ $d['id'] }})"
-                                            class="dispatch-driver-card flex items-center justify-between p-3 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group"
+                                            wire:click="selectDriver({{ $d['driver_id'] }})"
+                                            class="dispatch-driver-card flex items-center justify-between p-3 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group {{ $d['status'] === 'in_progress' ? 'border-blue-500/20 hover:border-blue-400/40' : ($d['status'] === 'pending' ? 'border-amber-500/20 hover:border-amber-400/40' : 'border-emerald-500/20 hover:border-emerald-400/40') }}"
                                         >
                                             <div class="flex items-center gap-3">
                                                 <div class="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-xs font-black text-sky-300 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300">
@@ -387,10 +460,11 @@
                                                 <div class="text-left min-w-0">
                                                     <p class="text-xs font-bold text-white">{{ $d['driver_name'] }}</p>
                                                     <p class="text-[10px] text-slate-400 truncate max-w-[190px]">{{ $d['truck_name'] }} / {{ $d['route'] }}</p>
+                                                    <p class="text-[10px] text-slate-500 truncate max-w-[190px]">{{ $d['dispatch_count'] }} despachos · {{ $d['total_orders'] }} pedidos</p>
                                                 </div>
                                             </div>
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $d['status'] === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20' }}">
-                                                {{ $d['status'] === 'in_progress' ? 'En ruta' : 'Terminado' }}
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $d['status'] === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : ($d['status'] === 'pending' ? 'bg-amber-600/20 text-amber-400 border border-amber-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20') }}">
+                                                {{ $d['status'] === 'in_progress' ? 'En ruta' : ($d['status'] === 'pending' ? 'Pendiente' : 'Completado') }}
                                             </span>
                                         </div>
                                     @empty
@@ -665,7 +739,7 @@
                     stopMarkers: [],
                     
                     // State del piloto seleccionado
-                    selectedPilot: @json($this->getSelectedDispatchDetails()),
+                    selectedPilot: @json($this->getSelectedDriverDetails()),
                     selectedPilotStops: [],
                     activeStopId: null,
                     selectedStop: null,
@@ -677,8 +751,8 @@
                     refreshTimer: null,
                     
                     async init() {
-                        this.selectedPilot = @json($this->getSelectedDispatchDetails());
-                        this.selectedPilotStops = @json($this->getSelectedDispatchStops());
+                        this.selectedPilot = @json($this->getSelectedDriverDetails());
+                        this.selectedPilotStops = @json($this->getSelectedDriverStops());
                         
                         await this.loadLeaflet();
                         this.initMap();
@@ -762,7 +836,7 @@
 
                         // Si hay un piloto pre-seleccionado, cargar su ruta
                         if (this.selectedPilot) {
-                            this.renderSelectedRoute(@json($this->getSelectedDispatchLocations()), this.selectedPilotStops);
+                            this.renderSelectedRoute(@json($this->getSelectedDriverLocations()), this.selectedPilotStops);
                         } else {
                             this.loadAllActivePilots();
                         }
@@ -776,7 +850,39 @@
                     },
 
                     updatePilotsMarkers(pilots) {
-                        // Limpiar marcadores que ya no estén activos
+                        // Deduplicar pilotos por `driver_id` (o por nombre si driver_id no existe)
+                        const seen = {};
+                        const uniquePilots = [];
+                        pilots.forEach(p => {
+                            const key = (p.driver_id !== undefined && p.driver_id !== null) ? String(p.driver_id) : (p.driver_name || '').trim().toLowerCase();
+                            if (!key) return;
+                            if (!seen[key]) {
+                                seen[key] = p;
+                                uniquePilots.push(p);
+                            } else {
+                                // Si ya existe, preferir la ruta en progreso o la ubicación más reciente si hay timestamp
+                                const existing = seen[key];
+                                if (p.status === 'in_progress' && existing.status !== 'in_progress') {
+                                    // reemplazar
+                                    seen[key] = p;
+                                    const idx = uniquePilots.findIndex(x => ((x.driver_id || '').toString() === (existing.driver_id || '').toString()) || (x.driver_name || '').toLowerCase() === (existing.driver_name || '').toLowerCase());
+                                    if (idx !== -1) uniquePilots[idx] = p;
+                                } else if (p.timestamp && existing.timestamp) {
+                                    // tomar la más reciente por timestamp
+                                    try {
+                                        if (new Date(p.timestamp) > new Date(existing.timestamp)) {
+                                            seen[key] = p;
+                                            const idx = uniquePilots.findIndex(x => ((x.driver_id || '').toString() === (existing.driver_id || '').toString()) || (x.driver_name || '').toLowerCase() === (existing.driver_name || '').toLowerCase());
+                                            if (idx !== -1) uniquePilots[idx] = p;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        });
+
+                        pilots = uniquePilots;
+
+                        // Limpiar marcadores que ya no estén activos (usando dispatch_id de los pilotos seleccionados)
                         const activeIds = pilots.map(p => p.dispatch_id);
                         Object.keys(this.activeMarkers).forEach(id => {
                             if (!activeIds.includes(parseInt(id))) {
@@ -795,7 +901,7 @@
                                         </div>
                                     </div>
                                     <div style="margin-top:4px;padding:2px 8px;background:rgba(15,23,42,0.9);color:white;font-size:9px;font-weight:800;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);">
-                                        ${p.driver_name.split(' ')[0]}
+                                        ${p.driver_name ? p.driver_name.split(' ')[0] : ''}
                                     </div>
                                 </div>
                             `;
@@ -813,7 +919,7 @@
                                 const marker = L.marker([p.lat, p.lng], { icon: customIcon })
                                     .addTo(this.map)
                                     .on('click', () => {
-                                        this.$wire.selectDispatch(p.dispatch_id);
+                                        this.$wire.selectDriver(p.driver_id);
                                     });
                                 this.activeMarkers[p.dispatch_id] = marker;
                             }
