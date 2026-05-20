@@ -32,6 +32,19 @@ Route::post('/api/tracking', [\App\Http\Controllers\Api\TrackingController::clas
     ->middleware(['web', 'auth'])
     ->name('web.tracking.store');
 
+// Ruta para que el piloto consulte dinámicamente su despacho activo
+Route::get('/api/my-active-dispatch', function () {
+    $user = auth()->user();
+    if (!$user) return response()->json(['dispatch_id' => null]);
+
+    $dispatch = \App\Models\Dispatch::where('driver_id', $user->id)
+        ->where('status', 'in_progress')
+        ->orderByDesc('id')
+        ->first(['id']);
+
+    return response()->json(['dispatch_id' => $dispatch?->id]);
+})->middleware(['web', 'auth'])->name('web.my-active-dispatch');
+
 // Polling endpoint: get the latest dispatch location for real-time map updates
 Route::get('/api/dispatch-location/{dispatch}/latest', function (\App\Models\Dispatch $dispatch) {
     // 1. Get all active dispatches for the same truck (in progress)

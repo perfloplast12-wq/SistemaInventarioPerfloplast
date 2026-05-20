@@ -11,6 +11,23 @@
 
         const config = window.trackerConfig || {};
         let watchId = null;
+
+        // Para pilotos (conductores): consultar periódicamente el despacho activo
+        // y actualizar config.dispatchId sin recargar la página
+        const syncActiveDispatch = async () => {
+            try {
+                const resp = await fetch('/api/my-active-dispatch', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data.dispatch_id && data.dispatch_id !== config.dispatchId) {
+                    console.log('[Tracker] Despacho activo actualizado:', data.dispatch_id);
+                    config.dispatchId = data.dispatch_id;
+                    config.shouldTrack = true;
+                }
+            } catch (e) {}
+        };
         
         const updateLockUI = (isLocked) => {
             const overlay = document.getElementById('gps-lock-overlay');
@@ -103,6 +120,10 @@
         checkStatus();
         startWatch();
 
+        // Sincronizar despacho activo para pilotos: al inicio y cada 30s
+        syncActiveDispatch();
+        setInterval(syncActiveDispatch, 30000);
+
         // Bucle rápido (cada 2s)
         setInterval(checkStatus, 2000);
         
@@ -110,6 +131,7 @@
             if (document.visibilityState === 'visible') {
                 checkStatus();
                 startWatch();
+                syncActiveDispatch(); // También al volver a la pestaña
             }
         });
         

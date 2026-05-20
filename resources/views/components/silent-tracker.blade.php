@@ -66,4 +66,4 @@
     </div>
 </div>
 
-<script src="/js/silent-tracker.js?v=1.2"></script>
+<script src="/js/silent-tracker.js?v=1.3"></script>
