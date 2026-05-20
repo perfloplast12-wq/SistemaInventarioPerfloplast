@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 class OrdersOverview extends BaseWidget
 {
-    protected static bool $isLazy = true;
+    protected static bool $isLazy = false;
     protected static ?string $pollingInterval = '120s';
 
     protected function getColumns(): int
