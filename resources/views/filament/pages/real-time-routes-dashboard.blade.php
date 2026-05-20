@@ -2,85 +2,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        .dispatch-page {
+        .dispatch-map-page {
             width: 100%;
             max-width: none;
-            min-height: calc(100dvh - 7rem);
-            color: #f8fafc;
-            background-color: #070d19;
-            position: relative;
             font-family: 'Outfit', sans-serif;
+            position: relative;
         }
 
-        .dispatch-card {
-            border: 1px solid #13223f !important;
+        .dispatch-map-page .dispatch-card {
             border-radius: 18px;
-            background: #0a1120 !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
 
-        .dispatch-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .dispatch-main {
-            display: grid;
-            grid-template-columns: minmax(0, 2.25fr) minmax(320px, 390px);
-            gap: 1.25rem;
-            align-items: start;
-        }
-
-        .dispatch-map-container {
-            position: relative;
-            width: 100%;
-        }
-
-        .dispatch-map {
+        .dispatch-map-page .dispatch-map {
             height: min(68dvh, 750px) !important;
             min-height: 560px;
-            border: 1px solid #13223f !important;
             border-radius: 18px;
             overflow: hidden;
-            background: #020617;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             position: relative;
         }
 
-        .dispatch-side {
-            height: min(68dvh, 750px) !important;
-            min-height: 560px;
+        .dispatch-map-page .dispatch-side {
+            height: min(85dvh, 900px) !important;
+            min-height: 600px;
             overflow-y: auto;
+            position: sticky;
+            top: 1rem;
         }
 
         /* Custom Scrollbar */
-        .scrollbar-thin::-webkit-scrollbar {
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar {
             height: 5px;
             width: 5px;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-track {
             background: rgba(15, 23, 42, 0.1);
             border-radius: 99px;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb {
             background: #1e293b;
             border-radius: 99px;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb:hover {
             background: #4f46e5;
         }
 
         /* Zoom Control customization to match screenshot */
-        .leaflet-control-zoom {
+        .dispatch-map-page .leaflet-control-zoom {
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 12px !important;
             overflow: hidden !important;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
         }
-        .leaflet-control-zoom a {
+        .dispatch-map-page .leaflet-control-zoom a {
             width: 32px !important;
             height: 32px !important;
             background: #0a1120 !important;
@@ -92,7 +66,7 @@
             font-weight: 700 !important;
             transition: all 0.2s ease !important;
         }
-        .leaflet-control-zoom a:hover {
+        .dispatch-map-page .leaflet-control-zoom a:hover {
             background: #4f46e5 !important;
             color: #ffffff !important;
         }
@@ -101,79 +75,60 @@
             0% { transform: scale(1); opacity: 1; }
             70%, 100% { transform: scale(2); opacity: 0; }
         }
-
-        @media (max-width: 1024px) {
-            .dispatch-main {
-                grid-template-columns: 1fr;
-            }
-            .dispatch-map, .dispatch-side {
-                min-height: 480px;
-                height: 540px !important;
-            }
-        }
-
-        @media (max-width: 700px) {
-            .dispatch-header {
-                align-items: stretch;
-                flex-direction: column;
-            }
-        }
     </style>
 
     <div 
         x-data="realTimeDashboardComponent()"
-        class="dispatch-page flex flex-col"
+        class="dispatch-map-page min-h-screen dark:bg-[#07111f] bg-slate-50 dark:text-white text-slate-900"
     >
         @php
             $stats = $this->getTabsStats();
             $dispatches = $this->getDispatches();
         @endphp
 
-        <!-- CABECERA PRINCIPAL -->
-        <div class="dispatch-header">
-            <div class="flex items-center gap-4 min-w-0">
-                <span class="w-11 h-11 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 shadow-lg shadow-indigo-600/5">
-                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                </span>
-                <div class="min-w-0">
-                    <h2 class="text-xl font-extrabold tracking-tight text-white leading-tight">
-                        Mapa de Rutas en Tiempo Real
-                    </h2>
-                    <p class="text-xs text-slate-400 font-medium mt-0.5">Visualiza la ubicación de los pilotos y el estado de sus entregas</p>
+        <div class="grid lg:grid-cols-[1fr_340px] gap-4 w-full">
+            <!-- COLUMNA IZQUIERDA -->
+            <div class="flex flex-col gap-4 min-w-0">
+                <!-- CABECERA PRINCIPAL -->
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <span class="w-11 h-11 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 shadow-lg shadow-indigo-600/5">
+                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <h2 class="text-xl font-extrabold tracking-tight dark:text-white text-slate-900 leading-tight">
+                                Mapa de Rutas en Tiempo Real
+                            </h2>
+                            <p class="text-xs dark:text-slate-400 text-slate-500 font-medium mt-0.5">Visualiza la ubicación de los pilotos y el estado de sus entregas</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Botón Tabla -->
+                        <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
+                           class="px-4 py-2 rounded-xl dark:bg-[#0b1728] bg-white border dark:border-slate-700 border-slate-200 dark:text-slate-300 text-slate-700 dark:hover:text-white hover:text-slate-900 font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Tabla
+                        </a>
+
+                        <!-- Botón Nuevo Despacho -->
+                        <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
+                           class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 shadow-lg shadow-violet-600/20 rounded-xl active:scale-[0.98]">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            + Nuevo Despacho
+                        </a>
+                    </div>
                 </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-                <!-- Botón Tabla -->
-                <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
-                   class="px-4 py-2 rounded-xl bg-[#0a1120] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    Tabla
-                </a>
-
-                <!-- Botón Nuevo Despacho -->
-                <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
-                   class="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 shadow-lg shadow-[#4f46e5]/20 rounded-xl active:scale-[0.98]">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    + Nuevo Despacho
-                </a>
-            </div>
-        </div>
-
-        <!-- CONTENIDO PRINCIPAL: MAPA (70%) + DETALLES (30%) -->
-        <div class="dispatch-main">
-            <!-- COLUMNA MAPA -->
-            <div class="flex flex-col min-w-0">
                 <!-- CONTENEDOR DE CONTROLES DE PESTAÑAS Y CAPAS DIRECTAMENTE SOBRE EL MAPA -->
                 <div class="flex items-center justify-between mb-3 w-full flex-wrap gap-3">
                     <!-- Filtros Tabificados (Izquierda) -->
-                    <div class="flex flex-wrap items-center gap-1 bg-[#0a1120]/60 p-1 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+                    <div class="flex flex-wrap items-center gap-1 dark:bg-[#0b1728] bg-white p-1 rounded-2xl border dark:border-slate-800 border-slate-200">
                         @php
                             $tabs = [
                                 'todos' => ['label' => 'Todos', 'badge_class' => 'bg-[#6366f1]'],
@@ -186,7 +141,7 @@
                         @foreach($tabs as $key => $t)
                             <button 
                                 wire:click="setTab('{{ $key }}')"
-                                class="px-3.5 py-1.5 font-extrabold text-[11px] rounded-xl flex items-center gap-2 transition-all duration-300 {{ $activeTab === $key ? 'bg-[#13223f] text-white border border-indigo-500/40 shadow-md' : 'bg-transparent text-slate-400 border border-transparent hover:text-white hover:bg-slate-800/40' }}"
+                                class="px-3.5 py-1.5 font-extrabold text-[11px] rounded-xl flex items-center gap-2 transition-all duration-300 {{ $activeTab === $key ? 'bg-violet-600 text-white shadow-md' : 'bg-transparent dark:text-slate-300 text-slate-700 border border-transparent dark:hover:text-white hover:text-slate-900 dark:hover:bg-slate-800/40 hover:bg-slate-100' }}"
                             >
                                 {{ $t['label'] }}
                                 <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 {{ $t['badge_class'] }}">
@@ -323,12 +278,11 @@
                         </div>
                     </div>
                 </template>
- </template>
             </div>
 
             <!-- COLUMNA PANEL LATERAL (Detalle del Piloto) -->
-            <div class="flex flex-col gap-4 min-w-0">
-                <div class="dispatch-card dispatch-side p-5 flex flex-col gap-5">
+            <div class="w-[340px] shrink-0">
+                <div class="dispatch-card dispatch-side p-5 flex flex-col gap-5 dark:bg-[#0b1728] bg-white border dark:border-[#1e293b] border-slate-200">
                     <!-- Vista por defecto: Sin conductor seleccionado -->
                     <template x-if="!selectedPilot">
                         <div class="flex flex-col h-full py-2">
@@ -535,8 +489,8 @@
                                                 type="button"
                                                 @click="reportSelectedStopReturn()"
                                                 :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
-                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#f59e0b]/10 active:scale-[0.98]'"
-                                                class="bg-transparent text-[#f59e0b] border border-[#f59e0b]/40 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
+                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'active:scale-[0.98]'"
+                                                class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
                                             >
                                                 Reportar Devolución
                                             </button>
@@ -545,7 +499,7 @@
                                             <button 
                                                 type="button"
                                                 @click="cancelActiveDispatch()"
-                                                class="bg-transparent hover:bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/40 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
+                                                class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
                                             >
                                                 Cancelar Despacho
                                             </button>
@@ -556,7 +510,7 @@
                                             <button 
                                                 type="button"
                                                 @click="completeSelectedStop()"
-                                                class="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
+                                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
                                             >
                                                 Finalizar Entrega
                                             </button>
@@ -567,7 +521,7 @@
                                             <button 
                                                 type="button"
                                                 @click="finishActiveDispatch()"
-                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
+                                                class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
                                             >
                                                 Liquidar Despacho y Facturar
                                             </button>
