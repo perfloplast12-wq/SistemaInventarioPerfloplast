@@ -9,50 +9,52 @@
             position: relative;
         }
 
+        /* Card genérica: dark mode usa fondo oscuro, light mode usa blanco */
         .dispatch-map-page .dispatch-card {
             border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            border: 1px solid;
+        }
+        .dark .dispatch-map-page .dispatch-card,
+        [data-theme="dark"] .dispatch-map-page .dispatch-card {
+            background: #0b1728;
+            border-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        }
+        .dispatch-map-page .dispatch-card {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
         }
 
+        /* Contenedor del mapa: height fijo, overflow:hidden, NUNCA contiene el resumen */
         .dispatch-map-page .dispatch-map {
-            height: min(68dvh, 750px) !important;
-            min-height: 560px;
+            height: min(65dvh, 700px) !important;
+            min-height: 500px;
             border-radius: 18px;
             overflow: hidden;
             position: relative;
         }
 
+        /* Panel lateral derecho: sticky, scrolleable */
         .dispatch-map-page .dispatch-side {
-            height: min(85dvh, 900px) !important;
-            min-height: 600px;
+            max-height: min(88dvh, 920px);
             overflow-y: auto;
             position: sticky;
             top: 1rem;
         }
 
         /* Custom Scrollbar */
-        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar {
-            height: 5px;
-            width: 5px;
-        }
-        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.1);
-            border-radius: 99px;
-        }
-        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 99px;
-        }
-        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: #4f46e5;
-        }
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar { height: 5px; width: 5px; }
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-track { background: rgba(15,23,42,0.1); border-radius: 99px; }
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
+        .dispatch-map-page .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
 
-        /* Zoom Control customization to match screenshot */
+        /* Zoom Control */
         .dispatch-map-page .leaflet-control-zoom {
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
             border-radius: 12px !important;
             overflow: hidden !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
         }
         .dispatch-map-page .leaflet-control-zoom a {
             width: 32px !important;
@@ -60,16 +62,13 @@
             background: #0a1120 !important;
             color: #94a3b8 !important;
             border: none !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
             line-height: 32px !important;
             font-size: 1.1rem !important;
             font-weight: 700 !important;
             transition: all 0.2s ease !important;
         }
-        .dispatch-map-page .leaflet-control-zoom a:hover {
-            background: #4f46e5 !important;
-            color: #ffffff !important;
-        }
+        .dispatch-map-page .leaflet-control-zoom a:hover { background: #7c3aed !important; color: #fff !important; }
 
         @keyframes ping {
             0% { transform: scale(1); opacity: 1; }
@@ -154,13 +153,13 @@
                     <!-- Controles de Capa y Maximizado (Derecha) -->
                     <div class="flex items-center gap-2.5">
                         <!-- Selector de Capas -->
-                        <div class="flex items-center bg-[#0a1120]/60 p-1 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
-                            <span class="text-[10px] text-slate-500 font-extrabold px-2.5">Vista</span>
+                        <div class="flex items-center dark:bg-slate-900/80 bg-white p-1 rounded-2xl border dark:border-slate-700 border-slate-200">
+                            <span class="text-[10px] dark:text-slate-400 text-slate-500 font-extrabold px-2.5">Vista</span>
                             <div class="flex gap-1">
                                 <button 
                                     type="button"
                                     @click="setMapLayer('map')"
-                                    :class="mapLayer === 'map' ? 'bg-[#4f46e5] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40'"
+                                    :class="mapLayer === 'map' ? 'bg-violet-600 text-white shadow-md' : 'dark:text-slate-400 text-slate-600 dark:hover:bg-slate-800 hover:bg-slate-100'"
                                     class="px-3.5 py-1.5 font-extrabold text-[10px] rounded-xl transition-all duration-300"
                                 >
                                     Mapa
@@ -168,7 +167,7 @@
                                 <button 
                                     type="button"
                                     @click="setMapLayer('satellite')"
-                                    :class="mapLayer === 'satellite' ? 'bg-[#4f46e5] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40'"
+                                    :class="mapLayer === 'satellite' ? 'bg-violet-600 text-white shadow-md' : 'dark:text-slate-400 text-slate-600 dark:hover:bg-slate-800 hover:bg-slate-100'"
                                     class="px-3.5 py-1.5 font-extrabold text-[10px] rounded-xl transition-all duration-300"
                                 >
                                     Satélite
@@ -180,26 +179,24 @@
                         <button 
                             type="button"
                             @click="toggleFullscreen()"
-                            class="w-9 h-9 flex items-center justify-center bg-[#0a1120]/60 hover:bg-slate-800 border border-slate-800/80 text-slate-400 hover:text-white rounded-2xl transition-all duration-300"
+                            class="w-9 h-9 flex items-center justify-center dark:bg-slate-900/80 bg-white hover:bg-slate-100 dark:hover:bg-slate-800 border dark:border-slate-700 border-slate-200 dark:text-slate-400 text-slate-600 dark:hover:text-white hover:text-slate-900 rounded-2xl transition-all duration-300"
                             title="Maximizar Mapa"
                         >
-                            <svg class="w-5 h-5 text-slate-300 hover:text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M16 4h4v4M4 16v4h4M16 20h4v-4" />
                             </svg>
                         </button>
                     </div>
                 </div>
 
-                <!-- CONTENEDOR MAPA -->
+                <!-- CONTENEDOR MAPA: overflow:hidden — NO poner nada más aquí -->
                 <div id="dispatch-map-card" class="dispatch-map relative w-full shadow-2xl">
                     <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
 
-                    <!-- Overlay de Piloto Activo en la esquina inferior izquierda (flotante premium) -->
+                    <!-- Overlay flotante: Piloto activo (esquina inferior izquierda) -->
                     <template x-if="selectedPilot">
-                        <div class="absolute bottom-4 left-4 z-[999] bg-[#070d19]/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-slate-800/80 shadow-2xl flex items-center gap-3.5 min-w-[270px]">
-                            <!-- Initials Avatar -->
-                            <div class="w-10 h-10 rounded-full bg-[#13223f]/80 border border-slate-700/50 flex items-center justify-center font-extrabold text-xs text-white" x-text="selectedPilot.driver_initials"></div>
-                            
+                        <div class="absolute bottom-4 left-4 z-[999] bg-slate-950/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-white/10 shadow-2xl flex items-center gap-3.5 min-w-[270px]">
+                            <div class="w-10 h-10 rounded-full bg-violet-900/80 border border-violet-700/50 flex items-center justify-center font-extrabold text-xs text-white" x-text="selectedPilot.driver_initials"></div>
                             <div class="flex flex-col text-left">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs font-bold text-white" x-text="selectedPilot.driver_name + ' (' + selectedPilot.truck_name + ')'"></span>
@@ -211,67 +208,63 @@
                             </div>
                         </div>
                     </template>
-                                <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
+                </div>
+                {{-- ↑ Fin del mapa. El resumen va AQUÍ, fuera del overflow:hidden --}}
+
+                <!-- RESUMEN HORIZONTAL DE LA RUTA (fuera del mapa, debajo) -->
                 <template x-if="selectedPilotStops.length > 0">
-                    <div class="dispatch-card p-5 mt-4 flex flex-col gap-4">
-                        <h4 class="text-xs font-black text-slate-400 tracking-wider uppercase flex items-center gap-2">
-                            <svg class="w-5 h-5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="dispatch-card dark:bg-slate-900 bg-white border dark:border-slate-700 border-slate-200 p-5 mt-1 flex flex-col gap-4">
+                        <h4 class="text-xs font-black dark:text-slate-400 text-slate-500 tracking-wider uppercase flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                             </svg>
-                            Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
+                            Resumen de la ruta de <span class="text-violet-500 font-bold ml-1" x-text="selectedPilot ? selectedPilot.driver_name : ''"></span>
                         </h4>
-                        
+
                         <!-- Timeline horizontal de paradas -->
-                        <div class="relative flex items-center justify-between w-full mt-2 px-6 overflow-x-auto pb-4 gap-4 scrollbar-thin">
+                        <div class="relative flex items-start w-full mt-1 px-4 overflow-x-auto pb-3 gap-0 scrollbar-thin">
                             <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
                                 <div class="flex items-center grow last:grow-0">
                                     <!-- Nodo de la parada -->
-                                    <div 
-                                        class="flex flex-col items-center z-10 min-w-[125px] text-center group cursor-pointer" 
+                                    <div
+                                        class="flex flex-col items-center z-10 min-w-[110px] text-center cursor-pointer group"
                                         @click="zoomToStop(stop)"
                                     >
-                                        <!-- Círculo del Punto (Sólido Premium) -->
-                                        <div 
-                                            class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 shadow-md"
-                                            :class="stop.status === 'completed' 
-                                                ? 'bg-[#10b981] text-white shadow-emerald-950/20' 
-                                                : (stop.status === 'returned' 
-                                                    ? 'bg-[#f97316] text-white shadow-orange-950/20' 
-                                                    : (stop.number === selectedPilotStops.length 
-                                                        ? 'bg-[#ef4444] text-white shadow-rose-950/20' 
-                                                        : 'bg-[#6366f1] text-white shadow-indigo-950/20'))"
+                                        <!-- Círculo -->
+                                        <div
+                                            class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 shadow-md group-hover:scale-110"
+                                            :class="stop.status === 'completed'
+                                                ? 'bg-emerald-500 text-white'
+                                                : (stop.status === 'returned'
+                                                    ? 'bg-amber-500 text-white'
+                                                    : (stop.number === selectedPilotStops.length
+                                                        ? 'bg-red-500 text-white'
+                                                        : 'bg-violet-600 text-white'))"
                                         >
                                             <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                         </div>
 
-                                        <!-- Textos del nodo alineados de acuerdo al mockup -->
-                                        <div class="mt-2.5 flex flex-col items-center text-center">
-                                            <template x-if="stop.number === selectedPilotStops.length">
-                                                <div class="flex flex-col items-center">
-                                                    <span class="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Destino</span>
-                                                    <span class="text-[10px] text-slate-300 max-w-[115px] leading-tight mt-0.5" x-text="getShortAddress(stop.delivery_address)"></span>
-                                                    <span class="text-[10px] font-bold text-[#f59e0b] mt-0.5">Pendiente</span>
-                                                    <span class="text-[10px] text-slate-500 font-mono font-medium mt-0.5" x-text="formatTime(stop, idx)"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="stop.number !== selectedPilotStops.length">
-                                                <div class="flex flex-col items-center">
-                                                    <span class="text-[11px] font-bold text-white max-w-[115px] leading-tight" x-text="getShortAddress(stop.delivery_address)"></span>
-                                                    <span 
-                                                        class="text-[10px] font-bold mt-1" 
-                                                        :class="stop.status === 'completed' ? 'text-[#10b981]' : (stop.status === 'returned' ? 'text-[#f97316]' : 'text-[#f59e0b]')"
-                                                        x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
-                                                    ></span>
-                                                    <span class="text-[10px] text-slate-500 font-mono font-medium mt-0.5" x-text="formatTime(stop, idx)"></span>
-                                                </div>
-                                            </template>
+                                        <!-- Etiquetas debajo del círculo -->
+                                        <div class="mt-2 flex flex-col items-center">
+                                            <span
+                                                class="text-[10px] font-bold dark:text-slate-300 text-slate-700 max-w-[100px] leading-tight text-center line-clamp-2"
+                                                x-text="stop.number === selectedPilotStops.length ? 'Destino' : getShortAddress(stop.delivery_address)"
+                                            ></span>
+                                            <span
+                                                class="text-[9px] font-bold mt-0.5"
+                                                :class="stop.status === 'completed' ? 'text-emerald-500' : (stop.status === 'returned' ? 'text-amber-500' : 'text-violet-500')"
+                                                x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
+                                            ></span>
+                                            <span class="text-[9px] dark:text-slate-500 text-slate-400 font-mono mt-0.5" x-text="formatTime(stop, idx)"></span>
                                         </div>
                                     </div>
 
-                                    <!-- Línea conectora horizontal punteada condicional -->
+                                    <!-- Línea conectora horizontal -->
                                     <template x-if="idx < selectedPilotStops.length - 1">
-                                        <div class="h-[2px] grow min-w-[40px] mx-2 shrink-0 border-t-2 border-dashed transition-all duration-300"
-                                             :class="(stop.status === 'completed' && selectedPilotStops[idx+1].status === 'completed') ? 'border-[#10b981]' : 'border-slate-800'"></div>
+                                        <div
+                                            class="h-[2px] grow min-w-[32px] mx-1 shrink-0 border-t-2 border-dashed transition-all duration-300"
+                                            :class="(stop.status === 'completed' && selectedPilotStops[idx+1].status === 'completed') ? 'border-emerald-500' : 'dark:border-slate-700 border-slate-300'"
+                                        ></div>
                                     </template>
                                 </div>
                             </template>
@@ -279,6 +272,7 @@
                     </div>
                 </template>
             </div>
+            {{-- ↑ Fin columna izquierda --}}
 
             <!-- COLUMNA PANEL LATERAL (Detalle del Piloto) -->
             <aside class="w-full xl:w-[340px] shrink-0">
@@ -479,60 +473,62 @@
                                 </div>
                             </div>
 
-                            <!-- Panel de Acciones Rápidas (Estilo capsule premium) -->
+                            <!-- Acciones Rápidas -->
                             <template x-if="selectedPilot.status === 'in_progress' || selectedPilot.status === 'completed'">
-                                <div class="border-t border-slate-800/60 pt-4 flex flex-col gap-3">
-                                    <div class="flex flex-col gap-2">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <!-- Reportar Devolución -->
-                                            <button 
-                                                type="button"
-                                                @click="reportSelectedStopReturn()"
-                                                :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
-                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'active:scale-[0.98]'"
-                                                class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
-                                            >
-                                                Reportar Devolución
-                                            </button>
+                                <div class="border-t dark:border-slate-700 border-slate-200 pt-4 flex flex-col gap-2">
+                                    <p class="text-[10px] font-black dark:text-slate-500 text-slate-400 uppercase tracking-wider">Acciones rápidas</p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <!-- Reportar Devolución -->
+                                        <button
+                                            type="button"
+                                            @click="reportSelectedStopReturn()"
+                                            :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
+                                            :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-600 active:scale-[0.98]'"
+                                            class="bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.27 16A2 2 0 005.07 19z" /></svg>
+                                            Reportar Devolución
+                                        </button>
 
-                                            <!-- Cancelar Despacho -->
-                                            <button 
-                                                type="button"
-                                                @click="cancelActiveDispatch()"
-                                                class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
-                                            >
-                                                Cancelar Despacho
-                                            </button>
-                                        </div>
-
-                                        <!-- Finalizar Entrega -->
-                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
-                                            <button 
-                                                type="button"
-                                                @click="completeSelectedStop()"
-                                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
-                                            >
-                                                Finalizar Entrega
-                                            </button>
-                                        </template>
-
-                                        <!-- Liquidar Despacho -->
-                                        <template x-if="selectedPilot.status === 'completed'">
-                                            <button 
-                                                type="button"
-                                                @click="finishActiveDispatch()"
-                                                class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
-                                            >
-                                                Liquidar Despacho y Facturar
-                                            </button>
-                                        </template>
+                                        <!-- Cancelar Despacho -->
+                                        <button
+                                            type="button"
+                                            @click="cancelActiveDispatch()"
+                                            class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all duration-300"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            Cancelar Despacho
+                                        </button>
                                     </div>
+
+                                    <!-- Finalizar Entrega -->
+                                    <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
+                                        <button
+                                            type="button"
+                                            @click="completeSelectedStop()"
+                                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                            Finalizar Entrega
+                                        </button>
+                                    </template>
+
+                                    <!-- Liquidar Despacho -->
+                                    <template x-if="selectedPilot.status === 'completed'">
+                                        <button
+                                            type="button"
+                                            @click="finishActiveDispatch()"
+                                            class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
+                                        >
+                                            Liquidar Despacho y Facturar
+                                        </button>
+                                    </template>
                                 </div>
                             </template>
                         </div>
                     </template>
                 </div>
-            </div>
+            </aside>
         </div>
 
         <!-- MODAL DE REGISTRO DE DEVOLUCIÓN -->
