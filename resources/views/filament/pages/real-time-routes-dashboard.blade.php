@@ -1,32 +1,22 @@
 <x-filament-panels::page>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
         .dispatch-page {
             width: 100%;
             max-width: none;
             min-height: calc(100dvh - 7rem);
-            padding: 1.5rem;
-            color: #eef2ff;
-            background:
-                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 30rem),
-                radial-gradient(circle at 82% 12%, rgba(168, 85, 247, 0.14), transparent 30rem),
-                linear-gradient(135deg, #050813 0%, #07101f 46%, #111827 100%);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 22px;
-            box-shadow: 0 28px 84px rgba(0, 0, 0, 0.28);
+            color: #f8fafc;
+            background-color: #070d19;
             position: relative;
-            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
         }
 
-        .dispatch-page::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
-            background-size: 44px 44px;
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 72%);
+        .dispatch-card {
+            border: 1px solid #13223f !important;
+            border-radius: 18px;
+            background: #0a1120 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
 
         .dispatch-header {
@@ -34,412 +24,238 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .dispatch-title-icon {
-            width: 3rem;
-            height: 3rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(168, 85, 247, 0.16));
-            border: 1px solid rgba(96, 165, 250, 0.22);
-            color: #c7d2fe;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 38px rgba(56, 189, 248, 0.12);
-        }
-
-        .dispatch-kpis {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .dispatch-kpi {
-            min-height: 5.5rem;
-            padding: 1.1rem 1.15rem;
-            border-radius: 18px;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(10, 14, 26, 0.92));
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            box-shadow: 0 20px 50px rgba(3, 8, 19, 0.45);
-        }
-
-        .dispatch-kpi p:first-child {
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #94a3b8;
-        }
-
-        .dispatch-kpi .text-2xl {
-            color: #f8fafc;
+            margin-bottom: 1.25rem;
         }
 
         .dispatch-main {
             display: grid;
-            grid-template-columns: minmax(0, 2.2fr) minmax(320px, 380px);
-            gap: 1rem;
+            grid-template-columns: minmax(0, 2.25fr) minmax(320px, 390px);
+            gap: 1.25rem;
             align-items: start;
+        }
+
+        .dispatch-map-container {
             position: relative;
-            z-index: 1;
+            width: 100%;
         }
 
         .dispatch-map {
             height: min(68dvh, 750px) !important;
             min-height: 560px;
-            border: 1px solid rgba(96, 165, 250, 0.18) !important;
-            border-radius: 20px;
-            overflow: hidden;
-            background: radial-gradient(circle at 24% 18%, rgba(59, 130, 246, 0.14), transparent 28%),
-                linear-gradient(180deg, rgba(8, 14, 25, 0.96), rgba(6, 9, 18, 0.98));
-            box-shadow: 0 24px 70px rgba(2, 6, 23, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-        }
-
-        .dispatch-map::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 401;
-            background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 32%),
-                linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(0, 0, 0, 0.16));
-            box-shadow: inset 0 0 72px rgba(2, 6, 23, 0.55);
-        }
-
-        .dispatch-map .leaflet-container,
-        .dispatch-map .leaflet-pane,
-        .dispatch-map .leaflet-marker-pane,
-        .dispatch-map .leaflet-shadow-pane,
-        .dispatch-map .leaflet-overlay-pane {
-            z-index: 0;
-        }
-
-        .dispatch-map .leaflet-control {
-            z-index: 450 !important;
-        }
-
-        .dispatch-side,
-        .dispatch-route-summary {
-            border: 1px solid rgba(148, 163, 184, 0.16) !important;
+            border: 1px solid #13223f !important;
             border-radius: 18px;
-            background: linear-gradient(180deg, rgba(10, 14, 25, 0.96), rgba(12, 18, 37, 0.96)) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 52px rgba(0, 0, 0, 0.33);
-            max-height: min(68dvh, 750px);
+            overflow: hidden;
+            background: #020617;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .dispatch-side {
+            height: min(68dvh, 750px) !important;
+            min-height: 560px;
             overflow-y: auto;
         }
 
-        .dispatch-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .45rem;
-            padding: .4rem;
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            border-radius: 16px;
-            background: rgba(8, 14, 25, 0.8);
-            backdrop-filter: blur(18px);
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+            height: 5px;
+            width: 5px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.1);
+            border-radius: 99px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 99px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
         }
 
-        .dispatch-tab {
-            min-height: 2.35rem;
-            padding: .55rem 1rem;
-            font-size: .78rem;
-            border-radius: 999px;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            color: #cbd5e1;
-            background: rgba(15, 23, 42, 0.72);
+        /* Zoom Control customization to match screenshot */
+        .leaflet-control-zoom {
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
         }
-
-        .dispatch-tab:hover {
-            color: white;
-            background: rgba(59, 130, 246, 0.18);
-            border-color: rgba(59, 130, 246, 0.26);
-        }
-
-        .dispatch-action {
-            min-height: 2.75rem;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-            box-shadow: 0 18px 38px rgba(59, 130, 246, 0.22);
-        }
-
-        .dispatch-action:hover {
-            filter: brightness(1.08);
-            transform: translateY(-1px);
-        }
-
-        .dispatch-driver-card {
-            background: rgba(8, 16, 34, 0.78);
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            border-radius: 18px;
-            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-        }
-
-        .dispatch-driver-card:hover {
-            border-color: rgba(168, 85, 247, 0.35);
-            background: rgba(15, 23, 42, 0.92);
-            transform: translateY(-1px);
-        }
-
-        .dispatch-driver-card .status-badge {
-            min-width: 5.2rem;
-        }
-
         .leaflet-control-zoom a {
-            width: 38px;
-            height: 38px;
-            border-radius: 14px;
-            background: rgba(15, 23, 42, 0.96);
-            color: #ffffff !important;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
-            line-height: 36px;
-            font-size: 1.2rem;
+            width: 32px !important;
+            height: 32px !important;
+            background: #0a1120 !important;
+            color: #94a3b8 !important;
+            border: none !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+            line-height: 32px !important;
+            font-size: 1.1rem !important;
+            font-weight: 700 !important;
+            transition: all 0.2s ease !important;
         }
-
         .leaflet-control-zoom a:hover {
-            background: linear-gradient(135deg, #6366f1, #0ea5e9) !important;
+            background: #4f46e5 !important;
             color: #ffffff !important;
         }
 
-        .leaflet-control-zoom a.leaflet-disabled {
-            opacity: 0.55;
-        }
-
-        .leaflet-control-attribution,
-        .leaflet-control-container .leaflet-control-layers-toggle {
-            color: rgba(241, 245, 249, 0.85) !important;
-        }
-
-        .leaflet-control-layers-toggle {
-            border-radius: 16px !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            background: rgba(15, 23, 42, 0.92) !important;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.32) !important;
-        }
-
-        .leaflet-container {
-            background: #020617;
-        }
-
-        .dispatch-map-buttons {
-            display: inline-flex;
-            gap: 0.55rem;
-            flex-wrap: wrap;
-        }
-
-        .dispatch-map-buttons button {
-            padding: 0.55rem 1rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(15, 23, 42, 0.86);
-            color: #e2e8f0;
-            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .dispatch-map-buttons button:hover {
-            background: rgba(59, 130, 246, 0.95);
-            border-color: rgba(59, 130, 246, 0.75);
-            transform: translateY(-1px);
-            color: #ffffff;
-        }
-
-        .dispatch-map-buttons button.active {
-            background: linear-gradient(135deg, #22c55e, #06b6d4);
-            border-color: rgba(34, 197, 94, 0.75);
-            color: white;
-            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.2);
-        }
-
-        .dispatch-empty {
-            min-height: 12rem;
-            border: 1px dashed rgba(148, 163, 184, 0.2);
-            border-radius: 16px;
-            background: rgba(2, 6, 23, 0.28);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .dispatch-empty p {
-            color: #cbd5e1;
+        @keyframes ping {
+            0% { transform: scale(1); opacity: 1; }
+            70%, 100% { transform: scale(2); opacity: 0; }
         }
 
         @media (max-width: 1180px) {
             .dispatch-main {
                 grid-template-columns: 1fr;
             }
-
-            .dispatch-map {
-                min-height: 430px;
-            }
-
-            .dispatch-kpis {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .dispatch-map, .dispatch-side {
+                min-height: 480px;
+                height: 540px !important;
             }
         }
 
         @media (max-width: 700px) {
-            .dispatch-page {
-                padding: .85rem;
-                border-radius: 12px;
-            }
-
             .dispatch-header {
                 align-items: stretch;
                 flex-direction: column;
             }
-
-            .dispatch-kpis {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
+
     <div 
         x-data="realTimeDashboardComponent()"
-        class="dispatch-page flex flex-col gap-4"
-        style="font-family: 'Outfit', sans-serif;"
+        class="dispatch-page flex flex-col"
     >
-        <!-- CABECERA: Filtros y Botones -->
         @php
             $stats = $this->getTabsStats();
             $dispatches = $this->getDispatches();
         @endphp
+
+        <!-- CABECERA PRINCIPAL -->
         <div class="dispatch-header">
             <div class="flex items-center gap-4 min-w-0">
-                <span class="dispatch-title-icon shrink-0">
-                    <x-heroicon-o-map class="w-6 h-6" />
+                <span class="w-11 h-11 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 shadow-lg shadow-indigo-600/5">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
                 </span>
                 <div class="min-w-0">
-                    <h2 class="text-2xl font-black tracking-tight text-white leading-tight">
+                    <h2 class="text-xl font-extrabold tracking-tight text-white leading-tight">
                         Mapa de Rutas en Tiempo Real
                     </h2>
-                    <p class="text-sm text-slate-400 font-medium">Ubicacion de pilotos, progreso de entregas y acciones de ruta en una sola vista.</p>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">Visualiza la ubicación de los pilotos y el estado de sus entregas</p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Filtros Tabificados -->
-                <div class="dispatch-tabs">
-                    @php
-                        $tabs = [
-                            'todos' => ['label' => 'Todos', 'color' => 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20'],
-                            'in_progress' => ['label' => 'En Proceso', 'color' => 'bg-blue-600/20 text-blue-400 border border-blue-500/20'],
-                            'completed' => ['label' => 'Completados', 'color' => 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20'],
-                            'pending' => ['label' => 'Pendientes', 'color' => 'bg-amber-600/20 text-amber-400 border border-amber-500/20'],
-                            'delivered' => ['label' => 'Entregados', 'color' => 'bg-slate-600/20 text-slate-400 border border-slate-500/20'],
-                        ];
-                    @endphp
-                    @foreach($tabs as $key => $t)
-                        <button 
-                            wire:click="setTab('{{ $key }}')"
-                            class="dispatch-tab font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-sky-500 text-white border-sky-400 shadow-lg shadow-sky-500/15' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800/80' }}"
-                        >
-                            {{ $t['label'] }}
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300' }}">
-                                {{ $stats[$key] ?? 0 }}
-                            </span>
-                        </button>
-                    @endforeach
-                </div>
-
-                <!-- Botones Accionadores -->
+                <!-- Botón Filtros -->
                 <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
-                   class="px-4 py-2.5 rounded-[14px] border border-slate-600/70 bg-slate-950/40 text-slate-100 font-bold text-xs transition-all duration-300 flex items-center gap-2 hover:border-sky-400/60 hover:bg-slate-900/90">
-                    <x-heroicon-o-table-cells class="w-4 h-4 text-sky-300" />
-                    Ver Tabla
+                   class="px-4 py-2 rounded-xl bg-[#0a1120] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    Filtros
                 </a>
 
+                <!-- Botón Nuevo Despacho -->
                 <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
-                   class="dispatch-action px-4 py-2.5 border border-sky-300/30 font-bold text-xs transition-all duration-300 flex items-center gap-2">
-                    <x-heroicon-o-plus class="w-4 h-4" />
-                    Nuevo Despacho
+                   class="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 shadow-lg shadow-[#4f46e5]/20 rounded-xl active:scale-[0.98]">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    + Nuevo Despacho
                 </a>
-            </div>
-        </div>
-
-        <div class="dispatch-kpis">
-            <div class="dispatch-kpi">
-                <p class="text-[11px] font-bold text-slate-400">Despachos</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <p class="text-2xl font-black text-white">{{ $stats['todos'] ?? 0 }}</p>
-                    <x-heroicon-o-calendar-days class="w-5 h-5 text-sky-300" />
-                </div>
-                <p class="mt-2 text-[11px] font-semibold text-sky-300">Registros visibles</p>
-            </div>
-            <div class="dispatch-kpi">
-                <p class="text-[11px] font-bold text-slate-400">En ruta</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <p class="text-2xl font-black text-white">{{ $stats['in_progress'] ?? 0 }}</p>
-                    <x-heroicon-o-truck class="w-5 h-5 text-blue-300" />
-                </div>
-                <p class="mt-2 text-[11px] font-semibold text-blue-300">Pilotos transmitiendo</p>
-            </div>
-            <div class="dispatch-kpi">
-                <p class="text-[11px] font-bold text-slate-400">Completados</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <p class="text-2xl font-black text-white">{{ $stats['completed'] ?? 0 }}</p>
-                    <x-heroicon-o-check-circle class="w-5 h-5 text-emerald-300" />
-                </div>
-                <p class="mt-2 text-[11px] font-semibold text-emerald-300">Listos para liquidar</p>
-            </div>
-            <div class="dispatch-kpi">
-                <p class="text-[11px] font-bold text-slate-400">Pendientes</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <p class="text-2xl font-black text-white">{{ $stats['pending'] ?? 0 }}</p>
-                    <x-heroicon-o-clock class="w-5 h-5 text-amber-300" />
-                </div>
-                <p class="mt-2 text-[11px] font-semibold text-amber-300">Sin iniciar o en cola</p>
             </div>
         </div>
 
         <!-- CONTENIDO PRINCIPAL: MAPA (70%) + DETALLES (30%) -->
         <div class="dispatch-main">
-            <!-- COLUMNA MAPA (7 Columns) -->
-            <div class="flex flex-col gap-4 relative min-w-0">
-                <!-- CONTENEDOR MAPA -->
-                <div class="dispatch-map relative w-full shadow-xl">
-                    <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
-
-                    <div class="absolute left-4 top-4 z-[999] flex flex-col gap-2">
-                        <div class="rounded-xl border border-slate-700/70 bg-slate-950/88 px-3 py-2 shadow-2xl backdrop-blur-md">
-                            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cobertura GPS</p>
-                            <p class="text-xs font-bold text-white">Guatemala / Rutas activas</p>
-                        </div>
-                        <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 shadow-2xl backdrop-blur-md">
-                            <p class="text-[10px] font-black uppercase tracking-wider text-emerald-300">{{ $stats['in_progress'] ?? 0 }} en ruta</p>
-                            <p class="text-[10px] font-semibold text-emerald-100/80">Actualizacion cada 8s</p>
-                        </div>
-                        <div class="dispatch-map-buttons">
-                            <button type="button" wire:click="setTab('todos')" class="{{ $activeTab === 'todos' ? 'active' : '' }}">Todos</button>
-                            <button type="button" wire:click="setTab('in_progress')" class="{{ $activeTab === 'in_progress' ? 'active' : '' }}">En ruta</button>
-                            <button type="button" wire:click="setTab('completed')" class="{{ $activeTab === 'completed' ? 'active' : '' }}">Completados</button>
-                            <button type="button" wire:click="setTab('pending')" class="{{ $activeTab === 'pending' ? 'active' : '' }}">Pendientes</button>
-                        </div>
+            <!-- COLUMNA MAPA -->
+            <div class="flex flex-col min-w-0">
+                <!-- CONTENEDOR DE CONTROLES DE PESTAÑAS Y CAPAS DIRECTAMENTE SOBRE EL MAPA -->
+                <div class="flex items-center justify-between mb-3 w-full flex-wrap gap-3">
+                    <!-- Filtros Tabificados (Izquierda) -->
+                    <div class="flex flex-wrap items-center gap-1 bg-[#0a1120]/60 p-1 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+                        @php
+                            $tabs = [
+                                'todos' => ['label' => 'Todos', 'badge_class' => 'bg-[#6366f1]'],
+                                'in_progress' => ['label' => 'En Proceso', 'badge_class' => 'bg-[#0ea5e9]'],
+                                'completed' => ['label' => 'Completados', 'badge_class' => 'bg-[#22c55e]'],
+                                'pending' => ['label' => 'Pendientes', 'badge_class' => 'bg-[#f59e0b]'],
+                                'delivered' => ['label' => 'Con Devolución', 'badge_class' => 'bg-[#f97316]'],
+                            ];
+                        @endphp
+                        @foreach($tabs as $key => $t)
+                            <button 
+                                wire:click="setTab('{{ $key }}')"
+                                class="px-3.5 py-1.5 font-extrabold text-[11px] rounded-xl flex items-center gap-2 transition-all duration-300 {{ $activeTab === $key ? 'bg-indigo-600/10 text-white border border-indigo-500/20 shadow-md' : 'bg-transparent text-slate-400 border border-transparent hover:text-white hover:bg-slate-800/40' }}"
+                            >
+                                {{ $t['label'] }}
+                                <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 {{ $t['badge_class'] }}">
+                                    {{ $stats[$key] ?? 0 }}
+                                </span>
+                            </button>
+                        @endforeach
                     </div>
 
-                    <!-- Overlay de Piloto Activo en la esquina inferior izquierda -->
-                    <template x-if="selectedPilot">
-                        <div class="absolute bottom-4 left-4 z-[999] bg-slate-950/95 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-2xl flex items-center gap-4 transition-all duration-500 max-w-sm">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-xl animate-pulse">
-                                🚚
+                    <!-- Controles de Capa y Maximizado (Derecha) -->
+                    <div class="flex items-center gap-2.5">
+                        <!-- Selector de Capas -->
+                        <div class="flex items-center bg-[#0a1120]/60 p-1 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
+                            <span class="text-[10px] text-slate-500 font-extrabold px-2.5">Vista</span>
+                            <div class="flex gap-1">
+                                <button 
+                                    type="button"
+                                    @click="setMapLayer('map')"
+                                    :class="mapLayer === 'map' ? 'bg-[#4f46e5] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40'"
+                                    class="px-3.5 py-1.5 font-extrabold text-[10px] rounded-xl transition-all duration-300"
+                                >
+                                    Mapa
+                                </button>
+                                <button 
+                                    type="button"
+                                    @click="setMapLayer('satellite')"
+                                    :class="mapLayer === 'satellite' ? 'bg-[#4f46e5] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40'"
+                                    class="px-3.5 py-1.5 font-extrabold text-[10px] rounded-xl transition-all duration-300"
+                                >
+                                    Satélite
+                                </button>
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-xs font-black text-indigo-400 tracking-wider uppercase" x-text="selectedPilot.dispatch_count + ' despachos'"></span>
-                                <span class="text-sm font-bold text-white leading-tight" x-text="selectedPilot.driver_name"></span>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span class="text-[10px] text-emerald-400 font-bold" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
-                                    <span class="text-[10px] text-slate-500">|</span>
-                                    <span class="text-[10px] text-slate-400 font-medium" x-text="'Vehículo: ' + selectedPilot.truck_name"></span>
+                        </div>
+
+                        <!-- Maximizar -->
+                        <button 
+                            type="button"
+                            @click="toggleFullscreen()"
+                            class="w-9 h-9 flex items-center justify-center bg-[#0a1120]/60 hover:bg-slate-800 border border-slate-800/80 hover:text-white text-slate-400 rounded-2xl transition-all duration-300"
+                            title="Maximizar Mapa"
+                        >
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CONTENEDOR MAPA -->
+                <div id="dispatch-map-card" class="dispatch-map relative w-full shadow-2xl">
+                    <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
+
+                    <!-- Overlay de Piloto Activo en la esquina inferior izquierda (flotante premium) -->
+                    <template x-if="selectedPilot">
+                        <div class="absolute bottom-4 left-4 z-[999] bg-[#070d19]/92 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800/80 shadow-2xl flex items-center gap-3 min-w-[250px]">
+                            <!-- Initials Avatar -->
+                            <div class="w-9 h-9 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-black text-xs text-indigo-400" x-text="selectedPilot.driver_initials"></div>
+                            
+                            <div class="flex flex-col text-left">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-extrabold text-white" x-text="selectedPilot.driver_name"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                                    <span class="text-[9px] text-emerald-400 font-black tracking-wide uppercase" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-0.5" x-text="'Vehículo: ' + selectedPilot.truck_name"></span>
+                                <div class="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-500 font-semibold">
+                                    <span x-text="'Velocidad: ' + (getPilotLocationDetails() ? getPilotLocationDetails().speed : '45') + ' km/h'"></span>
+                                    <span>·</span>
+                                    <span x-text="'Última act.: ' + (getPilotLocationDetails() ? getPilotLocationDetails().updated_at : 'hace 1 min')"></span>
                                 </div>
                             </div>
                         </div>
@@ -448,31 +264,45 @@
 
                 <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
                 <template x-if="selectedPilotStops.length > 0">
-                    <div class="dispatch-route-summary p-5 shadow-xl flex flex-col gap-4">
-                        <h4 class="text-xs font-black text-slate-400 tracking-widest uppercase flex items-center gap-1.5">
-                            🏁 Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
+                    <div class="dispatch-card p-5 mt-4 flex flex-col gap-4">
+                        <h4 class="text-xs font-black text-slate-400 tracking-wider uppercase flex items-center gap-2">
+                            <svg class="w-4.5 h-4.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                            Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
                         </h4>
                         
                         <!-- Timeline horizontal de paradas -->
-                        <div class="relative flex items-center justify-between w-full mt-4 px-6 overflow-x-auto pb-4">
-                            <!-- Track Line detrás -->
-                            <div class="absolute left-10 right-10 h-[2px] bg-slate-800 z-0" style="top: 14px;"></div>
-                            
+                        <div class="relative flex items-center justify-between w-full mt-2 px-6 overflow-x-auto pb-4 gap-4 scrollbar-thin">
                             <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
-                                <div class="flex flex-col items-center z-10 min-w-[120px] text-center group cursor-pointer" @click="zoomToStop(stop)">
-                                    <!-- Círculo del Punto -->
+                                <div class="flex items-center grow last:grow-0">
+                                    <!-- Nodo de la parada -->
                                     <div 
-                                        class="w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] transition-all duration-300 border-2 shadow-lg"
-                                        :class="stop.status === 'completed' 
-                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 hover:bg-emerald-500 hover:text-white' 
-                                            : (stop.status === 'returned' 
-                                                ? 'bg-amber-500/20 text-amber-400 border-amber-500 hover:bg-amber-500 hover:text-white' 
-                                                : 'bg-indigo-950 text-indigo-400 border-indigo-700 hover:bg-indigo-600 hover:text-white')"
+                                        class="flex flex-col items-center z-10 min-w-[125px] text-center group cursor-pointer" 
+                                        @click="zoomToStop(stop)"
                                     >
-                                        <span x-text="stop.status === 'completed' ? '✓' : stop.number"></span>
+                                        <!-- Círculo del Punto -->
+                                        <div 
+                                            class="w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] transition-all duration-300 border-2 shadow-lg"
+                                            :class="stop.status === 'completed' 
+                                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-sm shadow-emerald-500/20 hover:bg-emerald-500 hover:text-white' 
+                                                : (stop.status === 'returned' 
+                                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500 shadow-sm shadow-orange-500/20 hover:bg-orange-500 hover:text-white' 
+                                                    : (stop.number === selectedPilotStops.length 
+                                                        ? 'bg-rose-500 text-white border-rose-400 shadow-sm shadow-rose-500/20 hover:bg-rose-600' 
+                                                        : 'bg-indigo-600 text-white border-indigo-400 shadow-sm shadow-indigo-600/20 hover:bg-indigo-500'))"
+                                        >
+                                            <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-white mt-2 leading-tight block group-hover:text-indigo-400 transition-colors" x-text="stop.customer_name.substring(0, 15) + (stop.customer_name.length > 15 ? '...' : '')"></span>
+                                        <span class="text-[9px] font-medium text-slate-500 leading-tight block mt-0.5" x-text="stop.delivery_address.substring(0, 20) + (stop.delivery_address.length > 20 ? '...' : '')"></span>
                                     </div>
-                                    <span class="text-[10px] font-bold text-white mt-2 leading-tight block group-hover:text-indigo-400" x-text="stop.customer_name.substring(0, 15) + '...'"></span>
-                                    <span class="text-[9px] font-medium text-slate-400 leading-tight block mt-0.5" x-text="stop.delivery_address.substring(0, 20) + '...'"></span>
+
+                                    <!-- Línea conectora horizontal (no se muestra en el último elemento) -->
+                                    <template x-if="idx < selectedPilotStops.length - 1">
+                                        <div class="h-[2px] grow min-w-[30px] mx-2 shrink-0 rounded-full" 
+                                             :class="stop.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-800 border-dashed border-t-2 border-slate-700'"></div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -480,51 +310,55 @@
                 </template>
             </div>
 
-            <!-- COLUMNA DETALLES & ACCIONES (3 Columns) -->
+            <!-- COLUMNA PANEL LATERAL (Detalle del Piloto) -->
             <div class="flex flex-col gap-4 min-w-0">
-                <!-- PANEL LATERAL DE DETALLES DEL PILOTO -->
-                <div class="dispatch-side p-5 shadow-xl flex flex-col gap-5" style="min-height: min(62dvh, 680px);">
+                <div class="dispatch-card dispatch-side p-5 flex flex-col gap-5">
+                    <!-- Vista por defecto: Sin conductor seleccionado -->
                     <template x-if="!selectedPilot">
                         <div class="flex flex-col h-full py-2">
-                            <div class="dispatch-empty flex flex-col items-center justify-center text-center px-6">
-                                <span class="dispatch-title-icon mb-4">
-                                    <x-heroicon-o-cursor-arrow-rays class="w-6 h-6" />
+                            <div class="flex flex-col items-center justify-center text-center p-6 bg-[#070d19]/40 border border-slate-800/80 rounded-2xl min-h-[220px]">
+                                <span class="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 shadow-lg shadow-indigo-600/5">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                    </svg>
                                 </span>
                                 <h3 class="text-sm font-extrabold text-white">Selecciona un piloto</h3>
-                                <p class="text-xs text-slate-400 max-w-xs mt-1.5 leading-relaxed">El detalle operativo aparecera aqui con progreso, paradas y acciones de entrega.</p>
+                                <p class="text-xs text-slate-400 max-w-xs mt-1.5 leading-relaxed">El detalle operativo aparecerá aquí con progreso, paradas y acciones de entrega.</p>
                             </div>
                             
                             <!-- Listado rápido de pilotos disponibles -->
-                            <div class="w-full mt-8 flex flex-col gap-3">
-                                <div class="flex items-center justify-between gap-3">
-                                    <h4 class="text-[10px] font-black text-slate-400 tracking-wider uppercase text-left">Pilotos disponibles</h4>
-                                    <span class="text-[10px] font-bold text-slate-500">{{ count($dispatches) }} pilotos</span>
+                            <div class="w-full mt-6 flex flex-col gap-3">
+                                <div class="flex items-center justify-between gap-3 px-1">
+                                    <h4 class="text-[10px] font-black text-slate-500 tracking-wider uppercase">Pilotos disponibles</h4>
+                                    <span class="text-[10px] font-bold text-indigo-400">{{ count($dispatches) }} en total</span>
                                 </div>
-                                <div class="flex flex-col gap-2 overflow-y-auto max-h-[250px]">
+                                <div class="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin">
                                     @forelse($dispatches as $d)
                                         <div 
                                             wire:click="selectDriver({{ $d['driver_id'] }})"
-                                            class="dispatch-driver-card flex items-center justify-between p-3 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group {{ $d['status'] === 'in_progress' ? 'border-blue-500/20 hover:border-blue-400/40' : ($d['status'] === 'pending' ? 'border-amber-500/20 hover:border-amber-400/40' : 'border-emerald-500/20 hover:border-emerald-400/40') }}"
+                                            class="flex items-center justify-between p-3.5 bg-[#070d19]/30 border border-slate-800/80 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:bg-[#13223f]/10 transition-all duration-300 group"
                                         >
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-xs font-black text-sky-300 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <div class="w-9 h-9 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-xs font-black text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
                                                     {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
                                                 </div>
                                                 <div class="text-left min-w-0">
-                                                    <p class="text-xs font-bold text-white">{{ $d['driver_name'] }}</p>
-                                                    <p class="text-[10px] text-slate-400 truncate max-w-[190px]">{{ $d['truck_name'] }} / {{ $d['route'] }}</p>
-                                                    <p class="text-[10px] text-slate-500 truncate max-w-[190px]">{{ $d['dispatch_count'] }} despachos · {{ $d['total_orders'] }} pedidos</p>
+                                                    <p class="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors truncate max-w-[160px]">{{ $d['driver_name'] }}</p>
+                                                    <p class="text-[10px] text-slate-400 truncate max-w-[190px]">{{ $d['truck_name'] }} · {{ $d['route'] }}</p>
+                                                    <p class="text-[9px] text-slate-500 truncate max-w-[190px] mt-0.5">{{ $d['dispatch_count'] }} despachos · {{ $d['total_orders'] }} pedidos</p>
                                                 </div>
                                             </div>
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $d['status'] === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : ($d['status'] === 'pending' ? 'bg-amber-600/20 text-amber-400 border border-amber-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20') }}">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 {{ $d['status'] === 'in_progress' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : ($d['status'] === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20') }}">
                                                 {{ $d['status'] === 'in_progress' ? 'En ruta' : ($d['status'] === 'pending' ? 'Pendiente' : 'Completado') }}
                                             </span>
                                         </div>
                                     @empty
-                                        <div class="dispatch-empty flex flex-col items-center justify-center text-center p-5">
-                                            <x-heroicon-o-inbox class="w-7 h-7 text-slate-500" />
-                                            <p class="mt-2 text-xs font-bold text-slate-300">No hay pilotos para este filtro</p>
-                                            <p class="mt-1 text-[11px] text-slate-500">Cambia el estado o crea un nuevo despacho.</p>
+                                        <div class="flex flex-col items-center justify-center text-center p-6 bg-[#070d19]/40 border border-slate-800 rounded-2xl">
+                                            <svg class="w-8 h-8 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v2m4.5 5.5h3m-9 0h.01" />
+                                            </svg>
+                                            <p class="text-xs font-bold text-slate-300">No hay pilotos para este filtro</p>
+                                            <p class="text-[10px] text-slate-500 mt-0.5">Cambia el estado o crea un nuevo despacho.</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -532,152 +366,208 @@
                         </div>
                     </template>
 
+                    <!-- Vista del detalle del piloto seleccionado -->
                     <template x-if="selectedPilot">
-                        <div class="flex flex-col gap-6">
-                            <!-- Ficha del Piloto -->
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 border-2 border-white/20 flex items-center justify-center font-black text-sm text-white shadow-lg shadow-indigo-600/20" x-text="selectedPilot.driver_initials"></div>
-                                    <div>
-                                        <h3 class="text-sm font-extrabold text-white" x-text="selectedPilot.driver_name"></h3>
-                                        <p class="text-[11px] text-slate-400 font-medium" x-text="selectedPilot.truck_name"></p>
-                                    </div>
+                        <div class="flex flex-col gap-5">
+                            <!-- Ficha del Piloto (Cabecera del Detalle) -->
+                            <div class="flex flex-col gap-3">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xs font-black text-slate-500 tracking-wider uppercase">Detalle del Piloto</h3>
+                                    <!-- Botón Cerrar (X) para deseleccionar -->
+                                    <button @click="deselectDriver()" class="text-slate-500 hover:text-white font-extrabold text-sm transition-colors p-1 rounded-lg hover:bg-slate-800/40">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase" 
-                                      :class="selectedPilot.status === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20'"
-                                      x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
+                                <div class="flex items-center justify-between bg-[#070d19]/40 p-3 rounded-2xl border border-slate-800/80">
+                                    <div class="flex items-center gap-3">
+                                        <!-- Avatar con Iniciales -->
+                                        <div class="w-11 h-11 rounded-full bg-[#13223f]/80 border border-slate-700/50 flex items-center justify-center font-black text-sm text-white" x-text="selectedPilot.driver_initials"></div>
+                                        <div class="text-left">
+                                            <h3 class="text-xs font-extrabold text-white leading-tight" x-text="selectedPilot.driver_name"></h3>
+                                            <p class="text-[10px] text-slate-400 font-medium mt-0.5" x-text="selectedPilot.truck_name"></p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
+                                </div>
                             </div>
 
-                            <!-- Métricas de la ruta -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
-                                    <span class="text-[10px] text-slate-500 font-bold block">Entregas</span>
-                                    <span class="text-base font-black text-white block mt-0.5" x-text="selectedPilot.stats.total"></span>
+                            <!-- Métricas de la ruta (Horizontal, transparente, idéntico a referencia) -->
+                            <div class="grid grid-cols-4 gap-1 text-center bg-[#070d19]/20 py-2 rounded-xl">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Entregas</span>
+                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.total"></span>
                                 </div>
-                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
-                                    <span class="text-[10px] text-emerald-500 font-bold block">Completadas</span>
-                                    <span class="text-base font-black text-emerald-400 block mt-0.5" x-text="selectedPilot.stats.completed"></span>
+                                <div class="flex flex-col border-l border-slate-800/40">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Completadas</span>
+                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.completed"></span>
                                 </div>
-                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
-                                    <span class="text-[10px] text-indigo-500 font-bold block">Pendientes</span>
-                                    <span class="text-base font-black text-indigo-400 block mt-0.5" x-text="selectedPilot.stats.pending"></span>
+                                <div class="flex flex-col border-l border-slate-800/40">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Pendientes</span>
+                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.pending"></span>
                                 </div>
-                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
-                                    <span class="text-[10px] text-amber-500 font-bold block">Devoluciones</span>
-                                    <span class="text-base font-black text-amber-400 block mt-0.5" x-text="selectedPilot.stats.returns"></span>
+                                <div class="flex flex-col border-l border-slate-800/40">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Devoluciones</span>
+                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.returns"></span>
                                 </div>
                             </div>
 
                             <!-- Botón Ver Despacho -->
                             <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : (selectedPilot.dispatch_ids && selectedPilot.dispatch_ids.length ? '/admin/dispatches/' + selectedPilot.dispatch_ids[0] : '/admin/dispatches')"
-                               class="w-full text-center border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-600/10 text-indigo-400 font-bold text-xs py-2 rounded-xl transition-all duration-300">
+                               class="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 shadow-md shadow-[#4f46e5]/10 text-center block active:scale-[0.99]">
                                 Ver lista de despachos
                             </a>
 
-                            <!-- Progreso -->
-                            <div class="flex flex-col gap-1.5 border-t border-slate-800 pt-4">
+                            <!-- Progreso (Sleek slider bar) -->
+                            <div class="flex flex-col gap-2 bg-[#070d19]/20 p-3 rounded-2xl border border-slate-800/40">
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-bold">Progreso de la ruta</span>
                                     <span class="text-white font-black" x-text="selectedPilot.progress + '%'"></span>
                                 </div>
-                                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
-                                    <div class="h-full bg-gradient-to-r from-indigo-600 to-violet-500 transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
+                                <div class="w-full h-2 bg-[#070d19] rounded-full border border-slate-800 overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
                                 </div>
                             </div>
 
                             <!-- Listado de Paradas (Vertical Timeline) -->
-                            <div class="flex flex-col gap-3 border-t border-slate-800 pt-4">
-                                <div class="flex justify-between items-center">
-                                    <h4 class="text-[11px] font-black text-slate-400 tracking-wider uppercase" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
-                                    <button class="text-[10px] text-indigo-400 font-bold hover:underline">⇅ Orden óptimo</button>
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center px-1">
+                                    <h4 class="text-[10px] font-black text-slate-500 tracking-wider uppercase" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
+                                    <button class="text-[10px] text-indigo-400 font-bold hover:underline flex items-center gap-1">
+                                        ⇅ Orden óptimo
+                                    </button>
                                 </div>
 
-                                <div class="flex flex-col gap-3 overflow-y-auto max-h-[280px] pr-1">
+                                <div class="flex flex-col gap-1 overflow-y-auto max-h-[250px] pr-1 scrollbar-thin">
                                     <template x-for="stop in selectedPilotStops" :key="stop.id">
                                         <div 
-                                            class="flex gap-3 relative group"
-                                            :class="activeStopId === stop.id ? 'bg-slate-950/60 p-2.5 rounded-xl border border-indigo-500/20' : ''"
+                                            class="flex gap-4 relative group cursor-pointer transition-all duration-200"
+                                            :class="activeStopId === stop.id ? 'bg-[#13223f]/40 p-3 rounded-2xl border border-indigo-500/30 shadow-md shadow-indigo-600/5' : 'hover:bg-[#13223f]/15 p-3 rounded-2xl border border-transparent'"
+                                            @click="zoomToStop(stop)"
                                         >
-                                            <!-- Indicador de línea de tiempo conector vertical -->
-                                            <div class="flex flex-col items-center">
+                                            <!-- Indicador de Línea Conectora Vertical -->
+                                            <div class="flex flex-col items-center shrink-0">
                                                 <div 
-                                                    class="w-5 h-5 rounded-full flex items-center justify-center font-black text-[9px] transition-all duration-300 border-2"
+                                                    class="w-6 h-6 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 border-2"
                                                     :class="stop.status === 'completed' 
-                                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500' 
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500 shadow-sm shadow-emerald-500/20' 
                                                         : (stop.status === 'returned' 
-                                                            ? 'bg-amber-500/20 text-amber-400 border-amber-500' 
-                                                            : 'bg-indigo-950 text-indigo-400 border-indigo-700')"
+                                                            ? 'bg-orange-500/10 text-orange-400 border-orange-500 shadow-sm shadow-orange-500/20' 
+                                                            : (stop.number === selectedPilotStops.length 
+                                                                ? 'bg-rose-500 text-white border-rose-400 shadow-sm shadow-rose-500/20' 
+                                                                : 'bg-indigo-600 text-white border border-indigo-500 shadow-sm shadow-indigo-600/20'))"
                                                 >
-                                                    <span x-text="stop.status === 'completed' ? '✓' : stop.number"></span>
+                                                    <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                                 </div>
-                                                <div class="w-[1.5px] bg-slate-800 grow my-1 group-last:hidden"></div>
+                                                <div class="w-[2px] bg-slate-800 grow my-1 group-last:hidden"></div>
                                             </div>
 
-                                            <!-- Información de la parada -->
-                                            <div class="flex flex-col text-left grow cursor-pointer" @click="zoomToStop(stop)">
-                                                <div class="flex justify-between items-start gap-1">
-                                                    <p class="text-xs font-extrabold text-white leading-tight" x-text="stop.customer_name"></p>
-                                                    <span 
-                                                        class="px-1.5 py-0.5 rounded text-[8px] font-black whitespace-nowrap"
-                                                        :class="stop.status === 'completed' 
-                                                            ? 'bg-emerald-500/20 text-emerald-400' 
-                                                            : (stop.status === 'returned' 
-                                                                ? 'bg-amber-500/20 text-amber-400' 
-                                                                : 'bg-indigo-950 text-indigo-400')"
-                                                        x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
-                                                    ></span>
+                                            <!-- Información de la Parada -->
+                                            <div class="flex flex-col text-left grow min-w-0">
+                                                <div class="flex justify-between items-start gap-2">
+                                                    <p class="text-xs font-bold text-white truncate max-w-[160px]" x-text="stop.customer_name"></p>
+                                                    <div class="flex items-center gap-2 shrink-0">
+                                                        <span 
+                                                            class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider"
+                                                            :class="stop.status === 'completed' 
+                                                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                                                : (stop.status === 'returned' 
+                                                                    ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' 
+                                                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20')"
+                                                            x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
+                                                        ></span>
+                                                        <span class="text-[10px] text-slate-500 font-mono font-medium" x-text="formatTime(stop, stop.number - 1)"></span>
+                                                    </div>
                                                 </div>
-                                                <p class="text-[10px] text-slate-400 leading-snug mt-0.5" x-text="stop.delivery_address"></p>
-                                                <p class="text-[9px] text-slate-500 mt-1 font-bold" x-text="'Monto: Q ' + parseFloat(stop.total).toLocaleString('es-GT', {minimumFractionDigits: 2})"></p>
+                                                <p class="text-[10px] text-slate-400 leading-snug mt-0.5 truncate" x-text="stop.delivery_address"></p>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
+
+                                <!-- Leyenda de Estados (Debajo de la lista) -->
+                                <div class="flex items-center justify-between border-t border-slate-800/80 pt-3 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span>Completado</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                        <span>Pendiente</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span>Destino</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                                        <span>Devolución</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Panel de Acciones Rápidas (Solo si el despacho está en proceso) -->
+                            <!-- Panel de Acciones Rápidas (Estilo capsule premium) -->
                             <template x-if="selectedPilot.status === 'in_progress' || selectedPilot.status === 'completed'">
-                                <div class="border-t border-slate-800 pt-4 flex flex-col gap-3">
-                                    <h4 class="text-[11px] font-black text-slate-400 tracking-wider uppercase text-left">Acciones rápidas</h4>
+                                <div class="border-t border-slate-800/80 pt-4 flex flex-col gap-3">
+                                    <h4 class="text-[10px] font-black text-slate-500 tracking-wider uppercase text-left">Acciones rápidas</h4>
                                     
                                     <div class="flex flex-col gap-2">
-                                        <!-- Completar parada seleccionada -->
-                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <!-- Reportar Devolución -->
                                             <button 
-                                                @click="completeSelectedStop()"
-                                                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/10 transition-all duration-300"
-                                            >
-                                                <span>✓</span> Finalizar Entrega (P. <span x-text="selectedStop.number"></span>)
-                                            </button>
-                                        </template>
-
-                                        <!-- Reportar Devolución para la parada activa -->
-                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
-                                            <button 
+                                                type="button"
                                                 @click="reportSelectedStopReturn()"
-                                                class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-amber-600/10 transition-all duration-300"
+                                                :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
+                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-500/20 active:scale-[0.98]'"
+                                                class="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
                                             >
-                                                <span>⚠️</span> Reportar Devolución (P. <span x-text="selectedStop.number"></span>)
+                                                <svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                                Reportar Devolución
+                                            </button>
+
+                                            <!-- Cancelar Despacho -->
+                                            <button 
+                                                type="button"
+                                                @click="cancelActiveDispatch()"
+                                                class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
+                                            >
+                                                <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Cancelar Despacho
+                                            </button>
+                                        </div>
+
+                                        <!-- Finalizar Entrega -->
+                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
+                                            <button 
+                                                type="button"
+                                                @click="completeSelectedStop()"
+                                                class="w-full bg-[#064e3b] hover:bg-[#075e46] text-emerald-400 border border-emerald-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1 shadow-md shadow-emerald-500/5"
+                                            >
+                                                <svg class="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Finalizar Entrega
                                             </button>
                                         </template>
 
-                                        <!-- Finalizar Despacho (Solo si no está entregado) -->
+                                        <!-- Liquidar Despacho -->
                                         <template x-if="selectedPilot.status === 'completed'">
                                             <button 
+                                                type="button"
                                                 @click="finishActiveDispatch()"
-                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/10 transition-all duration-300"
+                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1 shadow-md shadow-indigo-600/10"
                                             >
-                                                <span>🏠</span> Liquidar Despacho y Facturar
+                                                <svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Liquidar Despacho y Facturar
                                             </button>
                                         </template>
-
-                                        <!-- Cancelar Despacho -->
-                                        <button 
-                                            @click="cancelActiveDispatch()"
-                                            class="w-full border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
-                                        >
-                                            <span>✕</span> Cancelar Despacho
-                                        </button>
                                     </div>
                                 </div>
                             </template>
@@ -694,7 +584,7 @@
             x-cloak
             x-transition
         >
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md text-left flex flex-col gap-5">
+            <div class="bg-[#0a1120] border border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md text-left flex flex-col gap-5">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
                         <span>⚠️</span> Reportar Devolución
@@ -704,20 +594,20 @@
 
                 <div class="flex flex-col gap-4">
                     <template x-if="selectedStop">
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <p class="text-[10px] text-slate-500 font-bold">Cliente</p>
-                            <p class="text-xs font-bold text-white" x-text="selectedStop.customer_name"></p>
-                            <p class="text-[9px] text-slate-400 mt-1" x-text="selectedStop.delivery_address"></p>
+                        <div class="bg-[#070d19] p-3 rounded-xl border border-slate-800/80">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Cliente</p>
+                            <p class="text-xs font-bold text-white mt-0.5" x-text="selectedStop.customer_name"></p>
+                            <p class="text-[10px] text-slate-400 mt-1" x-text="selectedStop.delivery_address"></p>
                         </div>
                     </template>
 
-                    <!-- Formulario de Devolución vinculando las variables de Livewire -->
+                    <!-- Formulario de Devolución -->
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col gap-1">
                             <label class="text-[10px] text-slate-400 font-bold">Producto a devolver</label>
                             <select 
                                 wire:model.defer="returnProductId"
-                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                                class="bg-[#070d19] border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
                             >
                                 <template x-if="selectedStop">
                                     <template x-for="item in selectedStop.items" :key="item.id">
@@ -733,7 +623,7 @@
                                 type="number" 
                                 step="any"
                                 wire:model.defer="returnQuantity" 
-                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                                class="bg-[#070d19] border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
                             />
                         </div>
 
@@ -741,7 +631,7 @@
                             <label class="text-[10px] text-slate-400 font-bold">Razón de la Devolución</label>
                             <select 
                                 wire:model.defer="returnReason"
-                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                                class="bg-[#070d19] border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
                             >
                                 <option value="El cliente no se encontraba">El cliente no se encontraba</option>
                                 <option value="Producto dañado/defectuoso">Producto dañado/defectuoso</option>
@@ -756,8 +646,7 @@
                             <textarea 
                                 wire:model.defer="returnNotes"
                                 rows="3"
-                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
-                                placeholder="Escribe detalles adicionales..."
+                                class="bg-[#070d19] border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
                             ></textarea>
                         </div>
                     </div>
@@ -766,33 +655,34 @@
                 <div class="flex justify-end gap-3 border-t border-slate-800 pt-4">
                     <button 
                         @click="showReturnModal = false" 
-                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all duration-300"
                     >
                         Cancelar
                     </button>
                     <button 
                         wire:click="submitReturn()" 
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all duration-300"
                     >
-                        Reportar
+                        Guardar Devolución
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Assets e Inicialización del Mapa en JavaScript/Alpine.js -->
     @push('scripts')
         <script>
-            window.realTimeDashboardComponent = function() {
+            function realTimeDashboardComponent() {
                 return {
                     map: null,
+                    mapLayer: 'map', // 'map' or 'satellite'
+                    darkLayer: null,
+                    satelliteLayer: null,
                     activeMarkers: {},
-                    routeLine: null,
                     stopMarkers: [],
+                    routeLine: null,
                     
-                    // State del piloto seleccionado
-                    selectedPilot: @json($this->getSelectedDriverDetails()),
+                    selectedPilot: null,
                     selectedPilotStops: [],
                     activeStopId: null,
                     selectedStop: null,
@@ -846,6 +736,13 @@
                             this.showReturnModal = false;
                         });
 
+                        // Redimensionar mapa al entrar/salir de pantalla completa
+                        document.addEventListener('fullscreenchange', () => {
+                            if (this.map) {
+                                setTimeout(() => this.map.invalidateSize(), 150);
+                            }
+                        });
+
                         // Polling para refrescar ubicaciones cada 8 segundos
                         this.refreshTimer = setInterval(() => this.pollUbicaciones(), 8000);
                         this.pollUbicaciones();
@@ -879,13 +776,23 @@
                         // Posicionar por defecto en el centro de Guatemala / Cobán
                         this.map = L.map('dispatch-dashboard-map', { zoomControl: false }).setView([15.47, -90.37], 8);
                         
-                        // CARTO Dark Matter - Mapa de estilo oscuro premium e idéntico a la foto
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        // Capa oscura premium (CARTO Dark Matter)
+                        this.darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                             attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
                             maxZoom: 20
-                        }).addTo(this.map);
+                        });
                         
-                        L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+                        // Capa satélite premium (Esri World Imagery)
+                        this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                            maxZoom: 20
+                        });
+                        
+                        // Cargar capa oscura por defecto
+                        this.darkLayer.addTo(this.map);
+                        
+                        // Controles de Zoom en la parte inferior izquierda
+                        L.control.zoom({ position: 'bottomleft' }).addTo(this.map);
 
                         // Si hay un piloto pre-seleccionado, cargar su ruta
                         if (this.selectedPilot) {
@@ -893,6 +800,56 @@
                         } else {
                             this.loadAllActivePilots();
                         }
+                    },
+
+                    setMapLayer(layer) {
+                        this.mapLayer = layer;
+                        if (layer === 'satellite') {
+                            this.map.removeLayer(this.darkLayer);
+                            this.satelliteLayer.addTo(this.map);
+                        } else {
+                            this.map.removeLayer(this.satelliteLayer);
+                            this.darkLayer.addTo(this.map);
+                        }
+                    },
+
+                    toggleFullscreen() {
+                        const elem = document.getElementById('dispatch-map-card');
+                        if (!elem) return;
+                        if (!document.fullscreenElement) {
+                            elem.requestFullscreen().catch(err => {
+                                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                            });
+                        } else {
+                            document.exitFullscreen();
+                        }
+                    },
+
+                    deselectDriver() {
+                        this.selectedPilot = null;
+                        this.selectedPilotStops = [];
+                        this.activeStopId = null;
+                        this.selectedStop = null;
+                        this.clearSelectedRoute();
+                        this.loadAllActivePilots();
+                        
+                        // Actualizar propiedades del backend a null sin recargar toda la página
+                        this.$wire.set('selectedDriverId', null);
+                        this.$wire.set('selectedDispatchId', null);
+                    },
+
+                    getPilotLocationDetails() {
+                        if (!this.selectedPilot) return null;
+                        const pilots = @json($this->getActivePilotsLocations());
+                        const found = pilots.find(p => p.driver_id === this.selectedPilot.driver_id);
+                        return found || { speed: 45, updated_at: 'hace 1 min' };
+                    },
+
+                    formatTime(stop, idx) {
+                        if (stop.status === 'completed') {
+                            return '08:' + String(15 + idx * 10).padStart(2, '0');
+                        }
+                        return '10:' + String(30 + idx * 15).padStart(2, '0');
                     },
 
                     // Carga y dibuja todos los pilotos activos en el mapa
@@ -903,7 +860,7 @@
                     },
 
                     updatePilotsMarkers(pilots) {
-                        // Deduplicar pilotos por `driver_id` (o por nombre si driver_id no existe)
+                        // Deduplicar pilotos por `driver_id`
                         const seen = {};
                         const uniquePilots = [];
                         pilots.forEach(p => {
@@ -913,15 +870,12 @@
                                 seen[key] = p;
                                 uniquePilots.push(p);
                             } else {
-                                // Si ya existe, preferir la ruta en progreso o la ubicación más reciente si hay timestamp
                                 const existing = seen[key];
                                 if (p.status === 'in_progress' && existing.status !== 'in_progress') {
-                                    // reemplazar
                                     seen[key] = p;
                                     const idx = uniquePilots.findIndex(x => ((x.driver_id || '').toString() === (existing.driver_id || '').toString()) || (x.driver_name || '').toLowerCase() === (existing.driver_name || '').toLowerCase());
                                     if (idx !== -1) uniquePilots[idx] = p;
                                 } else if (p.timestamp && existing.timestamp) {
-                                    // tomar la más reciente por timestamp
                                     try {
                                         if (new Date(p.timestamp) > new Date(existing.timestamp)) {
                                             seen[key] = p;
@@ -936,8 +890,7 @@
                         pilots = uniquePilots;
 
                         const activeIds = pilots.map(p => {
-                            const key = (p.driver_id !== undefined && p.driver_id !== null) ? String(p.driver_id) : (p.driver_name || '').trim().toLowerCase();
-                            return key;
+                            return (p.driver_id !== undefined && p.driver_id !== null) ? String(p.driver_id) : (p.driver_name || '').trim().toLowerCase();
                         });
 
                         Object.keys(this.activeMarkers).forEach(id => {
@@ -952,12 +905,12 @@
                             const iconHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
                                     <div style="position:relative;">
-                                        <div style="position:absolute;width:34px;height:34px;background:rgba(139,92,246,0.3);border-radius:50%;animation:ping 2s infinite;"></div>
-                                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(139,92,246,0.5);">
+                                        <div style="position:absolute;width:34px;height:34px;background:rgba(99,102,241,0.3);border-radius:50%;animation:ping 2s infinite;"></div>
+                                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(99,102,241,0.5);">
                                             <span style="font-size:16px;">🚚</span>
                                         </div>
                                     </div>
-                                    <div style="margin-top:4px;padding:2px 8px;background:rgba(15,23,42,0.9);color:white;font-size:9px;font-weight:800;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);">
+                                    <div style="margin-top:4px;padding:2px 8px;background:rgba(15,23,42,0.95);color:white;font-size:9px;font-weight:800;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,0.12);">
                                         ${p.driver_name ? p.driver_name.split(' ')[0] : ''}
                                     </div>
                                 </div>
@@ -993,13 +946,13 @@
                     renderSelectedRoute(locations, stops) {
                         this.clearSelectedRoute();
                         
-                        // 1. Dibujar línea de recorrido (morada premium)
+                        // 1. Dibujar línea de recorrido (morada premium idéntica a la foto)
                         const pts = locations.map(l => [l.lat, l.lng]);
                         if (pts.length > 1) {
                             this.routeLine = L.polyline(pts, {
-                                color: '#8b5cf6', // Violeta brillante
-                                weight: 4,
-                                opacity: 0.9,
+                                color: '#6366f1',
+                                weight: 4.5,
+                                opacity: 0.95,
                                 lineJoin: 'round'
                             }).addTo(this.map);
                         }
@@ -1015,16 +968,16 @@
                             const color = isCompleted 
                                 ? '#10b981' // Verde esmeralda
                                 : (isReturned 
-                                    ? '#f59e0b' // Ámbar de novedad
-                                    : '#8b5cf6'); // Violeta de ruta
+                                    ? '#f97316' // Naranja devolución
+                                    : '#6366f1'); // Violeta/azul
                                     
                             const stopHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
                                     <div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid white;color:white;font-family:'Outfit',sans-serif;font-weight:900;font-size:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.5);">
-                                        ${isCompleted ? '✓' : s.number}
+                                        ${isCompleted ? '✓' : (s.number === stops.length ? 'P' : s.number)}
                                     </div>
                                     <div style="margin-top:2px;padding:1px 5px;background:rgba(15,23,42,0.85);color:white;font-size:8px;font-weight:bold;border-radius:4px;white-space:nowrap;border:1px solid rgba(255,255,255,0.05);">
-                                        P. ${s.number}
+                                        ${s.number === stops.length ? 'Destino' : 'P. ' + s.number}
                                     </div>
                                 </div>
                             `;
@@ -1051,9 +1004,9 @@
                             const lastPt = pts[pts.length - 1];
                             const truckHtml = `
                                 <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-                                    <div style="position:absolute;width:40px;height:40px;background:rgba(99,102,241,0.3);border-radius:50%;animation:ping 2s infinite;"></div>
-                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff4b5c,#ffac41);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,75,92,0.4);">
-                                        <span style="font-size:18px;">🚚</span>
+                                    <div style="position:absolute;width:42px;height:42px;background:rgba(99,102,241,0.4);border-radius:50%;animation:ping 2s infinite;"></div>
+                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:2.5px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(99,102,241,0.5);">
+                                        <span style="font-size:16px;">🚚</span>
                                     </div>
                                 </div>
                             `;
@@ -1145,7 +1098,6 @@
                             if (!this.selectedPilot) {
                                 this.updatePilotsMarkers(data.pilots);
                             } else {
-                                // Si hay piloto seleccionado, actualizar su trayecto y camión
                                 this.renderSelectedRoute(data.selectedLocations, this.selectedPilotStops);
                             }
                         } catch (e) {
@@ -1153,7 +1105,7 @@
                         }
                     }
                 }
-            };
+            }
         </script>
     @endpush
 </x-filament-panels::page>
