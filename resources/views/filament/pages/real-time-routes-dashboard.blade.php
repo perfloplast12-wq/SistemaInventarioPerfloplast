@@ -186,7 +186,7 @@
                         @foreach($tabs as $key => $t)
                             <button 
                                 wire:click="setTab('{{ $key }}')"
-                                class="px-3.5 py-1.5 font-extrabold text-[11px] rounded-xl flex items-center gap-2 transition-all duration-300 {{ $activeTab === $key ? 'bg-indigo-600/10 text-white border border-indigo-500/20 shadow-md' : 'bg-transparent text-slate-400 border border-transparent hover:text-white hover:bg-slate-800/40' }}"
+                                class="px-3.5 py-1.5 font-extrabold text-[11px] rounded-xl flex items-center gap-2 transition-all duration-300 {{ $activeTab === $key ? 'bg-[#13223f] text-white border border-indigo-500/40 shadow-md' : 'bg-transparent text-slate-400 border border-transparent hover:text-white hover:bg-slate-800/40' }}"
                             >
                                 {{ $t['label'] }}
                                 <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 {{ $t['badge_class'] }}">
@@ -225,11 +225,11 @@
                         <button 
                             type="button"
                             @click="toggleFullscreen()"
-                            class="w-9 h-9 flex items-center justify-center bg-[#0a1120]/60 hover:bg-slate-800 border border-slate-800/80 hover:text-white text-slate-400 rounded-2xl transition-all duration-300"
+                            class="w-9 h-9 flex items-center justify-center bg-[#0a1120]/60 hover:bg-slate-800 border border-slate-800/80 text-slate-400 hover:text-white rounded-2xl transition-all duration-300"
                             title="Maximizar Mapa"
                         >
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4" />
+                            <svg class="w-5 h-5 text-slate-300 hover:text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M16 4h4v4M4 16v4h4M16 20h4v-4" />
                             </svg>
                         </button>
                     </div>
@@ -241,32 +241,26 @@
 
                     <!-- Overlay de Piloto Activo en la esquina inferior izquierda (flotante premium) -->
                     <template x-if="selectedPilot">
-                        <div class="absolute bottom-4 left-4 z-[999] bg-[#070d19]/92 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800/80 shadow-2xl flex items-center gap-3 min-w-[250px]">
+                        <div class="absolute bottom-4 left-4 z-[999] bg-[#070d19]/90 backdrop-blur-md px-4 py-3.5 rounded-2xl border border-slate-800/80 shadow-2xl flex items-center gap-3.5 min-w-[270px]">
                             <!-- Initials Avatar -->
-                            <div class="w-9 h-9 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-black text-xs text-indigo-400" x-text="selectedPilot.driver_initials"></div>
+                            <div class="w-10 h-10 rounded-full bg-[#13223f]/80 border border-slate-700/50 flex items-center justify-center font-extrabold text-xs text-white" x-text="selectedPilot.driver_initials"></div>
                             
                             <div class="flex flex-col text-left">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-extrabold text-white" x-text="selectedPilot.driver_name"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                                    <span class="text-[9px] text-emerald-400 font-black tracking-wide uppercase" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-bold text-white" x-text="selectedPilot.driver_name + ' (' + selectedPilot.truck_name + ')'"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span class="text-[10px] text-emerald-400 font-bold" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
                                 </div>
-                                <span class="text-[10px] text-slate-400 mt-0.5" x-text="'Vehículo: ' + selectedPilot.truck_name"></span>
-                                <div class="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-500 font-semibold">
-                                    <span x-text="'Velocidad: ' + (getPilotLocationDetails() ? getPilotLocationDetails().speed : '45') + ' km/h'"></span>
-                                    <span>·</span>
-                                    <span x-text="'Última act.: ' + (getPilotLocationDetails() ? getPilotLocationDetails().updated_at : 'hace 1 min')"></span>
-                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1" x-text="'Velocidad: ' + (getPilotLocationDetails() ? getPilotLocationDetails().speed : '45') + ' km/h'"></p>
+                                <p class="text-[10px] text-slate-400 mt-0.5" x-text="'Última actualización: ' + (getPilotLocationDetails() ? getPilotLocationDetails().updated_at : 'hace 1 min')"></p>
                             </div>
                         </div>
                     </template>
-                </div>
-
-                <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
+                                <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
                 <template x-if="selectedPilotStops.length > 0">
                     <div class="dispatch-card p-5 mt-4 flex flex-col gap-4">
                         <h4 class="text-xs font-black text-slate-400 tracking-wider uppercase flex items-center gap-2">
-                            <svg class="w-4.5 h-4.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                             </svg>
                             Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
@@ -281,33 +275,55 @@
                                         class="flex flex-col items-center z-10 min-w-[125px] text-center group cursor-pointer" 
                                         @click="zoomToStop(stop)"
                                     >
-                                        <!-- Círculo del Punto -->
+                                        <!-- Círculo del Punto (Sólido Premium) -->
                                         <div 
-                                            class="w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] transition-all duration-300 border-2 shadow-lg"
+                                            class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 shadow-md"
                                             :class="stop.status === 'completed' 
-                                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-sm shadow-emerald-500/20 hover:bg-emerald-500 hover:text-white' 
+                                                ? 'bg-[#10b981] text-white shadow-emerald-950/20' 
                                                 : (stop.status === 'returned' 
-                                                    ? 'bg-orange-500/20 text-orange-400 border-orange-500 shadow-sm shadow-orange-500/20 hover:bg-orange-500 hover:text-white' 
+                                                    ? 'bg-[#f97316] text-white shadow-orange-950/20' 
                                                     : (stop.number === selectedPilotStops.length 
-                                                        ? 'bg-rose-500 text-white border-rose-400 shadow-sm shadow-rose-500/20 hover:bg-rose-600' 
-                                                        : 'bg-indigo-600 text-white border-indigo-400 shadow-sm shadow-indigo-600/20 hover:bg-indigo-500'))"
+                                                        ? 'bg-[#ef4444] text-white shadow-rose-950/20' 
+                                                        : 'bg-[#6366f1] text-white shadow-indigo-950/20'))"
                                         >
                                             <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                         </div>
-                                        <span class="text-[10px] font-bold text-white mt-2 leading-tight block group-hover:text-indigo-400 transition-colors" x-text="stop.customer_name.substring(0, 15) + (stop.customer_name.length > 15 ? '...' : '')"></span>
-                                        <span class="text-[9px] font-medium text-slate-500 leading-tight block mt-0.5" x-text="stop.delivery_address.substring(0, 20) + (stop.delivery_address.length > 20 ? '...' : '')"></span>
+
+                                        <!-- Textos del nodo alineados de acuerdo al mockup -->
+                                        <div class="mt-2.5 flex flex-col items-center text-center">
+                                            <template x-if="stop.number === selectedPilotStops.length">
+                                                <div class="flex flex-col items-center">
+                                                    <span class="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Destino</span>
+                                                    <span class="text-[10px] text-slate-300 max-w-[115px] leading-tight mt-0.5" x-text="getShortAddress(stop.delivery_address)"></span>
+                                                    <span class="text-[10px] font-bold text-[#f59e0b] mt-0.5">Pendiente</span>
+                                                    <span class="text-[10px] text-slate-500 font-mono font-medium mt-0.5" x-text="formatTime(stop, idx)"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="stop.number !== selectedPilotStops.length">
+                                                <div class="flex flex-col items-center">
+                                                    <span class="text-[11px] font-bold text-white max-w-[115px] leading-tight" x-text="getShortAddress(stop.delivery_address)"></span>
+                                                    <span 
+                                                        class="text-[10px] font-bold mt-1" 
+                                                        :class="stop.status === 'completed' ? 'text-[#10b981]' : (stop.status === 'returned' ? 'text-[#f97316]' : 'text-[#f59e0b]')"
+                                                        x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
+                                                    ></span>
+                                                    <span class="text-[10px] text-slate-500 font-mono font-medium mt-0.5" x-text="formatTime(stop, idx)"></span>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
 
-                                    <!-- Línea conectora horizontal (no se muestra en el último elemento) -->
+                                    <!-- Línea conectora horizontal punteada condicional -->
                                     <template x-if="idx < selectedPilotStops.length - 1">
-                                        <div class="h-[2px] grow min-w-[30px] mx-2 shrink-0 rounded-full" 
-                                             :class="stop.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-800 border-dashed border-t-2 border-slate-700'"></div>
+                                        <div class="h-[2px] grow min-w-[40px] mx-2 shrink-0 border-t-2 border-dashed transition-all duration-300"
+                                             :class="(stop.status === 'completed' && selectedPilotStops[idx+1].status === 'completed') ? 'border-[#10b981]' : 'border-slate-800'"></div>
                                     </template>
                                 </div>
                             </template>
                         </div>
                     </div>
                 </template>
+ </template>
             </div>
 
             <!-- COLUMNA PANEL LATERAL (Detalle del Piloto) -->
@@ -370,138 +386,139 @@
                     <template x-if="selectedPilot">
                         <div class="flex flex-col gap-5">
                             <!-- Ficha del Piloto (Cabecera del Detalle) -->
-                            <div class="flex flex-col gap-3">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-xs font-black text-slate-500 tracking-wider uppercase">Detalle del Piloto</h3>
-                                    <!-- Botón Cerrar (X) para deseleccionar -->
-                                    <button @click="deselectDriver()" class="text-slate-500 hover:text-white font-extrabold text-sm transition-colors p-1 rounded-lg hover:bg-slate-800/40">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-full bg-[#13223f]/80 flex items-center justify-center font-black text-sm text-white" x-text="selectedPilot.driver_initials"></div>
+                                    <div class="text-left">
+                                        <h3 class="text-sm font-extrabold text-white leading-tight" x-text="selectedPilot.driver_name"></h3>
+                                        <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="selectedPilot.truck_name"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-950/80 text-emerald-400 border border-emerald-800/60" x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
+                                    <button @click="deselectDriver()" class="text-slate-500 hover:text-white transition-colors p-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
-                                <div class="flex items-center justify-between bg-[#070d19]/40 p-3 rounded-2xl border border-slate-800/80">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Avatar con Iniciales -->
-                                        <div class="w-11 h-11 rounded-full bg-[#13223f]/80 border border-slate-700/50 flex items-center justify-center font-black text-sm text-white" x-text="selectedPilot.driver_initials"></div>
-                                        <div class="text-left">
-                                            <h3 class="text-xs font-extrabold text-white leading-tight" x-text="selectedPilot.driver_name"></h3>
-                                            <p class="text-[10px] text-slate-400 font-medium mt-0.5" x-text="selectedPilot.truck_name"></p>
-                                        </div>
-                                    </div>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
-                                </div>
                             </div>
 
-                            <!-- Métricas de la ruta (Horizontal, transparente, idéntico a referencia) -->
-                            <div class="grid grid-cols-4 gap-1 text-center bg-[#070d19]/20 py-2 rounded-xl">
+                            <!-- Métricas de la ruta -->
+                            <div class="grid grid-cols-4 gap-0 text-center py-4 border-y border-slate-800/60">
                                 <div class="flex flex-col">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Entregas</span>
-                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.total"></span>
+                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.total"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/40">
+                                <div class="flex flex-col border-l border-slate-800/60">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Completadas</span>
-                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.completed"></span>
+                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.completed"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/40">
+                                <div class="flex flex-col border-l border-slate-800/60">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Pendientes</span>
-                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.pending"></span>
+                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.pending"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/40">
+                                <div class="flex flex-col border-l border-slate-800/60">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Devoluciones</span>
-                                    <span class="text-lg font-black text-white mt-1" x-text="selectedPilot.stats.returns"></span>
+                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.returns"></span>
                                 </div>
                             </div>
 
                             <!-- Botón Ver Despacho -->
                             <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : (selectedPilot.dispatch_ids && selectedPilot.dispatch_ids.length ? '/admin/dispatches/' + selectedPilot.dispatch_ids[0] : '/admin/dispatches')"
-                               class="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 shadow-md shadow-[#4f46e5]/10 text-center block active:scale-[0.99]">
+                               class="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center block">
                                 Ver lista de despachos
                             </a>
 
-                            <!-- Progreso (Sleek slider bar) -->
-                            <div class="flex flex-col gap-2 bg-[#070d19]/20 p-3 rounded-2xl border border-slate-800/40">
+                            <!-- Progreso de la Ruta -->
+                            <div class="flex flex-col gap-2 mt-2">
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-bold">Progreso de la ruta</span>
                                     <span class="text-white font-black" x-text="selectedPilot.progress + '%'"></span>
                                 </div>
-                                <div class="w-full h-2 bg-[#070d19] rounded-full border border-slate-800 overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
+                                <div class="w-full h-1.5 bg-[#0b1329] rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#4f46e5] transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
                                 </div>
                             </div>
 
                             <!-- Listado de Paradas (Vertical Timeline) -->
-                            <div class="flex flex-col gap-3">
-                                <div class="flex justify-between items-center px-1">
-                                    <h4 class="text-[10px] font-black text-slate-500 tracking-wider uppercase" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
-                                    <button class="text-[10px] text-indigo-400 font-bold hover:underline flex items-center gap-1">
+                            <div class="flex flex-col gap-3 mt-2">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="text-sm font-extrabold text-white" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
+                                    <button class="bg-[#070d19] border border-slate-800 text-[10px] text-slate-300 px-3 py-1.5 rounded-full font-bold hover:text-white transition-colors">
                                         ⇅ Orden óptimo
                                     </button>
                                 </div>
 
-                                <div class="flex flex-col gap-1 overflow-y-auto max-h-[250px] pr-1 scrollbar-thin">
-                                    <template x-for="stop in selectedPilotStops" :key="stop.id">
+                                <div class="flex flex-col gap-0 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin">
+                                    <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
                                         <div 
-                                            class="flex gap-4 relative group cursor-pointer transition-all duration-200"
-                                            :class="activeStopId === stop.id ? 'bg-[#13223f]/40 p-3 rounded-2xl border border-indigo-500/30 shadow-md shadow-indigo-600/5' : 'hover:bg-[#13223f]/15 p-3 rounded-2xl border border-transparent'"
+                                            class="flex gap-4 relative cursor-pointer py-3 border-b border-slate-800/30 last:border-0"
                                             @click="zoomToStop(stop)"
                                         >
-                                            <!-- Indicador de Línea Conectora Vertical -->
+                                            <!-- Indicador de Parada (Sólido) -->
                                             <div class="flex flex-col items-center shrink-0">
                                                 <div 
-                                                    class="w-6 h-6 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 border-2"
+                                                    class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs"
                                                     :class="stop.status === 'completed' 
-                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500 shadow-sm shadow-emerald-500/20' 
+                                                        ? 'bg-[#10b981] text-white' 
                                                         : (stop.status === 'returned' 
-                                                            ? 'bg-orange-500/10 text-orange-400 border-orange-500 shadow-sm shadow-orange-500/20' 
+                                                            ? 'bg-[#f97316] text-white' 
                                                             : (stop.number === selectedPilotStops.length 
-                                                                ? 'bg-rose-500 text-white border-rose-400 shadow-sm shadow-rose-500/20' 
-                                                                : 'bg-indigo-600 text-white border border-indigo-500 shadow-sm shadow-indigo-600/20'))"
+                                                                ? 'bg-[#ef4444] text-white' 
+                                                                : 'bg-[#6366f1] text-white'))"
                                                 >
                                                     <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                                 </div>
-                                                <div class="w-[2px] bg-slate-800 grow my-1 group-last:hidden"></div>
                                             </div>
 
                                             <!-- Información de la Parada -->
                                             <div class="flex flex-col text-left grow min-w-0">
                                                 <div class="flex justify-between items-start gap-2">
-                                                    <p class="text-xs font-bold text-white truncate max-w-[160px]" x-text="stop.customer_name"></p>
+                                                    <template x-if="stop.number === selectedPilotStops.length">
+                                                        <div class="flex flex-col">
+                                                            <p class="text-xs font-bold text-white">Destino</p>
+                                                            <p class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[160px]" x-text="stop.delivery_address"></p>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="stop.number !== selectedPilotStops.length">
+                                                        <p class="text-xs font-bold text-white max-w-[160px] leading-tight" x-text="stop.delivery_address"></p>
+                                                    </template>
+                                                    
                                                     <div class="flex items-center gap-2 shrink-0">
                                                         <span 
-                                                            class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider"
+                                                            class="text-[10px] font-bold"
                                                             :class="stop.status === 'completed' 
-                                                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                                                ? 'text-[#10b981]' 
                                                                 : (stop.status === 'returned' 
-                                                                    ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' 
-                                                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20')"
+                                                                    ? 'text-[#f97316]' 
+                                                                    : 'text-[#f59e0b]')"
                                                             x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
                                                         ></span>
-                                                        <span class="text-[10px] text-slate-500 font-mono font-medium" x-text="formatTime(stop, stop.number - 1)"></span>
+                                                        <span class="text-[10px] text-slate-500 font-mono" x-text="formatTime(stop, stop.number - 1)"></span>
                                                     </div>
                                                 </div>
-                                                <p class="text-[10px] text-slate-400 leading-snug mt-0.5 truncate" x-text="stop.delivery_address"></p>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
 
                                 <!-- Leyenda de Estados (Debajo de la lista) -->
-                                <div class="flex items-center justify-between border-t border-slate-800/80 pt-3 text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                                <div class="flex items-center justify-between pt-2 text-[10px] text-slate-400 font-medium">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
                                         <span>Completado</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#6366f1]"></span>
                                         <span>Pendiente</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
                                         <span>Destino</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-[#f97316]"></span>
                                         <span>Devolución</span>
                                     </div>
                                 </div>
@@ -509,9 +526,7 @@
 
                             <!-- Panel de Acciones Rápidas (Estilo capsule premium) -->
                             <template x-if="selectedPilot.status === 'in_progress' || selectedPilot.status === 'completed'">
-                                <div class="border-t border-slate-800/80 pt-4 flex flex-col gap-3">
-                                    <h4 class="text-[10px] font-black text-slate-500 tracking-wider uppercase text-left">Acciones rápidas</h4>
-                                    
+                                <div class="border-t border-slate-800/60 pt-4 flex flex-col gap-3">
                                     <div class="flex flex-col gap-2">
                                         <div class="grid grid-cols-2 gap-2">
                                             <!-- Reportar Devolución -->
@@ -519,12 +534,9 @@
                                                 type="button"
                                                 @click="reportSelectedStopReturn()"
                                                 :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
-                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-500/20 active:scale-[0.98]'"
-                                                class="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
+                                                :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#f59e0b]/10 active:scale-[0.98]'"
+                                                class="bg-transparent text-[#f59e0b] border border-[#f59e0b]/40 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
                                             >
-                                                <svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                </svg>
                                                 Reportar Devolución
                                             </button>
 
@@ -532,11 +544,8 @@
                                             <button 
                                                 type="button"
                                                 @click="cancelActiveDispatch()"
-                                                class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
+                                                class="bg-transparent hover:bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/40 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300"
                                             >
-                                                <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
                                                 Cancelar Despacho
                                             </button>
                                         </div>
@@ -546,11 +555,8 @@
                                             <button 
                                                 type="button"
                                                 @click="completeSelectedStop()"
-                                                class="w-full bg-[#064e3b] hover:bg-[#075e46] text-emerald-400 border border-emerald-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1 shadow-md shadow-emerald-500/5"
+                                                class="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
                                             >
-                                                <svg class="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
                                                 Finalizar Entrega
                                             </button>
                                         </template>
@@ -560,11 +566,8 @@
                                             <button 
                                                 type="button"
                                                 @click="finishActiveDispatch()"
-                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1 shadow-md shadow-indigo-600/10"
+                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 mt-1"
                                             >
-                                                <svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
                                                 Liquidar Despacho y Facturar
                                             </button>
                                         </template>
@@ -846,10 +849,22 @@
                     },
 
                     formatTime(stop, idx) {
+                        let totalMinutes = 0;
                         if (stop.status === 'completed') {
-                            return '08:' + String(15 + idx * 10).padStart(2, '0');
+                            totalMinutes = 8 * 60 + 15 + (idx * 15);
+                        } else {
+                            totalMinutes = 10 * 60 + 30 + (idx * 20);
                         }
-                        return '10:' + String(30 + idx * 15).padStart(2, '0');
+                        const hrs = Math.floor(totalMinutes / 60);
+                        const mins = totalMinutes % 60;
+                        return String(hrs).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
+                    },
+
+                    getShortAddress(address) {
+                        if (!address) return '';
+                        return address
+                            .replace(/Alta Verapaz/gi, 'A. Verapaz')
+                            .replace(/Baja Verapaz/gi, 'B. Verapaz');
                     },
 
                     // Carga y dibuja todos los pilotos activos en el mapa
