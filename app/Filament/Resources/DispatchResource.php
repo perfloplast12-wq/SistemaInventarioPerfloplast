@@ -25,6 +25,7 @@ class DispatchResource extends Resource
     protected static ?string $navigationGroup = 'LOGÍSTICA';
     protected static ?string $modelLabel = 'Despacho';
     protected static ?string $pluralModelLabel = 'Despachos';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function canViewAny(): bool
     {

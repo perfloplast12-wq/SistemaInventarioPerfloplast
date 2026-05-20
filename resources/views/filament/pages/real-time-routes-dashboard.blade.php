@@ -1,11 +1,94 @@
 <x-filament-panels::page>
+    <style>
+        .dispatch-page {
+            width: 100%;
+            max-width: none;
+            min-height: calc(100dvh - 7rem);
+            padding: 1.25rem;
+            color: #f8fafc;
+            background: #07111f;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 14px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+        }
+
+        .dispatch-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .dispatch-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .dispatch-map {
+            height: min(68dvh, 720px) !important;
+            min-height: 520px;
+            border: 1px solid rgba(148, 163, 184, 0.16) !important;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #020617;
+        }
+
+        .dispatch-side,
+        .dispatch-route-summary {
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.92) !important;
+        }
+
+        .dispatch-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            padding: .3rem;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 12px;
+            background: rgba(2, 6, 23, 0.74);
+        }
+
+        .dispatch-tab {
+            min-height: 2.25rem;
+            padding: .45rem .75rem;
+            font-size: .78rem;
+        }
+
+        @media (max-width: 1180px) {
+            .dispatch-main {
+                grid-template-columns: 1fr;
+            }
+
+            .dispatch-map {
+                min-height: 430px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .dispatch-page {
+                padding: .85rem;
+                border-radius: 10px;
+            }
+
+            .dispatch-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+    </style>
     <div 
         x-data="realTimeDashboardComponent()"
-        class="flex flex-col gap-6 text-white bg-slate-950 rounded-2xl p-6 shadow-2xl border border-slate-800"
-        style="font-family: 'Outfit', sans-serif; min-height: 850px; background-color: #0b132b;"
+        class="dispatch-page flex flex-col gap-4"
+        style="font-family: 'Outfit', sans-serif;"
     >
         <!-- CABECERA: Filtros y Botones -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
+        <div class="dispatch-header">
             <div>
                 <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
                     <span class="text-3xl">📡</span> Mapa de Rutas en Tiempo Real
@@ -15,7 +98,7 @@
             
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Filtros Tabificados -->
-                <div class="flex items-center bg-slate-900/95 border border-slate-800 p-1 rounded-xl shadow-inner gap-1">
+                <div class="dispatch-tabs">
                     @php
                         $stats = $this->getTabsStats();
                         $tabs = [
@@ -29,7 +112,7 @@
                     @foreach($tabs as $key => $t)
                         <button 
                             wire:click="setTab('{{ $key }}')"
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800' }}"
+                            class="dispatch-tab rounded-lg font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800' }}"
                         >
                             {{ $t['label'] }}
                             <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300' }}">
@@ -48,11 +131,11 @@
         </div>
 
         <!-- CONTENIDO PRINCIPAL: MAPA (70%) + DETALLES (30%) -->
-        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        <div class="dispatch-main">
             <!-- COLUMNA MAPA (7 Columns) -->
-            <div class="lg:col-span-7 flex flex-col gap-6 relative">
+            <div class="flex flex-col gap-4 relative min-w-0">
                 <!-- CONTENEDOR MAPA -->
-                <div class="relative w-full rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900" style="height: 600px;">
+                <div class="dispatch-map relative w-full shadow-xl">
                     <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
 
                     <!-- Overlay de Piloto Activo en la esquina inferior izquierda -->
@@ -77,7 +160,7 @@
 
                 <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
                 <template x-if="selectedPilotStops.length > 0">
-                    <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
+                    <div class="dispatch-route-summary p-5 shadow-xl flex flex-col gap-4">
                         <h4 class="text-xs font-black text-slate-400 tracking-widest uppercase flex items-center gap-1.5">
                             🏁 Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
                         </h4>
@@ -110,9 +193,9 @@
             </div>
 
             <!-- COLUMNA DETALLES & ACCIONES (3 Columns) -->
-            <div class="lg:col-span-3 flex flex-col gap-6">
+            <div class="flex flex-col gap-4 min-w-0">
                 <!-- PANEL LATERAL DE DETALLES DEL PILOTO -->
-                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6" style="min-height: 600px;">
+                <div class="dispatch-side p-5 shadow-xl flex flex-col gap-5" style="min-height: min(68dvh, 720px);">
                     <template x-if="!selectedPilot">
                         <div class="flex flex-col items-center justify-center h-full text-center py-20">
                             <span class="text-5xl mb-4 animate-bounce">🚛</span>

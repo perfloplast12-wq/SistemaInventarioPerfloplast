@@ -14,12 +14,14 @@ use Illuminate\Support\Facades\DB;
 
 class RealTimeRoutesDashboard extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-map';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
     protected static ?string $navigationGroup = 'LOGÍSTICA';
-    protected static ?string $navigationLabel = 'Mapa en Tiempo Real';
-    protected static ?string $title = 'Mapa de Rutas en Tiempo Real';
+    protected static ?string $navigationLabel = 'Despachos';
+    protected static ?string $title = 'Despachos';
     protected static ?string $slug = 'dispatch-map';
     protected static string $view = 'filament.pages.real-time-routes-dashboard';
+    protected ?string $maxContentWidth = 'full';
+    protected static ?int $navigationSort = 1;
 
     public string $activeTab = 'todos';
     public ?int $selectedDispatchId = null;
