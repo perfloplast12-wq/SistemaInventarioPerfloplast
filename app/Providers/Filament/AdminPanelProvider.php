@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 function () {
                     // Cachear el bloque completo de cabecera por 1 hora
                     // Solo se regenera si se limpia la caché o pasa el tiempo
-                    return Cache::remember('admin_panel_head_block_v9', 3600, function () {
+                    return Cache::remember('admin_panel_head_block_v10', 3600, function () {
                         try {
                             $settings = Setting::whereIn('key', [
                                 'primary_color_1',
@@ -149,7 +149,7 @@ class AdminPanelProvider extends PanelProvider
                             <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css\" />
                             <script src=\"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\"></script>
                             <script src=\"https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js\"></script>
-                            <script src=\"/js/filament-map.js?v=2.5\"></script>
+                            <script src=\"/js/filament-map.js?v=2.6\"></script>
                             <script src=\"/js/instant-nav.js?v=1.0\" defer></script>
                             {$styles}
                         ");

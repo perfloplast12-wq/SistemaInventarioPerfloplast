@@ -50,7 +50,7 @@
 </head>
 <body>
     <div class="no-print">
-        <a href="{{ url('/admin/sales/' . $invoice->sale_id) }}" class="btn btn-back">Volver</a>
+        <a href="{{ url('/admin/invoices') }}" class="btn btn-back">Volver</a>
         <button onclick="window.print()" class="btn btn-print">Imprimir Factura</button>
     </div>
 

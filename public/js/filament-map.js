@@ -165,7 +165,7 @@
                     : '';
 
                 const iconHtml = `
-                    <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-50%);">
+                    <div style="display:flex;flex-direction:column;align-items:center;">
                         <div style="position:relative;display:flex;align-items:center;justify-content:center;">
                             ${pulseHtml}
                             <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;z-index:1;"></div>
@@ -205,7 +205,7 @@
                         </div>
                     </div>`;
 
-                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [44, 80], iconAnchor: [22, 40], popupAnchor: [0, -40] });
+                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [120, 80], iconAnchor: [60, 22], popupAnchor: [0, -22] });
 
                 if (this.truckMarker) {
                     this.truckMarker.setLatLng([lat, lng]);
@@ -341,8 +341,9 @@
                     if (isCoordValid) {
                         const last = this.allPoints.length > 0 ? this.allPoints[this.allPoints.length - 1] : null;
                         if (!last || Math.abs(last[0] - lat) > 0.00001 || Math.abs(last[1] - lng) > 0.00001) {
+                            const isFirstRealLocation = !last;
                             this.allPoints.push([lat, lng]);
-                            this.drawPosition();
+                            this.drawPosition(isFirstRealLocation);
                         } else if (wasOnline !== this.isOnline) {
                             this.drawPosition();
                         }

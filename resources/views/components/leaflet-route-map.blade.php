@@ -21,39 +21,37 @@
         $activeDispatchIds[] = $record->id;
     }
 
-    // 2. Query each active dispatch ID individually (perfectly indexed, ultra-fast)
-    $latest = null;
+    // 2. Query active dispatch locations (up to 100 recent coordinates per active dispatch)
+    $locations = collect();
     foreach ($activeDispatchIds as $aid) {
-        $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
+        $locs = \App\Models\DispatchLocation::where('dispatch_id', $aid)
             ->orderByDesc('created_at')
-            ->first();
-        if ($loc) {
-            if (!$latest || $loc->created_at->gt($latest->created_at)) {
-                $latest = $loc;
-            }
-        }
+            ->limit(100)
+            ->get();
+        $locations = $locations->merge($locs);
     }
 
-    // 3. Fallback: check other recent dispatches for this truck
-    if (!$latest && $record->truck_id) {
+    // 3. Fallback: check other recent dispatches for this truck if no locations found
+    if ($locations->isEmpty() && $record->truck_id) {
         $otherIds = \App\Models\Dispatch::where('truck_id', $record->truck_id)
             ->whereNotIn('id', $activeDispatchIds)
             ->orderByDesc('id')
             ->limit(5)
             ->pluck('id');
         foreach ($otherIds as $oid) {
-            $loc = \App\Models\DispatchLocation::where('dispatch_id', $oid)
+            $locs = \App\Models\DispatchLocation::where('dispatch_id', $oid)
                 ->orderByDesc('created_at')
-                ->first();
-            if ($loc) {
-                if (!$latest || $loc->created_at->gt($latest->created_at)) {
-                    $latest = $loc;
-                }
+                ->limit(50)
+                ->get();
+            $locations = $locations->merge($locs);
+            if ($locations->isNotEmpty()) {
+                break;
             }
         }
     }
 
-    $locations = $latest ? collect([$latest]) : collect();
+    // Sort chronologically ascending to draw the route trail polyline correctly
+    $locations = $locations->sortBy('created_at')->values();
 
     $hideOrders = $hideOrders ?? false;
     $ordersData = [];
