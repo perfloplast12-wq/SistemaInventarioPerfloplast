@@ -42,7 +42,7 @@ class ViewSale extends ViewRecord
                             ->success()
                             ->send();
                         $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Error al confirmar')
                             ->body($e->getMessage())

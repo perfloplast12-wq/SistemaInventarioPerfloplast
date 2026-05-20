@@ -83,7 +83,7 @@ class InvoiceService
 
     private function getPaymentMethodLabel(Sale $sale): string
     {
-        $method = $sale->payments->first()?->method;
+        $method = $sale->payments->first()?->payment_method;
         return match ($method) {
             'cash' => 'EFECTIVO',
             'transfer' => 'TRANSFERENCIA',
