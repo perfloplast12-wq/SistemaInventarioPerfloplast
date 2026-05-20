@@ -32,9 +32,9 @@
                     // Render map with initial data
                     await this.render(config.locations);
 
-                    // Polling
+                    // Polling every 4s for faster updates
                     this.pollLatestPosition();
-                    this.pollTimer = setInterval(() => this.pollLatestPosition(), 10000);
+                    this.pollTimer = setInterval(() => this.pollLatestPosition(), 4000);
 
                     // Real-time
                     this.startEcho();
@@ -143,8 +143,8 @@
             drawPosition(fitBounds = false) {
                 if (!this.map) return;
 
-                let lat = 15.3725; // Default lat (Cobán/Verapaces general area)
-                let lng = -90.3800; // Default lng
+                let lat = 15.3725;
+                let lng = -90.3800;
                 let hasRealLocation = false;
 
                 if (this.allPoints.length > 0) {
@@ -156,52 +156,43 @@
 
                 const isOffline = !this.isOnline || this.dispatchStatus === 'completed' || this.dispatchStatus === 'delivered';
                 const dotColor = isOffline ? '#ef4444' : '#22c55e';
-                const pulseHtml = (!isOffline && hasRealLocation) ? `<div class="absolute w-[40px] h-[40px] bg-emerald-500/30 rounded-full animate-[truck-pulse_2s_ease-out_infinite]"></div>` : '';
-                const stateText = !hasRealLocation ? 'Esperando Señal...' : (isOffline ? 'Sin señal' : 'En línea');
+                const stateLabel = !hasRealLocation ? 'ESPERANDO...' : (isOffline ? 'SIN SEÑAL' : 'EN LÍNEA');
+                const stateLabelColor = !hasRealLocation ? '#f59e0b' : (isOffline ? '#f87171' : '#4ade80');
+
+                // 100% inline styles — no Tailwind classes — guaranteed to work in production
+                const pulseHtml = (!isOffline && hasRealLocation)
+                    ? `<div style="position:absolute;width:40px;height:40px;background:rgba(34,197,94,0.3);border-radius:50%;animation:truck-pulse 2s ease-out infinite;"></div>`
+                    : '';
 
                 const iconHtml = `
-                    <div class="flex flex-col items-center" style="transform: translateY(-50%);">
-                        <div class="relative flex items-center justify-center">
-                            <!-- Dual-ring high-tech pulsing sonar animation -->
+                    <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-50%);">
+                        <div style="position:relative;display:flex;align-items:center;justify-content:center;">
                             ${pulseHtml}
-                            <div class="absolute w-[44px] h-[44px] rounded-full bg-rose-500/10 border border-rose-500/20 animate-ping" style="animation-duration: 2.5s; z-index: 1;"></div>
-                            
-                            <!-- Premium Glossy circular container with deep shadows -->
-                            <div class="relative w-[42px] h-[42px] rounded-full flex items-center justify-center z-10"
-                                 style="background: linear-gradient(135deg, #ff1e56, #ffac41); border: 2px solid #ffffff; box-shadow: 0 4px 12px rgba(255, 30, 86, 0.4), inset 0 2px 4px rgba(255,255,255,0.4);">
-                                
-                                <!-- Sharp Vector Truck Icon flipped to face forward -->
-                                <span style="font-size: 19px; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.25)); transform: scaleX(-1); display: inline-block;">🚚</span>
+                            <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);animation:ping 2.5s cubic-bezier(0,0,0.2,1) infinite;z-index:1;"></div>
+                            <div style="position:relative;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;background:linear-gradient(135deg,#ff1e56,#ffac41);border:2px solid #ffffff;box-shadow:0 4px 12px rgba(255,30,86,0.4),inset 0 2px 4px rgba(255,255,255,0.4);">
+                                <span style="font-size:19px;filter:drop-shadow(0px 1px 2px rgba(0,0,0,0.25));transform:scaleX(-1);display:inline-block;">🚚</span>
                             </div>
-                            
-                            <!-- Status dot glowing pulse -->
-                            <div class="absolute -top-1 -right-1 w-[14px] h-[14px] rounded-full border-2 border-white z-20 shadow-sm flex items-center justify-center animate-pulse"
-                                 style="background-color: ${dotColor};">
-                                <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                            <div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;border:2px solid white;z-index:20;box-shadow:0 1px 3px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;background-color:${dotColor};animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;">
+                                <div style="width:6px;height:6px;border-radius:50%;background:white;"></div>
                             </div>
                         </div>
-                        
-                        <!-- Sleek Glassmorphic information plate -->
-                        <div class="mt-1.5 px-2.5 py-[3px] text-white text-[10px] font-extrabold rounded-md shadow-lg whitespace-nowrap flex items-center gap-1.5 border"
-                             style="background: rgba(15, 23, 42, 0.9); border-color: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px); font-family: 'Outfit', sans-serif;">
-                            <span style="color: #ffac41; text-shadow: 0 0 4px rgba(255,172,65,0.4);">🚛 ${this.truckName}</span>
-                            <span style="width: 1px; height: 8px; background: rgba(255,255,255,0.2);"></span>
-                            <span class="text-[8px] uppercase tracking-wider font-black" style="color: ${isOffline ? '#f87171' : '#4ade80'};">
-                                ${isOffline ? 'SIN SEÑAL' : 'EN LÍNEA'}
-                            </span>
+                        <div style="margin-top:6px;padding:3px 10px;background:rgba(15,23,42,0.9);border:1px solid rgba(255,255,255,0.15);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:'Outfit',system-ui,sans-serif;">
+                            <span style="color:#ffac41;font-size:10px;font-weight:800;text-shadow:0 0 4px rgba(255,172,65,0.4);">🚛 ${this.truckName}</span>
+                            <span style="width:1px;height:8px;background:rgba(255,255,255,0.2);"></span>
+                            <span style="font-size:8px;font-weight:900;letter-spacing:0.05em;color:${stateLabelColor};">${stateLabel}</span>
                         </div>
                     </div>
                 `;
 
                 const popupHtml = `
-                    <div style="min-width:220px;padding:12px;font-family:-apple-system,sans-serif;">
+                    <div style="min-width:220px;padding:12px;font-family:system-ui,sans-serif;">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                             <div style="width:32px;height:32px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;color:white;">🚚</div>
                             <div>
                                 <p style="margin:0;font-weight:700;font-size:14px;color:#111827;">${this.dispatchNumber}</p>
                                 <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:9999px;font-size:10px;font-weight:600;background:${isOffline ? '#fef2f2' : '#dcfce7'};color:${isOffline ? '#dc2626' : '#15803d'};">
                                     <span style="width:6px;height:6px;border-radius:50%;background:${dotColor};"></span>
-                                    ${stateText}
+                                    ${!hasRealLocation ? 'Esperando señal' : (isOffline ? 'Sin señal' : 'En línea')}
                                 </span>
                             </div>
                         </div>
@@ -214,7 +205,7 @@
                         </div>
                     </div>`;
 
-                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [44, 64], iconAnchor: [22, 32], popupAnchor: [0, -32] });
+                const newIcon = L.divIcon({ className: '', html: iconHtml, iconSize: [44, 80], iconAnchor: [22, 40], popupAnchor: [0, -40] });
 
                 if (this.truckMarker) {
                     this.truckMarker.setLatLng([lat, lng]);
@@ -222,29 +213,26 @@
                     this.truckMarker.setPopupContent(popupHtml);
                 } else {
                     this.truckMarker = L.marker([lat, lng], { icon: newIcon, zIndexOffset: 1000 }).addTo(this.map).bindPopup(popupHtml, { autoClose: false, closeOnClick: false });
-                    this.truckMarker.openPopup();
+                    if (hasRealLocation) this.truckMarker.openPopup();
                 }
 
-                // Draw/Update route tracking polyline
                 if (this.allPoints.length > 1) {
                     if (this.routeLine) {
                         this.routeLine.setLatLngs(this.allPoints);
                     } else {
                         this.routeLine = L.polyline(this.allPoints, {
-                            color: '#ef4444',
-                            weight: 4,
-                            opacity: 0.75,
-                            dashArray: '5, 8',
-                            lineJoin: 'round'
+                            color: '#ef4444', weight: 4, opacity: 0.75, dashArray: '5, 8', lineJoin: 'round'
                         }).addTo(this.map);
                     }
                 }
-                
-                if (fitBounds) this.map.setView([lat, lng], 15);
+
+                if (fitBounds && hasRealLocation) this.map.setView([lat, lng], 15);
             },
+
 
             drawOrders() {
                 if (!this.map || !this.orders || this.orders.length === 0) return;
+
 
                 this.orders.forEach(o => {
                     if (!this.isValidCoord(o.lat, o.lng)) return;
