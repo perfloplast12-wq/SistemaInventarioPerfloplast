@@ -80,7 +80,7 @@
 
         .dispatch-main {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+            grid-template-columns: minmax(0, 2.2fr) minmax(320px, 380px);
             gap: 1rem;
             align-items: start;
             position: relative;
@@ -88,8 +88,8 @@
         }
 
         .dispatch-map {
-            height: min(62dvh, 700px) !important;
-            min-height: 520px;
+            height: min(68dvh, 750px) !important;
+            min-height: 560px;
             border: 1px solid rgba(96, 165, 250, 0.18) !important;
             border-radius: 20px;
             overflow: hidden;
@@ -127,6 +127,8 @@
             border-radius: 18px;
             background: linear-gradient(180deg, rgba(10, 14, 25, 0.96), rgba(12, 18, 37, 0.96)) !important;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 52px rgba(0, 0, 0, 0.33);
+            max-height: min(68dvh, 750px);
+            overflow-y: auto;
         }
 
         .dispatch-tabs {

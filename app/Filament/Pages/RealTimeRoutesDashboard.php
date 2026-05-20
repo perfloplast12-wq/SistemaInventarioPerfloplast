@@ -452,7 +452,9 @@ class RealTimeRoutesDashboard extends Page
                 ->success()
                 ->send();
 
-            $this->selectDispatch($this->selectedDispatchId);
+            if ($this->selectedDriverId) {
+                $this->selectDriver($this->selectedDriverId);
+            }
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
@@ -521,7 +523,9 @@ class RealTimeRoutesDashboard extends Page
                 ->send();
 
             $this->dispatch('close-return-modal');
-            $this->selectDispatch($this->selectedDispatchId);
+            if ($this->selectedDriverId) {
+                $this->selectDriver($this->selectedDriverId);
+            }
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
@@ -552,7 +556,8 @@ class RealTimeRoutesDashboard extends Page
                 ->success()
                 ->send();
 
-            $this->selectDispatch($this->selectedDispatchId);
+            $this->selectedDriverId = null;
+            $this->selectedDispatchId = null;
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
