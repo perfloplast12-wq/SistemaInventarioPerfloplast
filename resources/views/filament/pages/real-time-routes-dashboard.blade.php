@@ -86,7 +86,7 @@
             $dispatches = $this->getDispatches();
         @endphp
 
-        <div class="grid lg:grid-cols-[1fr_340px] gap-4 w-full">
+        <div class="grid xl:grid-cols-[minmax(0,1fr)_340px] gap-4 items-start w-full">
             <!-- COLUMNA IZQUIERDA -->
             <div class="flex flex-col gap-4 min-w-0">
                 <!-- CABECERA PRINCIPAL -->
@@ -281,19 +281,19 @@
             </div>
 
             <!-- COLUMNA PANEL LATERAL (Detalle del Piloto) -->
-            <div class="w-[340px] shrink-0">
+            <aside class="w-full xl:w-[340px] shrink-0">
                 <div class="dispatch-card dispatch-side p-5 flex flex-col gap-5 dark:bg-[#0b1728] bg-white border dark:border-[#1e293b] border-slate-200">
                     <!-- Vista por defecto: Sin conductor seleccionado -->
                     <template x-if="!selectedPilot">
                         <div class="flex flex-col h-full py-2">
-                            <div class="flex flex-col items-center justify-center text-center p-6 bg-[#070d19]/40 border border-slate-800/80 rounded-2xl min-h-[220px]">
+                            <div class="flex flex-col items-center justify-center text-center p-6 dark:bg-[#070d19]/40 bg-slate-50 border dark:border-slate-800/80 border-slate-200 rounded-2xl min-h-[220px]">
                                 <span class="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 shadow-lg shadow-indigo-600/5">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                                     </svg>
                                 </span>
-                                <h3 class="text-sm font-extrabold text-white">Selecciona un piloto</h3>
-                                <p class="text-xs text-slate-400 max-w-xs mt-1.5 leading-relaxed">El detalle operativo aparecerá aquí con progreso, paradas y acciones de entrega.</p>
+                                <h3 class="text-sm font-extrabold dark:text-white text-slate-800">Selecciona un piloto</h3>
+                                <p class="text-xs dark:text-slate-400 text-slate-500 max-w-xs mt-1.5 leading-relaxed">El detalle operativo aparecerá aquí con progreso, paradas y acciones de entrega.</p>
                             </div>
                             
                             <!-- Listado rápido de pilotos disponibles -->
@@ -306,15 +306,15 @@
                                     @forelse($dispatches as $d)
                                         <div 
                                             wire:click="selectDriver({{ $d['driver_id'] }})"
-                                            class="flex items-center justify-between p-3.5 bg-[#070d19]/30 border border-slate-800/80 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:bg-[#13223f]/10 transition-all duration-300 group"
+                                            class="flex items-center justify-between p-3.5 dark:bg-[#070d19]/30 bg-slate-50 border dark:border-slate-800/80 border-slate-200 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:bg-[#13223f]/10 transition-all duration-300 group"
                                         >
                                             <div class="flex items-center gap-3 min-w-0">
                                                 <div class="w-9 h-9 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-xs font-black text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
                                                     {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
                                                 </div>
                                                 <div class="text-left min-w-0">
-                                                    <p class="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors truncate max-w-[160px]">{{ $d['driver_name'] }}</p>
-                                                    <p class="text-[10px] text-slate-400 truncate max-w-[190px]">{{ $d['truck_name'] }} · {{ $d['route'] }}</p>
+                                                    <p class="text-xs font-bold dark:text-white text-slate-800 group-hover:text-indigo-400 transition-colors truncate max-w-[160px]">{{ $d['driver_name'] }}</p>
+                                                    <p class="text-[10px] dark:text-slate-400 text-slate-500 truncate max-w-[190px]">{{ $d['truck_name'] }} · {{ $d['route'] }}</p>
                                                     <p class="text-[9px] text-slate-500 truncate max-w-[190px] mt-0.5">{{ $d['dispatch_count'] }} despachos · {{ $d['total_orders'] }} pedidos</p>
                                                 </div>
                                             </div>
@@ -323,11 +323,11 @@
                                             </span>
                                         </div>
                                     @empty
-                                        <div class="flex flex-col items-center justify-center text-center p-6 bg-[#070d19]/40 border border-slate-800 rounded-2xl">
+                                        <div class="flex flex-col items-center justify-center text-center p-6 dark:bg-[#070d19]/40 bg-slate-50 border dark:border-slate-800 border-slate-200 rounded-2xl">
                                             <svg class="w-8 h-8 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v2m4.5 5.5h3m-9 0h.01" />
                                             </svg>
-                                            <p class="text-xs font-bold text-slate-300">No hay pilotos para este filtro</p>
+                                            <p class="text-xs font-bold dark:text-slate-300 text-slate-700">No hay pilotos para este filtro</p>
                                             <p class="text-[10px] text-slate-500 mt-0.5">Cambia el estado o crea un nuevo despacho.</p>
                                         </div>
                                     @endforelse
@@ -344,13 +344,13 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-11 h-11 rounded-full bg-[#13223f]/80 flex items-center justify-center font-black text-sm text-white" x-text="selectedPilot.driver_initials"></div>
                                     <div class="text-left">
-                                        <h3 class="text-sm font-extrabold text-white leading-tight" x-text="selectedPilot.driver_name"></h3>
-                                        <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="selectedPilot.truck_name"></p>
+                                        <h3 class="text-sm font-extrabold dark:text-white text-slate-800 leading-tight" x-text="selectedPilot.driver_name"></h3>
+                                        <p class="text-xs dark:text-slate-400 text-slate-500 font-medium mt-0.5" x-text="selectedPilot.truck_name"></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-emerald-950/80 text-emerald-400 border border-emerald-800/60" x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
-                                    <button @click="deselectDriver()" class="text-slate-500 hover:text-white transition-colors p-1">
+                                    <button @click="deselectDriver()" class="text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors p-1">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -359,47 +359,47 @@
                             </div>
 
                             <!-- Métricas de la ruta -->
-                            <div class="grid grid-cols-4 gap-0 text-center py-4 border-y border-slate-800/60">
+                            <div class="grid grid-cols-4 gap-0 text-center py-4 border-y dark:border-slate-800/60 border-slate-200">
                                 <div class="flex flex-col">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Entregas</span>
-                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.total"></span>
+                                    <span class="text-xl font-black dark:text-white text-slate-800 mt-1" x-text="selectedPilot.stats.total"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/60">
+                                <div class="flex flex-col border-l dark:border-slate-800/60 border-slate-200">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Completadas</span>
-                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.completed"></span>
+                                    <span class="text-xl font-black dark:text-white text-slate-800 mt-1" x-text="selectedPilot.stats.completed"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/60">
+                                <div class="flex flex-col border-l dark:border-slate-800/60 border-slate-200">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Pendientes</span>
-                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.pending"></span>
+                                    <span class="text-xl font-black dark:text-white text-slate-800 mt-1" x-text="selectedPilot.stats.pending"></span>
                                 </div>
-                                <div class="flex flex-col border-l border-slate-800/60">
+                                <div class="flex flex-col border-l dark:border-slate-800/60 border-slate-200">
                                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Devoluciones</span>
-                                    <span class="text-xl font-black text-white mt-1" x-text="selectedPilot.stats.returns"></span>
+                                    <span class="text-xl font-black dark:text-white text-slate-800 mt-1" x-text="selectedPilot.stats.returns"></span>
                                 </div>
                             </div>
 
                             <!-- Botón Ver Despacho -->
                             <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : (selectedPilot.dispatch_ids && selectedPilot.dispatch_ids.length ? '/admin/dispatches/' + selectedPilot.dispatch_ids[0] : '/admin/dispatches')"
-                               class="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center block">
+                               class="w-full bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all duration-300 text-center block">
                                 Ver lista de despachos
                             </a>
 
                             <!-- Progreso de la Ruta -->
                             <div class="flex flex-col gap-2 mt-2">
                                 <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-400 font-bold">Progreso de la ruta</span>
-                                    <span class="text-white font-black" x-text="selectedPilot.progress + '%'"></span>
+                                    <span class="text-slate-500 font-bold">Progreso de la ruta</span>
+                                    <span class="dark:text-white text-slate-800 font-black" x-text="selectedPilot.progress + '%'"></span>
                                 </div>
-                                <div class="w-full h-1.5 bg-[#0b1329] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#4f46e5] transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
+                                <div class="w-full h-1.5 dark:bg-[#0b1329] bg-slate-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-violet-600 transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
                                 </div>
                             </div>
 
                             <!-- Listado de Paradas (Vertical Timeline) -->
                             <div class="flex flex-col gap-3 mt-2">
                                 <div class="flex justify-between items-center">
-                                    <h4 class="text-sm font-extrabold text-white" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
-                                    <button class="bg-[#070d19] border border-slate-800 text-[10px] text-slate-300 px-3 py-1.5 rounded-full font-bold hover:text-white transition-colors">
+                                    <h4 class="text-sm font-extrabold dark:text-white text-slate-800" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
+                                    <button class="dark:bg-[#070d19] bg-slate-50 border dark:border-slate-800 border-slate-200 text-[10px] dark:text-slate-300 text-slate-700 px-3 py-1.5 rounded-full font-bold dark:hover:text-white hover:text-slate-900 transition-colors">
                                         ⇅ Orden óptimo
                                     </button>
                                 </div>
@@ -407,7 +407,7 @@
                                 <div class="flex flex-col gap-0 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin">
                                     <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
                                         <div 
-                                            class="flex gap-4 relative cursor-pointer py-3 border-b border-slate-800/30 last:border-0"
+                                            class="flex gap-4 relative cursor-pointer py-3 border-b dark:border-slate-800/30 border-slate-200 last:border-0"
                                             @click="zoomToStop(stop)"
                                         >
                                             <!-- Indicador de Parada (Sólido con línea) -->
@@ -415,16 +415,16 @@
                                                 <div 
                                                     class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs z-10 relative"
                                                     :class="stop.status === 'completed' 
-                                                        ? 'bg-[#10b981] text-white' 
+                                                        ? 'bg-emerald-500 text-white' 
                                                         : (stop.status === 'returned' 
-                                                            ? 'bg-[#f97316] text-white' 
+                                                            ? 'bg-amber-500 text-white' 
                                                             : (stop.number === selectedPilotStops.length 
-                                                                ? 'bg-[#ef4444] text-white' 
-                                                                : 'bg-[#6366f1] text-white'))"
+                                                                ? 'bg-red-500 text-white' 
+                                                                : 'bg-violet-500 text-white'))"
                                                 >
                                                     <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                                 </div>
-                                                <div class="w-[2px] bg-slate-800/80 grow my-1 group-last:hidden"></div>
+                                                <div class="w-[2px] dark:bg-slate-800/80 bg-slate-200 grow my-1 group-last:hidden"></div>
                                             </div>
 
                                             <!-- Información de la Parada -->
@@ -432,22 +432,22 @@
                                                 <div class="flex justify-between items-start gap-2">
                                                     <template x-if="stop.number === selectedPilotStops.length">
                                                         <div class="flex flex-col">
-                                                            <p class="text-xs font-bold text-white">Destino</p>
-                                                            <p class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[160px]" x-text="stop.delivery_address"></p>
+                                                            <p class="text-xs font-bold dark:text-white text-slate-800">Destino</p>
+                                                            <p class="text-[10px] dark:text-slate-400 text-slate-500 mt-0.5 truncate max-w-[160px]" x-text="stop.delivery_address"></p>
                                                         </div>
                                                     </template>
                                                     <template x-if="stop.number !== selectedPilotStops.length">
-                                                        <p class="text-xs font-bold text-white max-w-[160px] leading-tight" x-text="stop.delivery_address"></p>
+                                                        <p class="text-xs font-bold dark:text-white text-slate-800 max-w-[160px] leading-tight" x-text="stop.delivery_address"></p>
                                                     </template>
                                                     
                                                     <div class="flex items-center gap-2 shrink-0">
                                                         <span 
                                                             class="text-[10px] font-bold"
                                                             :class="stop.status === 'completed' 
-                                                                ? 'text-[#10b981]' 
+                                                                ? 'text-emerald-500' 
                                                                 : (stop.status === 'returned' 
-                                                                    ? 'text-[#f97316]' 
-                                                                    : 'text-[#f59e0b]')"
+                                                                    ? 'text-amber-500' 
+                                                                    : 'text-violet-500')"
                                                             x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
                                                         ></span>
                                                         <span class="text-[10px] text-slate-500 font-mono" x-text="formatTime(stop, stop.number - 1)"></span>
@@ -459,21 +459,21 @@
                                 </div>
 
                                 <!-- Leyenda de Estados (Debajo de la lista) -->
-                                <div class="flex items-center justify-between pt-2 text-[10px] text-slate-400 font-medium">
+                                <div class="flex items-center justify-between pt-2 text-[10px] text-slate-500 font-medium">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                                         <span>Completado</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-[#6366f1]"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span>
                                         <span>Pendiente</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
                                         <span>Destino</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-[#f97316]"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                                         <span>Devolución</span>
                                     </div>
                                 </div>
