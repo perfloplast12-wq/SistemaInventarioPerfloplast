@@ -155,7 +155,7 @@ class RealTimeRoutesDashboard extends Page
     public function selectDriver(int $driverId): void
     {
         $this->selectedDriverId = $driverId;
-        $this->selectedDispatchId = null;
+        $this->selectedDispatchId = $this->getDriverLatestDispatchId($driverId);
 
         $this->dispatch(
             'dispatch-selected',
@@ -210,8 +210,13 @@ class RealTimeRoutesDashboard extends Page
 
         $progress = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
 
+        $dispatchIds = $dispatches->pluck('id')->unique()->values()->toArray();
+        $latestDispatchId = $dispatches->sortByDesc('dispatch_date')->first()->id;
+
         return [
             'driver_id' => $this->selectedDriverId,
+            'latest_dispatch_id' => $latestDispatchId,
+            'dispatch_ids' => $dispatchIds,
             'dispatch_count' => $dispatches->count(),
             'driver_initials' => $driverInitials,
             'driver_name' => $driverName,
@@ -392,6 +397,15 @@ class RealTimeRoutesDashboard extends Page
             })
             ->values()
             ->toArray();
+    }
+
+    protected function getDriverLatestDispatchId(int $driverId): ?int
+    {
+        return $this->dispatchesQuery()
+            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
+            ->where('driver_id', $driverId)
+            ->latest('dispatch_date')
+            ->value('id');
     }
 
     protected function dispatchesQuery(): Builder
