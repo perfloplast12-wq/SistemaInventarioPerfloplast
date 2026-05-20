@@ -4,12 +4,29 @@
             width: 100%;
             max-width: none;
             min-height: calc(100dvh - 7rem);
-            padding: 1.25rem;
+            padding: 1.5rem;
             color: #f8fafc;
-            background: #07111f;
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            border-radius: 14px;
-            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 34rem),
+                radial-gradient(circle at 78% 12%, rgba(16, 185, 129, 0.12), transparent 30rem),
+                linear-gradient(135deg, #07111f 0%, #0b1220 54%, #101827 100%);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dispatch-page::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.68), transparent 72%);
         }
 
         .dispatch-header {
@@ -17,31 +34,74 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            position: relative;
+            z-index: 1;
+        }
+
+        .dispatch-title-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.16), rgba(99, 102, 241, 0.18));
+            border: 1px solid rgba(125, 211, 252, 0.22);
+            color: #67e8f9;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(14, 165, 233, 0.12);
+        }
+
+        .dispatch-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dispatch-kpi {
+            min-height: 5.25rem;
+            padding: 1rem;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
         }
 
         .dispatch-main {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+            grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
             gap: 1rem;
             align-items: start;
+            position: relative;
+            z-index: 1;
         }
 
         .dispatch-map {
-            height: min(68dvh, 720px) !important;
-            min-height: 520px;
-            border: 1px solid rgba(148, 163, 184, 0.16) !important;
-            border-radius: 12px;
+            height: min(62dvh, 680px) !important;
+            min-height: 500px;
+            border: 1px solid rgba(125, 211, 252, 0.18) !important;
+            border-radius: 16px;
             overflow: hidden;
             background: #020617;
+            box-shadow: 0 22px 55px rgba(2, 6, 23, 0.46), inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+        }
+
+        .dispatch-map::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 401;
+            box-shadow: inset 0 0 80px rgba(2, 6, 23, 0.65);
         }
 
         .dispatch-side,
         .dispatch-route-summary {
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            border-radius: 12px;
-            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(148, 163, 184, 0.16) !important;
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.86)) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 18px 45px rgba(2, 6, 23, 0.28);
         }
 
         .dispatch-tabs {
@@ -50,14 +110,47 @@
             gap: .35rem;
             padding: .3rem;
             border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 12px;
-            background: rgba(2, 6, 23, 0.74);
+            border-radius: 14px;
+            background: rgba(2, 6, 23, 0.62);
+            backdrop-filter: blur(14px);
         }
 
         .dispatch-tab {
             min-height: 2.25rem;
-            padding: .45rem .75rem;
+            padding: .45rem .8rem;
             font-size: .78rem;
+            border-radius: 10px;
+        }
+
+        .dispatch-action {
+            min-height: 2.75rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            box-shadow: 0 16px 35px rgba(14, 165, 233, 0.2);
+        }
+
+        .dispatch-action:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .dispatch-driver-card {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 14px;
+        }
+
+        .dispatch-driver-card:hover {
+            border-color: rgba(34, 211, 238, 0.42);
+            background: rgba(15, 23, 42, 0.82);
+        }
+
+        .dispatch-empty {
+            min-height: 12rem;
+            border: 1px dashed rgba(148, 163, 184, 0.2);
+            border-radius: 14px;
+            background: rgba(2, 6, 23, 0.28);
         }
 
         @media (max-width: 1180px) {
@@ -68,17 +161,25 @@
             .dispatch-map {
                 min-height: 430px;
             }
+
+            .dispatch-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 700px) {
             .dispatch-page {
                 padding: .85rem;
-                border-radius: 10px;
+                border-radius: 12px;
             }
 
             .dispatch-header {
                 align-items: stretch;
                 flex-direction: column;
+            }
+
+            .dispatch-kpis {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -88,19 +189,27 @@
         style="font-family: 'Outfit', sans-serif;"
     >
         <!-- CABECERA: Filtros y Botones -->
+        @php
+            $stats = $this->getTabsStats();
+            $dispatches = $this->getDispatches();
+        @endphp
         <div class="dispatch-header">
-            <div>
-                <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                    <span class="text-3xl">📡</span> Mapa de Rutas en Tiempo Real
-                </h2>
-                <p class="text-sm text-slate-400 font-medium">Visualiza la ubicación de los pilotos y el estado de sus entregas</p>
+            <div class="flex items-center gap-4 min-w-0">
+                <span class="dispatch-title-icon shrink-0">
+                    <x-heroicon-o-map class="w-6 h-6" />
+                </span>
+                <div class="min-w-0">
+                    <h2 class="text-2xl font-black tracking-tight text-white leading-tight">
+                        Mapa de Rutas en Tiempo Real
+                    </h2>
+                    <p class="text-sm text-slate-400 font-medium">Ubicacion de pilotos, progreso de entregas y acciones de ruta en una sola vista.</p>
+                </div>
             </div>
-            
+
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Filtros Tabificados -->
                 <div class="dispatch-tabs">
                     @php
-                        $stats = $this->getTabsStats();
                         $tabs = [
                             'todos' => ['label' => 'Todos', 'color' => 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20'],
                             'in_progress' => ['label' => 'En Proceso', 'color' => 'bg-blue-600/20 text-blue-400 border border-blue-500/20'],
@@ -112,7 +221,7 @@
                     @foreach($tabs as $key => $t)
                         <button 
                             wire:click="setTab('{{ $key }}')"
-                            class="dispatch-tab rounded-lg font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800' }}"
+                            class="dispatch-tab font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-sky-500 text-white border-sky-400 shadow-lg shadow-sky-500/15' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800/80' }}"
                         >
                             {{ $t['label'] }}
                             <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300' }}">
@@ -124,9 +233,45 @@
 
                 <!-- Botones Accionadores -->
                 <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
-                   class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl shadow-lg hover:shadow-indigo-500/20 border border-indigo-500 font-bold text-xs transition-all duration-300 flex items-center gap-2">
-                    <span>➕</span> Nuevo Despacho
+                   class="dispatch-action px-4 py-2.5 border border-sky-300/30 font-bold text-xs transition-all duration-300 flex items-center gap-2">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Nuevo Despacho
                 </a>
+            </div>
+        </div>
+
+        <div class="dispatch-kpis">
+            <div class="dispatch-kpi">
+                <p class="text-[11px] font-bold text-slate-400">Rutas de hoy</p>
+                <div class="mt-2 flex items-end justify-between gap-3">
+                    <p class="text-2xl font-black text-white">{{ $stats['todos'] ?? 0 }}</p>
+                    <x-heroicon-o-calendar-days class="w-5 h-5 text-sky-300" />
+                </div>
+                <p class="mt-2 text-[11px] font-semibold text-sky-300">Despachos programados</p>
+            </div>
+            <div class="dispatch-kpi">
+                <p class="text-[11px] font-bold text-slate-400">En ruta</p>
+                <div class="mt-2 flex items-end justify-between gap-3">
+                    <p class="text-2xl font-black text-white">{{ $stats['in_progress'] ?? 0 }}</p>
+                    <x-heroicon-o-truck class="w-5 h-5 text-blue-300" />
+                </div>
+                <p class="mt-2 text-[11px] font-semibold text-blue-300">Pilotos transmitiendo</p>
+            </div>
+            <div class="dispatch-kpi">
+                <p class="text-[11px] font-bold text-slate-400">Completados</p>
+                <div class="mt-2 flex items-end justify-between gap-3">
+                    <p class="text-2xl font-black text-white">{{ $stats['completed'] ?? 0 }}</p>
+                    <x-heroicon-o-check-circle class="w-5 h-5 text-emerald-300" />
+                </div>
+                <p class="mt-2 text-[11px] font-semibold text-emerald-300">Listos para liquidar</p>
+            </div>
+            <div class="dispatch-kpi">
+                <p class="text-[11px] font-bold text-slate-400">Pendientes</p>
+                <div class="mt-2 flex items-end justify-between gap-3">
+                    <p class="text-2xl font-black text-white">{{ $stats['pending'] ?? 0 }}</p>
+                    <x-heroicon-o-clock class="w-5 h-5 text-amber-300" />
+                </div>
+                <p class="mt-2 text-[11px] font-semibold text-amber-300">Sin iniciar o en cola</p>
             </div>
         </div>
 
@@ -137,6 +282,17 @@
                 <!-- CONTENEDOR MAPA -->
                 <div class="dispatch-map relative w-full shadow-xl">
                     <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
+
+                    <div class="absolute left-4 top-4 z-[999] flex flex-wrap items-center gap-2">
+                        <div class="rounded-xl border border-slate-700/70 bg-slate-950/88 px-3 py-2 shadow-2xl backdrop-blur-md">
+                            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cobertura GPS</p>
+                            <p class="text-xs font-bold text-white">Guatemala / Rutas activas</p>
+                        </div>
+                        <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 shadow-2xl backdrop-blur-md">
+                            <p class="text-[10px] font-black uppercase tracking-wider text-emerald-300">{{ $stats['in_progress'] ?? 0 }} en ruta</p>
+                            <p class="text-[10px] font-semibold text-emerald-100/80">Actualizacion cada 8s</p>
+                        </div>
+                    </div>
 
                     <!-- Overlay de Piloto Activo en la esquina inferior izquierda -->
                     <template x-if="selectedPilot">
@@ -195,36 +351,49 @@
             <!-- COLUMNA DETALLES & ACCIONES (3 Columns) -->
             <div class="flex flex-col gap-4 min-w-0">
                 <!-- PANEL LATERAL DE DETALLES DEL PILOTO -->
-                <div class="dispatch-side p-5 shadow-xl flex flex-col gap-5" style="min-height: min(68dvh, 720px);">
+                <div class="dispatch-side p-5 shadow-xl flex flex-col gap-5" style="min-height: min(62dvh, 680px);">
                     <template x-if="!selectedPilot">
-                        <div class="flex flex-col items-center justify-center h-full text-center py-20">
-                            <span class="text-5xl mb-4 animate-bounce">🚛</span>
-                            <h3 class="text-sm font-bold text-white">Ningún piloto seleccionado</h3>
-                            <p class="text-xs text-slate-500 max-w-xs mt-1.5 leading-relaxed">Selecciona un piloto activo en el listado inferior o haz clic en su camión en el mapa para ver sus detalles en tiempo real.</p>
+                        <div class="flex flex-col h-full py-2">
+                            <div class="dispatch-empty flex flex-col items-center justify-center text-center px-6">
+                                <span class="dispatch-title-icon mb-4">
+                                    <x-heroicon-o-cursor-arrow-rays class="w-6 h-6" />
+                                </span>
+                                <h3 class="text-sm font-extrabold text-white">Selecciona un piloto</h3>
+                                <p class="text-xs text-slate-400 max-w-xs mt-1.5 leading-relaxed">El detalle operativo aparecera aqui con progreso, paradas y acciones de entrega.</p>
+                            </div>
                             
                             <!-- Listado rápido de pilotos disponibles -->
                             <div class="w-full mt-8 flex flex-col gap-3">
-                                <h4 class="text-[10px] font-black text-slate-400 tracking-wider uppercase text-left">Pilotos Disponibles</h4>
+                                <div class="flex items-center justify-between gap-3">
+                                    <h4 class="text-[10px] font-black text-slate-400 tracking-wider uppercase text-left">Pilotos disponibles</h4>
+                                    <span class="text-[10px] font-bold text-slate-500">{{ count($dispatches) }} rutas</span>
+                                </div>
                                 <div class="flex flex-col gap-2 overflow-y-auto max-h-[250px]">
-                                    @foreach($this->getDispatches() as $d)
+                                    @forelse($dispatches as $d)
                                         <div 
                                             wire:click="selectDispatch({{ $d['id'] }})"
-                                            class="flex items-center justify-between p-3 bg-slate-950/80 border border-slate-800 hover:border-indigo-500 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group"
+                                            class="dispatch-driver-card flex items-center justify-between p-3 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group"
                                         >
                                             <div class="flex items-center gap-3">
-                                                <div class="w-8 h-8 rounded-lg bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-xs font-black text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                                <div class="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-center text-xs font-black text-sky-300 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300">
                                                     {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
                                                 </div>
-                                                <div class="text-left">
+                                                <div class="text-left min-w-0">
                                                     <p class="text-xs font-bold text-white">{{ $d['driver_name'] }}</p>
-                                                    <p class="text-[10px] text-slate-400">{{ $d['truck_name'] }} | {{ $d['route'] }}</p>
+                                                    <p class="text-[10px] text-slate-400 truncate max-w-[190px]">{{ $d['truck_name'] }} / {{ $d['route'] }}</p>
                                                 </div>
                                             </div>
                                             <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $d['status'] === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20' }}">
                                                 {{ $d['status'] === 'in_progress' ? 'En ruta' : 'Terminado' }}
                                             </span>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="dispatch-empty flex flex-col items-center justify-center text-center p-5">
+                                            <x-heroicon-o-inbox class="w-7 h-7 text-slate-500" />
+                                            <p class="mt-2 text-xs font-bold text-slate-300">No hay pilotos para este filtro</p>
+                                            <p class="mt-1 text-[11px] text-slate-500">Cambia el estado o crea un nuevo despacho.</p>
+                                        </div>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
@@ -676,7 +845,7 @@
                                     <div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid white;color:white;font-family:'Outfit',sans-serif;font-weight:900;font-size:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.5);">
                                         ${isCompleted ? '✓' : s.number}
                                     </div>
-                                    <div style="margin-top:2px;padding:1px 5px;background:rgba(15,23,42,0.85);color:white;font-[8px];font-weight:bold;border-radius:4px;white-space:nowrap;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="margin-top:2px;padding:1px 5px;background:rgba(15,23,42,0.85);color:white;font-size:8px;font-weight:bold;border-radius:4px;white-space:nowrap;border:1px solid rgba(255,255,255,0.05);">
                                         P. ${s.number}
                                     </div>
                                 </div>
