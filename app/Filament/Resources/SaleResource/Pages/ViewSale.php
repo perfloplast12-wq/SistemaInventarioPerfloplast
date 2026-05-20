@@ -61,7 +61,7 @@ class ViewSale extends ViewRecord
                 ->icon('heroicon-o-printer')
                 ->color('info')
                 ->visible(fn () => $this->record->status === 'confirmed' && \App\Models\Invoice::where('sale_id', $this->record->id)->exists())
-                ->url(fn () => {
+                ->url(function () {
                     $invoice = \App\Models\Invoice::where('sale_id', $this->record->id)->first();
                     return $invoice ? route('invoices.print', ['invoice' => $invoice->id]) : '#';
                 })
