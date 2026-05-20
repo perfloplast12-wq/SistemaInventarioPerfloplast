@@ -5,14 +5,14 @@
             max-width: none;
             min-height: calc(100dvh - 7rem);
             padding: 1.5rem;
-            color: #f8fafc;
+            color: #eef2ff;
             background:
-                radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 34rem),
-                radial-gradient(circle at 78% 12%, rgba(16, 185, 129, 0.12), transparent 30rem),
-                linear-gradient(135deg, #07111f 0%, #0b1220 54%, #101827 100%);
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 30rem),
+                radial-gradient(circle at 82% 12%, rgba(168, 85, 247, 0.14), transparent 30rem),
+                linear-gradient(135deg, #050813 0%, #07101f 46%, #111827 100%);
             border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 18px;
-            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+            border-radius: 22px;
+            box-shadow: 0 28px 84px rgba(0, 0, 0, 0.28);
             position: relative;
             overflow: hidden;
         }
@@ -23,10 +23,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+                linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
             background-size: 44px 44px;
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.68), transparent 72%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 72%);
         }
 
         .dispatch-header {
@@ -39,38 +39,48 @@
         }
 
         .dispatch-title-icon {
-            width: 2.75rem;
-            height: 2.75rem;
+            width: 3rem;
+            height: 3rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(34, 211, 238, 0.16), rgba(99, 102, 241, 0.18));
-            border: 1px solid rgba(125, 211, 252, 0.22);
-            color: #67e8f9;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(14, 165, 233, 0.12);
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(168, 85, 247, 0.16));
+            border: 1px solid rgba(96, 165, 250, 0.22);
+            color: #c7d2fe;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 38px rgba(56, 189, 248, 0.12);
         }
 
         .dispatch-kpis {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: .75rem;
+            gap: 1rem;
             position: relative;
             z-index: 1;
         }
 
         .dispatch-kpi {
-            min-height: 5.25rem;
-            padding: 1rem;
-            border-radius: 14px;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+            min-height: 5.5rem;
+            padding: 1.1rem 1.15rem;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(10, 14, 26, 0.92));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 20px 50px rgba(3, 8, 19, 0.45);
+        }
+
+        .dispatch-kpi p:first-child {
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .dispatch-kpi .text-2xl {
+            color: #f8fafc;
         }
 
         .dispatch-main {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
             gap: 1rem;
             align-items: start;
             position: relative;
@@ -78,13 +88,14 @@
         }
 
         .dispatch-map {
-            height: min(62dvh, 680px) !important;
-            min-height: 500px;
-            border: 1px solid rgba(125, 211, 252, 0.18) !important;
-            border-radius: 16px;
+            height: min(62dvh, 700px) !important;
+            min-height: 520px;
+            border: 1px solid rgba(96, 165, 250, 0.18) !important;
+            border-radius: 20px;
             overflow: hidden;
-            background: #020617;
-            box-shadow: 0 22px 55px rgba(2, 6, 23, 0.46), inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+            background: radial-gradient(circle at 24% 18%, rgba(59, 130, 246, 0.14), transparent 28%),
+                linear-gradient(180deg, rgba(8, 14, 25, 0.96), rgba(6, 9, 18, 0.98));
+            box-shadow: 0 24px 70px rgba(2, 6, 23, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         }
 
         .dispatch-map::after {
@@ -93,41 +104,65 @@
             inset: 0;
             pointer-events: none;
             z-index: 401;
-            box-shadow: inset 0 0 80px rgba(2, 6, 23, 0.65);
+            background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 32%),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(0, 0, 0, 0.16));
+            box-shadow: inset 0 0 72px rgba(2, 6, 23, 0.55);
+        }
+
+        .dispatch-map .leaflet-container,
+        .dispatch-map .leaflet-pane,
+        .dispatch-map .leaflet-marker-pane,
+        .dispatch-map .leaflet-shadow-pane,
+        .dispatch-map .leaflet-overlay-pane {
+            z-index: 0;
+        }
+
+        .dispatch-map .leaflet-control {
+            z-index: 450 !important;
         }
 
         .dispatch-side,
         .dispatch-route-summary {
             border: 1px solid rgba(148, 163, 184, 0.16) !important;
-            border-radius: 16px;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.86)) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 18px 45px rgba(2, 6, 23, 0.28);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(10, 14, 25, 0.96), rgba(12, 18, 37, 0.96)) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 52px rgba(0, 0, 0, 0.33);
         }
 
         .dispatch-tabs {
             display: flex;
             flex-wrap: wrap;
-            gap: .35rem;
-            padding: .3rem;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 14px;
-            background: rgba(2, 6, 23, 0.62);
-            backdrop-filter: blur(14px);
+            gap: .45rem;
+            padding: .4rem;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 16px;
+            background: rgba(8, 14, 25, 0.8);
+            backdrop-filter: blur(18px);
         }
 
         .dispatch-tab {
-            min-height: 2.25rem;
-            padding: .45rem .8rem;
+            min-height: 2.35rem;
+            padding: .55rem 1rem;
             font-size: .78rem;
-            border-radius: 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            color: #cbd5e1;
+            background: rgba(15, 23, 42, 0.72);
+        }
+
+        .dispatch-tab:hover {
+            color: white;
+            background: rgba(59, 130, 246, 0.18);
+            border-color: rgba(59, 130, 246, 0.26);
         }
 
         .dispatch-action {
             min-height: 2.75rem;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            border-radius: 16px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
-            box-shadow: 0 16px 35px rgba(14, 165, 233, 0.2);
+            box-shadow: 0 18px 38px rgba(59, 130, 246, 0.22);
         }
 
         .dispatch-action:hover {
@@ -136,30 +171,36 @@
         }
 
         .dispatch-driver-card {
-            background: rgba(2, 6, 23, 0.5);
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            border-radius: 14px;
+            background: rgba(8, 16, 34, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 18px;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
         }
 
         .dispatch-driver-card:hover {
-            border-color: rgba(34, 211, 238, 0.42);
-            background: rgba(15, 23, 42, 0.82);
+            border-color: rgba(168, 85, 247, 0.35);
+            background: rgba(15, 23, 42, 0.92);
+            transform: translateY(-1px);
+        }
+
+        .dispatch-driver-card .status-badge {
+            min-width: 5.2rem;
         }
 
         .leaflet-control-zoom a {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 14px;
             background: rgba(15, 23, 42, 0.96);
             color: #ffffff !important;
             border: 1px solid rgba(255, 255, 255, 0.14);
             box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
             line-height: 36px;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
         }
 
         .leaflet-control-zoom a:hover {
-            background: linear-gradient(135deg, #2563eb, #8b5cf6) !important;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9) !important;
             color: #ffffff !important;
         }
 
@@ -185,19 +226,20 @@
 
         .dispatch-map-buttons {
             display: inline-flex;
-            gap: 0.5rem;
+            gap: 0.55rem;
             flex-wrap: wrap;
         }
 
         .dispatch-map-buttons button {
-            padding: 0.55rem 0.9rem;
+            padding: 0.55rem 1rem;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(15, 23, 42, 0.86);
             color: #e2e8f0;
             transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            white-space: nowrap;
         }
 
         .dispatch-map-buttons button:hover {
@@ -211,13 +253,22 @@
             background: linear-gradient(135deg, #22c55e, #06b6d4);
             border-color: rgba(34, 197, 94, 0.75);
             color: white;
+            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.2);
         }
 
         .dispatch-empty {
             min-height: 12rem;
             border: 1px dashed rgba(148, 163, 184, 0.2);
-            border-radius: 14px;
+            border-radius: 16px;
             background: rgba(2, 6, 23, 0.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .dispatch-empty p {
+            color: #cbd5e1;
         }
 
         @media (max-width: 1180px) {
@@ -516,7 +567,7 @@
                             </div>
 
                             <!-- Botón Ver Despacho -->
-                            <a :href="'/admin/dispatches/' + selectedPilot.id"
+                            <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : (selectedPilot.dispatch_ids && selectedPilot.dispatch_ids.length ? '/admin/dispatches/' + selectedPilot.dispatch_ids[0] : '/admin/dispatches')"
                                class="w-full text-center border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-600/10 text-indigo-400 font-bold text-xs py-2 rounded-xl transition-all duration-300">
                                 Ver lista de despachos
                             </a>
@@ -882,16 +933,20 @@
 
                         pilots = uniquePilots;
 
-                        // Limpiar marcadores que ya no estén activos (usando dispatch_id de los pilotos seleccionados)
-                        const activeIds = pilots.map(p => p.dispatch_id);
+                        const activeIds = pilots.map(p => {
+                            const key = (p.driver_id !== undefined && p.driver_id !== null) ? String(p.driver_id) : (p.driver_name || '').trim().toLowerCase();
+                            return key;
+                        });
+
                         Object.keys(this.activeMarkers).forEach(id => {
-                            if (!activeIds.includes(parseInt(id))) {
+                            if (!activeIds.includes(id)) {
                                 this.map.removeLayer(this.activeMarkers[id]);
                                 delete this.activeMarkers[id];
                             }
                         });
 
                         pilots.forEach(p => {
+                            const key = (p.driver_id !== undefined && p.driver_id !== null) ? String(p.driver_id) : (p.driver_name || '').trim().toLowerCase();
                             const iconHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
                                     <div style="position:relative;">
@@ -913,15 +968,15 @@
                                 iconAnchor: [40, 25]
                             });
 
-                            if (this.activeMarkers[p.dispatch_id]) {
-                                this.activeMarkers[p.dispatch_id].setLatLng([p.lat, p.lng]);
+                            if (this.activeMarkers[key]) {
+                                this.activeMarkers[key].setLatLng([p.lat, p.lng]);
                             } else {
                                 const marker = L.marker([p.lat, p.lng], { icon: customIcon })
                                     .addTo(this.map)
                                     .on('click', () => {
                                         this.$wire.selectDriver(p.driver_id);
                                     });
-                                this.activeMarkers[p.dispatch_id] = marker;
+                                this.activeMarkers[key] = marker;
                             }
                         });
 
@@ -1053,15 +1108,31 @@
                         this.$wire.initReturnModal(this.activeStopId);
                     },
 
+                    getActiveDispatchId() {
+                        return this.selectedPilot?.latest_dispatch_id || (this.selectedPilot?.dispatch_ids?.length ? this.selectedPilot.dispatch_ids[0] : null);
+                    },
+
                     finishActiveDispatch() {
+                        const dispatchId = this.getActiveDispatchId();
+                        if (!dispatchId) {
+                            alert('No se encontró un despacho válido para este piloto.');
+                            return;
+                        }
+
                         if (confirm('¿Desea liquidar el despacho de este piloto? Se generarán las facturas correspondientes para los pedidos.')) {
-                            this.$wire.finishDispatchGlobal(this.selectedPilot.id);
+                            this.$wire.finishDispatchGlobal(dispatchId);
                         }
                     },
 
                     cancelActiveDispatch() {
+                        const dispatchId = this.getActiveDispatchId();
+                        if (!dispatchId) {
+                            alert('No se encontró un despacho válido para este piloto.');
+                            return;
+                        }
+
                         if (confirm('¡ATENCIÓN! ¿Está seguro de cancelar este despacho? Se revertirá la transferencia de stock de inventario.')) {
-                            this.$wire.cancelDispatchGlobal(this.selectedPilot.id);
+                            this.$wire.cancelDispatchGlobal(dispatchId);
                         }
                     },
 
