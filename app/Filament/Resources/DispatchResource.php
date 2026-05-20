@@ -531,7 +531,7 @@ class DispatchResource extends Resource
                     ->icon('heroicon-o-map')
                     ->color('success')
                     ->iconButton()
-                    ->visible(fn ($record) => !auth()->user()?->hasRole('conductor'))
+                    ->visible(fn ($record) => $record->status === 'in_progress' && !auth()->user()?->hasRole('conductor'))
                     ->modalHeading(fn ($record) => 'Ruta Diaria del Camión: ' . ($record->truck?->name ?? 'Sin asignar'))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar')

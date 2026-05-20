@@ -1,0 +1,713 @@
+<x-filament-panels::page>
+    <div 
+        x-data="realTimeDashboardComponent()"
+        class="flex flex-col gap-6 text-white bg-slate-950 rounded-2xl p-6 shadow-2xl border border-slate-800"
+        style="font-family: 'Outfit', sans-serif; min-height: 850px; background-color: #0b132b;"
+    >
+        <!-- CABECERA: Filtros y Botones -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                    <span class="text-3xl">📡</span> Mapa de Rutas en Tiempo Real
+                </h2>
+                <p class="text-sm text-slate-400 font-medium">Visualiza la ubicación de los pilotos y el estado de sus entregas</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Filtros Tabificados -->
+                <div class="flex items-center bg-slate-900/95 border border-slate-800 p-1 rounded-xl shadow-inner gap-1">
+                    @php
+                        $stats = $this->getTabsStats();
+                        $tabs = [
+                            'todos' => ['label' => 'Todos', 'color' => 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20'],
+                            'in_progress' => ['label' => 'En Proceso', 'color' => 'bg-blue-600/20 text-blue-400 border border-blue-500/20'],
+                            'completed' => ['label' => 'Completados', 'color' => 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20'],
+                            'pending' => ['label' => 'Pendientes', 'color' => 'bg-amber-600/20 text-amber-400 border border-amber-500/20'],
+                            'delivered' => ['label' => 'Entregados', 'color' => 'bg-slate-600/20 text-slate-400 border border-slate-500/20'],
+                        ];
+                    @endphp
+                    @foreach($tabs as $key => $t)
+                        <button 
+                            wire:click="setTab('{{ $key }}')"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 border {{ $activeTab === $key ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-slate-800' }}"
+                        >
+                            {{ $t['label'] }}
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $activeTab === $key ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300' }}">
+                                {{ $stats[$key] ?? 0 }}
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- Botones Accionadores -->
+                <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
+                   class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl shadow-lg hover:shadow-indigo-500/20 border border-indigo-500 font-bold text-xs transition-all duration-300 flex items-center gap-2">
+                    <span>➕</span> Nuevo Despacho
+                </a>
+            </div>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL: MAPA (70%) + DETALLES (30%) -->
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+            <!-- COLUMNA MAPA (7 Columns) -->
+            <div class="lg:col-span-7 flex flex-col gap-6 relative">
+                <!-- CONTENEDOR MAPA -->
+                <div class="relative w-full rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900" style="height: 600px;">
+                    <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
+
+                    <!-- Overlay de Piloto Activo en la esquina inferior izquierda -->
+                    <template x-if="selectedPilot">
+                        <div class="absolute bottom-4 left-4 z-[999] bg-slate-950/95 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-2xl flex items-center gap-4 transition-all duration-500 max-w-sm">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-xl animate-pulse">
+                                🚚
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-black text-indigo-400 tracking-wider uppercase" x-text="selectedPilot.dispatch_number"></span>
+                                <span class="text-sm font-bold text-white leading-tight" x-text="selectedPilot.driver_name"></span>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-[10px] text-emerald-400 font-bold" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
+                                    <span class="text-[10px] text-slate-500">|</span>
+                                    <span class="text-[10px] text-slate-400 font-medium" x-text="'Vehículo: ' + selectedPilot.truck_name"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- RESUMEN HORIZONTAL DE LA RUTA (Abajo del mapa) -->
+                <template x-if="selectedPilotStops.length > 0">
+                    <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
+                        <h4 class="text-xs font-black text-slate-400 tracking-widest uppercase flex items-center gap-1.5">
+                            🏁 Resumen de la ruta de <span class="text-indigo-400 font-bold" x-text="selectedPilot.driver_name"></span>
+                        </h4>
+                        
+                        <!-- Timeline horizontal de paradas -->
+                        <div class="relative flex items-center justify-between w-full mt-4 px-6 overflow-x-auto pb-4">
+                            <!-- Track Line detrás -->
+                            <div class="absolute left-10 right-10 h-[2px] bg-slate-800 z-0" style="top: 14px;"></div>
+                            
+                            <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
+                                <div class="flex flex-col items-center z-10 min-w-[120px] text-center group cursor-pointer" @click="zoomToStop(stop)">
+                                    <!-- Círculo del Punto -->
+                                    <div 
+                                        class="w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] transition-all duration-300 border-2 shadow-lg"
+                                        :class="stop.status === 'completed' 
+                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 hover:bg-emerald-500 hover:text-white' 
+                                            : (stop.status === 'returned' 
+                                                ? 'bg-amber-500/20 text-amber-400 border-amber-500 hover:bg-amber-500 hover:text-white' 
+                                                : 'bg-indigo-950 text-indigo-400 border-indigo-700 hover:bg-indigo-600 hover:text-white')"
+                                    >
+                                        <span x-text="stop.status === 'completed' ? '✓' : stop.number"></span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-white mt-2 leading-tight block group-hover:text-indigo-400" x-text="stop.customer_name.substring(0, 15) + '...'"></span>
+                                    <span class="text-[9px] font-medium text-slate-400 leading-tight block mt-0.5" x-text="stop.delivery_address.substring(0, 20) + '...'"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- COLUMNA DETALLES & ACCIONES (3 Columns) -->
+            <div class="lg:col-span-3 flex flex-col gap-6">
+                <!-- PANEL LATERAL DE DETALLES DEL PILOTO -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6" style="min-height: 600px;">
+                    <template x-if="!selectedPilot">
+                        <div class="flex flex-col items-center justify-center h-full text-center py-20">
+                            <span class="text-5xl mb-4 animate-bounce">🚛</span>
+                            <h3 class="text-sm font-bold text-white">Ningún piloto seleccionado</h3>
+                            <p class="text-xs text-slate-500 max-w-xs mt-1.5 leading-relaxed">Selecciona un piloto activo en el listado inferior o haz clic en su camión en el mapa para ver sus detalles en tiempo real.</p>
+                            
+                            <!-- Listado rápido de pilotos disponibles -->
+                            <div class="w-full mt-8 flex flex-col gap-3">
+                                <h4 class="text-[10px] font-black text-slate-400 tracking-wider uppercase text-left">Pilotos Disponibles</h4>
+                                <div class="flex flex-col gap-2 overflow-y-auto max-h-[250px]">
+                                    @foreach($this->getDispatches() as $d)
+                                        <div 
+                                            wire:click="selectDispatch({{ $d['id'] }})"
+                                            class="flex items-center justify-between p-3 bg-slate-950/80 border border-slate-800 hover:border-indigo-500 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-0.5 group"
+                                        >
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-xs font-black text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                                    {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
+                                                </div>
+                                                <div class="text-left">
+                                                    <p class="text-xs font-bold text-white">{{ $d['driver_name'] }}</p>
+                                                    <p class="text-[10px] text-slate-400">{{ $d['truck_name'] }} | {{ $d['route'] }}</p>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $d['status'] === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20' }}">
+                                                {{ $d['status'] === 'in_progress' ? 'En ruta' : 'Terminado' }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="selectedPilot">
+                        <div class="flex flex-col gap-6">
+                            <!-- Ficha del Piloto -->
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 border-2 border-white/20 flex items-center justify-center font-black text-sm text-white shadow-lg shadow-indigo-600/20" x-text="selectedPilot.driver_initials"></div>
+                                    <div>
+                                        <h3 class="text-sm font-extrabold text-white" x-text="selectedPilot.driver_name"></h3>
+                                        <p class="text-[11px] text-slate-400 font-medium" x-text="selectedPilot.truck_name"></p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase" 
+                                      :class="selectedPilot.status === 'in_progress' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20'"
+                                      x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
+                            </div>
+
+                            <!-- Métricas de la ruta -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-[10px] text-slate-500 font-bold block">Entregas</span>
+                                    <span class="text-base font-black text-white block mt-0.5" x-text="selectedPilot.stats.total"></span>
+                                </div>
+                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-[10px] text-emerald-500 font-bold block">Completadas</span>
+                                    <span class="text-base font-black text-emerald-400 block mt-0.5" x-text="selectedPilot.stats.completed"></span>
+                                </div>
+                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-[10px] text-indigo-500 font-bold block">Pendientes</span>
+                                    <span class="text-base font-black text-indigo-400 block mt-0.5" x-text="selectedPilot.stats.pending"></span>
+                                </div>
+                                <div class="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl">
+                                    <span class="text-[10px] text-amber-500 font-bold block">Devoluciones</span>
+                                    <span class="text-base font-black text-amber-400 block mt-0.5" x-text="selectedPilot.stats.returns"></span>
+                                </div>
+                            </div>
+
+                            <!-- Botón Ver Despacho -->
+                            <a :href="'/admin/dispatches/' + selectedPilot.id"
+                               class="w-full text-center border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-600/10 text-indigo-400 font-bold text-xs py-2 rounded-xl transition-all duration-300">
+                                Ver lista de despachos
+                            </a>
+
+                            <!-- Progreso -->
+                            <div class="flex flex-col gap-1.5 border-t border-slate-800 pt-4">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400 font-bold">Progreso de la ruta</span>
+                                    <span class="text-white font-black" x-text="selectedPilot.progress + '%'"></span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/50">
+                                    <div class="h-full bg-gradient-to-r from-indigo-600 to-violet-500 transition-all duration-700" :style="'width: ' + selectedPilot.progress + '%'"></div>
+                                </div>
+                            </div>
+
+                            <!-- Listado de Paradas (Vertical Timeline) -->
+                            <div class="flex flex-col gap-3 border-t border-slate-800 pt-4">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="text-[11px] font-black text-slate-400 tracking-wider uppercase" x-text="'Paradas (' + selectedPilotStops.length + ')'"></h4>
+                                    <button class="text-[10px] text-indigo-400 font-bold hover:underline">⇅ Orden óptimo</button>
+                                </div>
+
+                                <div class="flex flex-col gap-3 overflow-y-auto max-h-[280px] pr-1">
+                                    <template x-for="stop in selectedPilotStops" :key="stop.id">
+                                        <div 
+                                            class="flex gap-3 relative group"
+                                            :class="activeStopId === stop.id ? 'bg-slate-950/60 p-2.5 rounded-xl border border-indigo-500/20' : ''"
+                                        >
+                                            <!-- Indicador de línea de tiempo conector vertical -->
+                                            <div class="flex flex-col items-center">
+                                                <div 
+                                                    class="w-5 h-5 rounded-full flex items-center justify-center font-black text-[9px] transition-all duration-300 border-2"
+                                                    :class="stop.status === 'completed' 
+                                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500' 
+                                                        : (stop.status === 'returned' 
+                                                            ? 'bg-amber-500/20 text-amber-400 border-amber-500' 
+                                                            : 'bg-indigo-950 text-indigo-400 border-indigo-700')"
+                                                >
+                                                    <span x-text="stop.status === 'completed' ? '✓' : stop.number"></span>
+                                                </div>
+                                                <div class="w-[1.5px] bg-slate-800 grow my-1 group-last:hidden"></div>
+                                            </div>
+
+                                            <!-- Información de la parada -->
+                                            <div class="flex flex-col text-left grow cursor-pointer" @click="zoomToStop(stop)">
+                                                <div class="flex justify-between items-start gap-1">
+                                                    <p class="text-xs font-extrabold text-white leading-tight" x-text="stop.customer_name"></p>
+                                                    <span 
+                                                        class="px-1.5 py-0.5 rounded text-[8px] font-black whitespace-nowrap"
+                                                        :class="stop.status === 'completed' 
+                                                            ? 'bg-emerald-500/20 text-emerald-400' 
+                                                            : (stop.status === 'returned' 
+                                                                ? 'bg-amber-500/20 text-amber-400' 
+                                                                : 'bg-indigo-950 text-indigo-400')"
+                                                        x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"
+                                                    ></span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-400 leading-snug mt-0.5" x-text="stop.delivery_address"></p>
+                                                <p class="text-[9px] text-slate-500 mt-1 font-bold" x-text="'Monto: Q ' + parseFloat(stop.total).toLocaleString('es-GT', {minimumFractionDigits: 2})"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Panel de Acciones Rápidas (Solo si el despacho está en proceso) -->
+                            <template x-if="selectedPilot.status === 'in_progress' || selectedPilot.status === 'completed'">
+                                <div class="border-t border-slate-800 pt-4 flex flex-col gap-3">
+                                    <h4 class="text-[11px] font-black text-slate-400 tracking-wider uppercase text-left">Acciones rápidas</h4>
+                                    
+                                    <div class="flex flex-col gap-2">
+                                        <!-- Completar parada seleccionada -->
+                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
+                                            <button 
+                                                @click="completeSelectedStop()"
+                                                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/10 transition-all duration-300"
+                                            >
+                                                <span>✓</span> Finalizar Entrega (P. <span x-text="selectedStop.number"></span>)
+                                            </button>
+                                        </template>
+
+                                        <!-- Reportar Devolución para la parada activa -->
+                                        <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
+                                            <button 
+                                                @click="reportSelectedStopReturn()"
+                                                class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-amber-600/10 transition-all duration-300"
+                                            >
+                                                <span>⚠️</span> Reportar Devolución (P. <span x-text="selectedStop.number"></span>)
+                                            </button>
+                                        </template>
+
+                                        <!-- Finalizar Despacho (Solo si no está entregado) -->
+                                        <template x-if="selectedPilot.status === 'completed'">
+                                            <button 
+                                                @click="finishActiveDispatch()"
+                                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/10 transition-all duration-300"
+                                            >
+                                                <span>🏠</span> Liquidar Despacho y Facturar
+                                            </button>
+                                        </template>
+
+                                        <!-- Cancelar Despacho -->
+                                        <button 
+                                            @click="cancelActiveDispatch()"
+                                            class="w-full border border-rose-500/30 hover:bg-rose-500/10 text-rose-400 font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
+                                        >
+                                            <span>✕</span> Cancelar Despacho
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE REGISTRO DE DEVOLUCIÓN -->
+        <div 
+            x-show="showReturnModal" 
+            class="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+            x-cloak
+            x-transition
+        >
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md text-left flex flex-col gap-5">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                        <span>⚠️</span> Reportar Devolución
+                    </h3>
+                    <button @click="showReturnModal = false" class="text-slate-400 hover:text-white font-black">✕</button>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <template x-if="selectedStop">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <p class="text-[10px] text-slate-500 font-bold">Cliente</p>
+                            <p class="text-xs font-bold text-white" x-text="selectedStop.customer_name"></p>
+                            <p class="text-[9px] text-slate-400 mt-1" x-text="selectedStop.delivery_address"></p>
+                        </div>
+                    </template>
+
+                    <!-- Formulario de Devolución vinculando las variables de Livewire -->
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] text-slate-400 font-bold">Producto a devolver</label>
+                            <select 
+                                wire:model.defer="returnProductId"
+                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                            >
+                                <template x-if="selectedStop">
+                                    <template x-for="item in selectedStop.items" :key="item.id">
+                                        <option :value="item.product_id" x-text="item.product_name + ' (' + item.color_name + ')'"></option>
+                                    </template>
+                                </template>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] text-slate-400 font-bold">Cantidad</label>
+                            <input 
+                                type="number" 
+                                step="any"
+                                wire:model.defer="returnQuantity" 
+                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                            />
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] text-slate-400 font-bold">Razón de la Devolución</label>
+                            <select 
+                                wire:model.defer="returnReason"
+                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                            >
+                                <option value="El cliente no se encontraba">El cliente no se encontraba</option>
+                                <option value="Producto dañado/defectuoso">Producto dañado/defectuoso</option>
+                                <option value="Pedido incorrecto">Pedido incorrecto</option>
+                                <option value="Cliente rechaza el producto">Cliente rechaza el producto</option>
+                                <option value="Otros">Otros (especificar en notas)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] text-slate-400 font-bold">Notas adicionales</label>
+                            <textarea 
+                                wire:model.defer="returnNotes"
+                                rows="3"
+                                class="bg-slate-950 border border-slate-800 rounded-xl text-xs py-2 px-3 text-white focus:border-indigo-500"
+                                placeholder="Escribe detalles adicionales..."
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 border-t border-slate-800 pt-4">
+                    <button 
+                        @click="showReturnModal = false" 
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        wire:click="submitReturn()" 
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors"
+                    >
+                        Reportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assets e Inicialización del Mapa en JavaScript/Alpine.js -->
+    @push('scripts')
+        <script>
+            window.realTimeDashboardComponent = function() {
+                return {
+                    map: null,
+                    activeMarkers: {},
+                    routeLine: null,
+                    stopMarkers: [],
+                    
+                    // State del piloto seleccionado
+                    selectedPilot: @entangle('selectedDispatchId') ? null : null,
+                    selectedPilotStops: [],
+                    activeStopId: null,
+                    selectedStop: null,
+                    
+                    // Modales
+                    showReturnModal: false,
+                    
+                    // Polling
+                    refreshTimer: null,
+                    
+                    async init() {
+                        this.selectedPilot = @json($this->getSelectedDispatchDetails());
+                        this.selectedPilotStops = @json($this->getSelectedDispatchStops());
+                        
+                        await this.loadLeaflet();
+                        this.initMap();
+                        
+                        // Escuchadores de eventos de Livewire
+                        window.addEventListener('dispatch-selected', (e) => {
+                            this.selectedPilot = @json($this->getSelectedDispatchDetails());
+                            this.selectedPilotStops = e.detail.stops;
+                            this.activeStopId = null;
+                            this.selectedStop = null;
+                            
+                            this.renderSelectedRoute(e.detail.locations, e.detail.stops);
+                        });
+
+                        window.addEventListener('dispatch-cancelled', () => {
+                            this.selectedPilot = null;
+                            this.selectedPilotStops = [];
+                            this.activeStopId = null;
+                            this.selectedStop = null;
+                            this.clearSelectedRoute();
+                            this.loadAllActivePilots();
+                        });
+
+                        window.addEventListener('open-return-modal', () => {
+                            this.showReturnModal = true;
+                        });
+
+                        window.addEventListener('close-return-modal', () => {
+                            this.showReturnModal = false;
+                        });
+
+                        // Polling para refrescar ubicaciones cada 8 segundos
+                        this.refreshTimer = setInterval(() => this.pollUbicaciones(), 8000);
+                        this.pollUbicaciones();
+                    },
+
+                    async loadLeaflet() {
+                        if (window.L) return;
+                        const loadStyle = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const link = document.createElement('link');
+                                link.id = id; link.rel = 'stylesheet'; link.href = url; link.onload = resolve; link.onerror = resolve;
+                                document.head.appendChild(link);
+                            });
+                        };
+                        const loadScript = (url, id) => {
+                            if (document.getElementById(id)) return Promise.resolve();
+                            return new Promise(resolve => {
+                                const script = document.createElement('script');
+                                script.id = id; script.src = url; script.onload = resolve; script.onerror = resolve;
+                                document.head.appendChild(script);
+                            });
+                        };
+                        await loadStyle('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'leaflet-css');
+                        await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'leaflet-js');
+                    },
+
+                    initMap() {
+                        if (this.map) return;
+                        
+                        // Posicionar por defecto en el centro de Guatemala / Cobán
+                        this.map = L.map('dispatch-dashboard-map', { zoomControl: false }).setView([15.47, -90.37], 8);
+                        
+                        // CARTO Dark Matter - Mapa de estilo oscuro premium e idéntico a la foto
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                            maxZoom: 20
+                        }).addTo(this.map);
+                        
+                        L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+
+                        // Si hay un piloto pre-seleccionado, cargar su ruta
+                        if (this.selectedPilot) {
+                            this.renderSelectedRoute(@json($this->getSelectedDispatchLocations()), this.selectedPilotStops);
+                        } else {
+                            this.loadAllActivePilots();
+                        }
+                    },
+
+                    // Carga y dibuja todos los pilotos activos en el mapa
+                    loadAllActivePilots() {
+                        this.clearSelectedRoute();
+                        const pilots = @json($this->getActivePilotsLocations());
+                        this.updatePilotsMarkers(pilots);
+                    },
+
+                    updatePilotsMarkers(pilots) {
+                        // Limpiar marcadores que ya no estén activos
+                        const activeIds = pilots.map(p => p.dispatch_id);
+                        Object.keys(this.activeMarkers).forEach(id => {
+                            if (!activeIds.includes(parseInt(id))) {
+                                this.map.removeLayer(this.activeMarkers[id]);
+                                delete this.activeMarkers[id];
+                            }
+                        });
+
+                        pilots.forEach(p => {
+                            const iconHtml = `
+                                <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+                                    <div style="position:relative;">
+                                        <div style="position:absolute;width:34px;height:34px;background:rgba(139,92,246,0.3);border-radius:50%;animation:ping 2s infinite;"></div>
+                                        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(139,92,246,0.5);">
+                                            <span style="font-size:16px;">🚚</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:4px;padding:2px 8px;background:rgba(15,23,42,0.9);color:white;font-size:9px;font-weight:800;border-radius:6px;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);">
+                                        ${p.driver_name.split(' ')[0]}
+                                    </div>
+                                </div>
+                            `;
+
+                            const customIcon = L.divIcon({
+                                className: '',
+                                html: iconHtml,
+                                iconSize: [80, 50],
+                                iconAnchor: [40, 25]
+                            });
+
+                            if (this.activeMarkers[p.dispatch_id]) {
+                                this.activeMarkers[p.dispatch_id].setLatLng([p.lat, p.lng]);
+                            } else {
+                                const marker = L.marker([p.lat, p.lng], { icon: customIcon })
+                                    .addTo(this.map)
+                                    .on('click', () => {
+                                        this.$wire.selectDispatch(p.dispatch_id);
+                                    });
+                                this.activeMarkers[p.dispatch_id] = marker;
+                            }
+                        });
+
+                        // Ajustar la vista si no hay piloto seleccionado y hay marcadores
+                        if (!this.selectedPilot && pilots.length > 0) {
+                            const group = L.featureGroup(Object.values(this.activeMarkers));
+                            this.map.fitBounds(group.getBounds().pad(0.2));
+                        }
+                    },
+
+                    // Dibuja la ruta y las paradas del piloto seleccionado
+                    renderSelectedRoute(locations, stops) {
+                        this.clearSelectedRoute();
+                        
+                        // 1. Dibujar línea de recorrido (morada premium)
+                        const pts = locations.map(l => [l.lat, l.lng]);
+                        if (pts.length > 1) {
+                            this.routeLine = L.polyline(pts, {
+                                color: '#8b5cf6', // Violeta brillante
+                                weight: 4,
+                                opacity: 0.9,
+                                lineJoin: 'round'
+                            }).addTo(this.map);
+                        }
+
+                        // 2. Dibujar marcadores de paradas (clientes)
+                        const bounds = [];
+                        stops.forEach(s => {
+                            if (!s.lat || !s.lng) return;
+                            
+                            const isCompleted = s.status === 'completed';
+                            const isReturned = s.status === 'returned';
+                            
+                            const color = isCompleted 
+                                ? '#10b981' // Verde esmeralda
+                                : (isReturned 
+                                    ? '#f59e0b' // Ámbar de novedad
+                                    : '#8b5cf6'); // Violeta de ruta
+                                    
+                            const stopHtml = `
+                                <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+                                    <div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid white;color:white;font-family:'Outfit',sans-serif;font-weight:900;font-size:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.5);">
+                                        ${isCompleted ? '✓' : s.number}
+                                    </div>
+                                    <div style="margin-top:2px;padding:1px 5px;background:rgba(15,23,42,0.85);color:white;font-[8px];font-weight:bold;border-radius:4px;white-space:nowrap;border:1px solid rgba(255,255,255,0.05);">
+                                        P. ${s.number}
+                                    </div>
+                                </div>
+                            `;
+
+                            const icon = L.divIcon({
+                                className: '',
+                                html: stopHtml,
+                                iconSize: [50, 40],
+                                iconAnchor: [25, 20]
+                            });
+
+                            const marker = L.marker([s.lat, s.lng], { icon: icon })
+                                .addTo(this.map)
+                                .on('click', () => {
+                                    this.zoomToStop(s);
+                                });
+
+                            this.stopMarkers.push(marker);
+                            bounds.push([s.lat, s.lng]);
+                        });
+
+                        // 3. Dibujar camión en la última posición conocida
+                        if (pts.length > 0) {
+                            const lastPt = pts[pts.length - 1];
+                            const truckHtml = `
+                                <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+                                    <div style="position:absolute;width:40px;height:40px;background:rgba(99,102,241,0.3);border-radius:50%;animation:ping 2s infinite;"></div>
+                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff4b5c,#ffac41);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,75,92,0.4);">
+                                        <span style="font-size:18px;">🚚</span>
+                                    </div>
+                                </div>
+                            `;
+
+                            const truckIcon = L.divIcon({
+                                className: '',
+                                html: truckHtml,
+                                iconSize: [50, 50],
+                                iconAnchor: [25, 25]
+                            });
+
+                            const marker = L.marker(lastPt, { icon: truckIcon }).addTo(this.map);
+                            this.stopMarkers.push(marker);
+                            bounds.push(lastPt);
+                        }
+
+                        // Enfocar y centrar la ruta completa
+                        if (bounds.length > 0) {
+                            this.map.fitBounds(bounds, { padding: [50, 50] });
+                        }
+                    },
+
+                    clearSelectedRoute() {
+                        // Limpiar camiones del mapa general
+                        Object.values(this.activeMarkers).forEach(m => this.map.removeLayer(m));
+                        this.activeMarkers = {};
+                        
+                        // Limpiar polilíneas y marcadores de paradas
+                        if (this.routeLine) {
+                            this.map.removeLayer(this.routeLine);
+                            this.routeLine = null;
+                        }
+                        this.stopMarkers.forEach(m => this.map.removeLayer(m));
+                        this.stopMarkers = [];
+                    },
+
+                    zoomToStop(stop) {
+                        this.activeStopId = stop.id;
+                        this.selectedStop = stop;
+                        
+                        if (stop.lat && stop.lng) {
+                            this.map.setView([stop.lat, stop.lng], 16, { animate: true, duration: 1.2 });
+                        }
+                    },
+
+                    // Acciones rápidas de la parada seleccionada en Alpine
+                    completeSelectedStop() {
+                        if (confirm('¿Estás seguro de marcar esta parada como entregada?')) {
+                            this.$wire.completeOrder(this.activeStopId);
+                        }
+                    },
+
+                    reportSelectedStopReturn() {
+                        this.$wire.initReturnModal(this.activeStopId);
+                    },
+
+                    finishActiveDispatch() {
+                        if (confirm('¿Desea liquidar el despacho de este piloto? Se generarán las facturas correspondientes para los pedidos.')) {
+                            this.$wire.finishDispatchGlobal(this.selectedPilot.id);
+                        }
+                    },
+
+                    cancelActiveDispatch() {
+                        if (confirm('¡ATENCIÓN! ¿Está seguro de cancelar este despacho? Se revertirá la transferencia de stock de inventario.')) {
+                            this.$wire.cancelDispatchGlobal(this.selectedPilot.id);
+                        }
+                    },
+
+                    // Polling asíncrono para refrescar las posiciones
+                    async pollUbicaciones() {
+                        try {
+                            const data = await this.$wire.refreshLocations();
+                            if (!this.selectedPilot) {
+                                this.updatePilotsMarkers(data.pilots);
+                            } else {
+                                // Si hay piloto seleccionado, actualizar su trayecto y camión
+                                this.renderSelectedRoute(data.selectedLocations, this.selectedPilotStops);
+                            }
+                        } catch (e) {
+                            console.error('[Error polling dispatch locations]', e);
+                        }
+                    }
+                }
+            };
+        </script>
+    @endpush
+</x-filament-panels::page>
