@@ -531,6 +531,9 @@ class DispatchResource extends Resource
                     ->icon('heroicon-o-map')
                     ->color('success')
                     ->iconButton()
+                    ->url(fn (Dispatch $record) => \App\Filament\Pages\RealTimeRoutesDashboard::getUrl([
+                        'dispatch' => $record->id,
+                    ]))
                     ->visible(fn ($record) => $record->status === 'in_progress' && !auth()->user()?->hasRole('conductor'))
                     ->modalHeading(fn ($record) => 'Ruta Diaria del Camión: ' . ($record->truck?->name ?? 'Sin asignar'))
                     ->modalSubmitAction(false)

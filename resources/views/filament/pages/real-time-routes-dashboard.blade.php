@@ -407,7 +407,7 @@
                     stopMarkers: [],
                     
                     // State del piloto seleccionado
-                    selectedPilot: @entangle('selectedDispatchId') ? null : null,
+                    selectedPilot: @json($this->getSelectedDispatchDetails()),
                     selectedPilotStops: [],
                     activeStopId: null,
                     selectedStop: null,
@@ -427,12 +427,12 @@
                         
                         // Escuchadores de eventos de Livewire
                         window.addEventListener('dispatch-selected', (e) => {
-                            this.selectedPilot = @json($this->getSelectedDispatchDetails());
-                            this.selectedPilotStops = e.detail.stops;
+                            this.selectedPilot = e.detail.details;
+                            this.selectedPilotStops = e.detail.stops || [];
                             this.activeStopId = null;
                             this.selectedStop = null;
                             
-                            this.renderSelectedRoute(e.detail.locations, e.detail.stops);
+                            this.renderSelectedRoute(e.detail.locations || [], this.selectedPilotStops);
                         });
 
                         window.addEventListener('dispatch-cancelled', () => {

@@ -18,6 +18,7 @@ class RealTimeRoutesDashboard extends Page
     protected static ?string $navigationGroup = 'LOGÍSTICA';
     protected static ?string $navigationLabel = 'Mapa en Tiempo Real';
     protected static ?string $title = 'Mapa de Rutas en Tiempo Real';
+    protected static ?string $slug = 'dispatch-map';
     protected static string $view = 'filament.pages.real-time-routes-dashboard';
 
     public string $activeTab = 'todos';
@@ -30,6 +31,11 @@ class RealTimeRoutesDashboard extends Page
     public float $returnQuantity = 0;
     public string $returnReason = '';
     public string $returnNotes = '';
+
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return '';
+    }
 
     public static function canAccess(): bool
     {
@@ -109,11 +115,13 @@ class RealTimeRoutesDashboard extends Page
         $this->selectedDispatchId = $dispatchId;
         
         if ($dispatchId) {
-            $this->dispatchBrowserEvent('dispatch-selected', [
-                'dispatchId' => $dispatchId,
-                'locations' => $this->getSelectedDispatchLocations(),
-                'stops' => $this->getSelectedDispatchStops(),
-            ]);
+            $this->dispatch(
+                'dispatch-selected',
+                dispatchId: $dispatchId,
+                details: $this->getSelectedDispatchDetails(),
+                locations: $this->getSelectedDispatchLocations(),
+                stops: $this->getSelectedDispatchStops(),
+            );
         }
     }
 
@@ -162,8 +170,8 @@ class RealTimeRoutesDashboard extends Page
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn($loc) => [
-                'lat' => (float) $loc->latitude,
-                'lng' => (float) $loc->longitude,
+                'lat' => (float) $loc->lat,
+                'lng' => (float) $loc->lng,
                 'created_at' => $loc->created_at->format('H:i:s'),
             ])
             ->toArray();
@@ -230,8 +238,8 @@ class RealTimeRoutesDashboard extends Page
                     'dispatch_id' => $d->id,
                     'driver_name' => $d->driver?->name ?? $d->driver_name ?? 'Sin Piloto',
                     'truck_name' => $d->truck?->name ?? 'Sin Camión',
-                    'lat' => (float) $lastLoc->latitude,
-                    'lng' => (float) $lastLoc->longitude,
+                    'lat' => (float) $lastLoc->lat,
+                    'lng' => (float) $lastLoc->lng,
                     'updated_at' => $lastLoc->created_at->diffForHumans(),
                     'speed' => $lastLoc->speed ?? 0,
                 ];
@@ -292,7 +300,7 @@ class RealTimeRoutesDashboard extends Page
         $this->returnReason = 'El cliente no se encontraba';
         $this->returnNotes = '';
         
-        $this->dispatchBrowserEvent('open-return-modal');
+        $this->dispatch('open-return-modal');
     }
 
     /**
@@ -332,7 +340,7 @@ class RealTimeRoutesDashboard extends Page
                 ->success()
                 ->send();
 
-            $this->dispatchBrowserEvent('close-return-modal');
+            $this->dispatch('close-return-modal');
             $this->selectDispatch($this->selectedDispatchId);
         } catch (\Exception $e) {
             Notification::make()
@@ -392,7 +400,7 @@ class RealTimeRoutesDashboard extends Page
                 ->send();
 
             $this->selectedDispatchId = null;
-            $this->dispatchBrowserEvent('dispatch-cancelled');
+            $this->dispatch('dispatch-cancelled');
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
