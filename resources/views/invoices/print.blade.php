@@ -50,7 +50,7 @@
 </head>
 <body>
     <div class="no-print">
-        <a href="javascript:history.back()" class="btn btn-back">Volver</a>
+        <a href="{{ url('/admin/sales/' . $invoice->sale_id) }}" class="btn btn-back">Volver</a>
         <button onclick="window.print()" class="btn btn-print">Imprimir Factura</button>
     </div>
 
@@ -61,7 +61,7 @@
                 <div class="company-details">
                     <div>{{ config('company.address') }}</div>
                     <div>Tel: {{ config('company.phone') }} | Email: {{ config('company.email') }}</div>
-                    <div>NIT: {{ config('company.nit') }}</div>
+
                 </div>
             </div>
             <div class="invoice-title">
