@@ -520,18 +520,23 @@ class DispatchResource extends Resource
                      }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('')
+                    ->tooltip('Ver Despacho')
+                    ->iconButton(),
+
                 Tables\Actions\Action::make('view_map')
-                    ->label('Ver Ruta')
+                    ->label('')
+                    ->tooltip('Ver Ruta en Mapa')
                     ->icon('heroicon-o-map')
                     ->color('success')
+                    ->iconButton()
                     ->visible(fn ($record) => !auth()->user()?->hasRole('conductor'))
                     ->modalHeading(fn ($record) => 'Ruta Diaria del Camión: ' . ($record->truck?->name ?? 'Sin asignar'))
-                    ->modalSubmitAction(false) // Solo cerrar
+                    ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar')
                     ->modalWidth('6xl')
                     ->modalContent(function (Dispatch $record) {
-                        // 1. Get all active dispatches for the same truck (in progress)
                         $activeDispatchIds = [];
                         if ($record->truck_id) {
                             $activeDispatchIds = Dispatch::where('truck_id', $record->truck_id)
@@ -539,13 +544,9 @@ class DispatchResource extends Resource
                                 ->pluck('id')
                                 ->toArray();
                         }
-
-                        // Always include the current dispatch ID
                         if (!in_array($record->id, $activeDispatchIds)) {
                             $activeDispatchIds[] = $record->id;
                         }
-
-                        // 2. Query each active dispatch ID individually (perfectly indexed, ultra-fast)
                         $latest = null;
                         foreach ($activeDispatchIds as $aid) {
                             $loc = \App\Models\DispatchLocation::where('dispatch_id', $aid)
@@ -557,8 +558,6 @@ class DispatchResource extends Resource
                                 }
                             }
                         }
-
-                        // 3. Fallback: check other recent dispatches for this truck
                         if (!$latest && $record->truck_id) {
                             $otherIds = Dispatch::where('truck_id', $record->truck_id)
                                 ->whereNotIn('id', $activeDispatchIds)
@@ -576,160 +575,168 @@ class DispatchResource extends Resource
                                 }
                             }
                         }
-
                         $locations = $latest ? collect([$latest]) : collect();
-
                         return view('components.leaflet-route-map', [
-                            'record' => $record,
-                            'locations' => $locations,
-                            'dispatchId' => $record->id,
-                            'dispatchNumber' => $record->dispatch_number,
-                            'driverName' => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
-                            'truckName' => $record->truck?->name ?? 'Sin asignar',
-                            'routeName' => $record->route ?? 'Sin ruta',
-                            'dispatchStatus' => $record->status,
-                            'hideOrders' => true,
+                            'record'          => $record,
+                            'locations'       => $locations,
+                            'dispatchId'      => $record->id,
+                            'dispatchNumber'  => $record->dispatch_number,
+                            'driverName'      => $record->driver?->name ?? $record->driver_name ?? 'Sin asignar',
+                            'truckName'       => $record->truck?->name ?? 'Sin asignar',
+                            'routeName'       => $record->route ?? 'Sin ruta',
+                            'dispatchStatus'  => $record->status,
+                            'hideOrders'      => true,
                         ]);
                     }),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->status === 'pending'),
-                Tables\Actions\Action::make('report_return')
-                    ->label('Reportar Devolución')
-                    ->icon('heroicon-o-exclamation-triangle')
-                    ->color('danger')
-                    ->visible(fn ($record) => $record->status === 'in_progress')
-                    ->form(function (Dispatch $record) {
-                        return [
-                            Forms\Components\Select::make('order_id')
-                                ->label('Seleccione el Pedido')
-                                ->options($record->orders->pluck('order_number', 'id'))
-                                ->required()
-                                ->live(),
-                            Forms\Components\Repeater::make('return_items')
-                                ->label('Productos Devueltos')
-                                ->schema([
-                                    Forms\Components\Select::make('product_id')
-                                        ->label('Producto')
-                                        ->options(function (Forms\Get $get) {
-                                            $orderId = $get('../../order_id');
-                                            if (!$orderId) return [];
-                                            $order = \App\Models\Order::with('items.product', 'items.color')->find($orderId);
-                                            if (!$order) return [];
-                                            return $order->items->mapWithKeys(function ($item) {
-                                                $qtyFormatted = number_format($item->quantity, (round($item->quantity) == $item->quantity ? 0 : 2), '.', ',');
-                                                $name = $item->product->name . ($item->color ? " ({$item->color->name})" : "") . " [Max: {$qtyFormatted}]";
-                                                $key = $item->product_id . '|' . ($item->color_id ?? '');
-                                                return [$key => $name];
-                                            })->toArray();
-                                        })
-                                        ->required()
-                                        ->columnSpan(3),
-                                    Forms\Components\TextInput::make('quantity')
-                                        ->label('Cantidad')
-                                        ->numeric()
-                                        ->step(0.01)
-                                        ->required()
-                                        ->minValue(0.01)
-                                        ->columnSpan(1),
-                                ])
-                                ->columns(4)
-                                ->defaultItems(1)
-                                ->addActionLabel('Añadir otro producto'),
-                            Forms\Components\Select::make('reason')
-                                ->label('Motivo del Rechazo')
-                                ->options([
-                                    'Producto Dañado' => 'Producto Dañado / Mal estado',
-                                    'Empaque Roto' => 'Empaque Roto',
-                                    'Equivocación de Pedido' => 'Equivocación de Pedido',
-                                    'Cliente no aceptó' => 'Cliente no aceptó / Canceló en puerta',
-                                    'Otro' => 'Otro (Especificar en notas)',
-                                ])
-                                ->required(),
-                            Forms\Components\Textarea::make('notes')
-                                ->label('Notas Adicionales')
-                                ->rows(2),
-                        ];
-                    })
-                    ->action(function (array $data, Dispatch $record): void {
-                        foreach ($data['return_items'] as $item) {
-                            list($productId, $colorId) = explode('|', $item['product_id']);
-                            $colorId = $colorId === '' ? null : $colorId;
 
-                            OrderReturn::create([
-                                'dispatch_id' => $record->id,
-                                'order_id' => $data['order_id'],
-                                'product_id' => $productId,
-                                'color_id' => $colorId,
-                                'driver_id' => $record->driver_id ?: auth()->id(),
-                                'truck_id' => $record->truck_id,
-                                'quantity' => $item['quantity'],
-                                'reason' => $data['reason'],
-                                'status' => 'pending',
-                                'notes' => $data['notes'] ?? null,
-                            ]);
-                        }
-                        
-                        \Filament\Notifications\Notification::make()
-                            ->title('Devolución(es) Reportada(s)')
-                            ->body('Las alertas han sido enviadas al administrador.')
-                            ->success()
-                            ->send();
-                    }),
-                Tables\Actions\Action::make('cancel_dispatch')
-                    ->label('Cancelar Despacho')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Cancelar Despacho?')
-                    ->modalDescription('Esto eliminará el despacho y devolverá los productos a la bodega de origen. Los pedidos volverán a estado pendiente.')
-                    ->visible(fn ($record) => in_array($record->status, ['pending', 'in_progress']) && auth()->user()?->can('dispatches.delete'))
-                    ->action(function (Dispatch $record, \App\Services\DispatchService $service): void {
-                        try {
-                            $service->cancel($record);
+                Tables\Actions\EditAction::make()
+                    ->label('')
+                    ->tooltip('Editar')
+                    ->iconButton()
+                    ->visible(fn ($record) => $record->status === 'pending'),
+
+                // Grupo compacto de acciones para despachos En Proceso
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('report_return')
+                        ->label('Reportar Devolución')
+                        ->icon('heroicon-o-exclamation-triangle')
+                        ->color('warning')
+                        ->visible(fn ($record) => $record->status === 'in_progress')
+                        ->form(function (Dispatch $record) {
+                            return [
+                                Forms\Components\Select::make('order_id')
+                                    ->label('Seleccione el Pedido')
+                                    ->options($record->orders->pluck('order_number', 'id'))
+                                    ->required()
+                                    ->live(),
+                                Forms\Components\Repeater::make('return_items')
+                                    ->label('Productos Devueltos')
+                                    ->schema([
+                                        Forms\Components\Select::make('product_id')
+                                            ->label('Producto')
+                                            ->options(function (Forms\Get $get) {
+                                                $orderId = $get('../../order_id');
+                                                if (!$orderId) return [];
+                                                $order = \App\Models\Order::with('items.product', 'items.color')->find($orderId);
+                                                if (!$order) return [];
+                                                return $order->items->mapWithKeys(function ($item) {
+                                                    $qtyFormatted = number_format($item->quantity, (round($item->quantity) == $item->quantity ? 0 : 2), '.', ',');
+                                                    $name = $item->product->name . ($item->color ? " ({$item->color->name})" : "") . " [Max: {$qtyFormatted}]";
+                                                    $key = $item->product_id . '|' . ($item->color_id ?? '');
+                                                    return [$key => $name];
+                                                })->toArray();
+                                            })
+                                            ->required()
+                                            ->columnSpan(3),
+                                        Forms\Components\TextInput::make('quantity')
+                                            ->label('Cantidad')
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->required()
+                                            ->minValue(0.01)
+                                            ->columnSpan(1),
+                                    ])
+                                    ->columns(4)
+                                    ->defaultItems(1)
+                                    ->addActionLabel('Añadir otro producto'),
+                                Forms\Components\Select::make('reason')
+                                    ->label('Motivo del Rechazo')
+                                    ->options([
+                                        'Producto Dañado'          => 'Producto Dañado / Mal estado',
+                                        'Empaque Roto'             => 'Empaque Roto',
+                                        'Equivocación de Pedido'   => 'Equivocación de Pedido',
+                                        'Cliente no aceptó'        => 'Cliente no aceptó / Canceló en puerta',
+                                        'Otro'                     => 'Otro (Especificar en notas)',
+                                    ])
+                                    ->required(),
+                                Forms\Components\Textarea::make('notes')
+                                    ->label('Notas Adicionales')
+                                    ->rows(2),
+                            ];
+                        })
+                        ->action(function (array $data, Dispatch $record): void {
+                            foreach ($data['return_items'] as $item) {
+                                list($productId, $colorId) = explode('|', $item['product_id']);
+                                $colorId = $colorId === '' ? null : $colorId;
+                                OrderReturn::create([
+                                    'dispatch_id' => $record->id,
+                                    'order_id'    => $data['order_id'],
+                                    'product_id'  => $productId,
+                                    'color_id'    => $colorId,
+                                    'driver_id'   => $record->driver_id ?: auth()->id(),
+                                    'truck_id'    => $record->truck_id,
+                                    'quantity'    => $item['quantity'],
+                                    'reason'      => $data['reason'],
+                                    'status'      => 'pending',
+                                    'notes'       => $data['notes'] ?? null,
+                                ]);
+                            }
                             \Filament\Notifications\Notification::make()
-                                ->title('Despacho Cancelado')
-                                ->body('El stock ha sido devuelto a la bodega con éxito.')
+                                ->title('Devolución(es) Reportada(s)')
+                                ->body('Las alertas han sido enviadas al administrador.')
                                 ->success()
                                 ->send();
-                        } catch (\Exception $e) {
+                        }),
+
+                    Tables\Actions\Action::make('cancel_dispatch')
+                        ->label('Cancelar Despacho')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Cancelar Despacho?')
+                        ->modalDescription('Esto eliminará el despacho y devolverá los productos a la bodega de origen. Los pedidos volverán a estado pendiente.')
+                        ->visible(fn ($record) => in_array($record->status, ['pending', 'in_progress']) && auth()->user()?->can('dispatches.delete'))
+                        ->action(function (Dispatch $record, \App\Services\DispatchService $service): void {
+                            try {
+                                $service->cancel($record);
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Despacho Cancelado')
+                                    ->body('El stock ha sido devuelto a la bodega con éxito.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Error')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+
+                    Tables\Actions\Action::make('complete_dispatch')
+                        ->label('Finalizar Entrega')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Finalizar el viaje de despacho?')
+                        ->modalDescription('Esto marcará el despacho como finalizado. Si hay devoluciones pendientes, por favor resuélvalas primero en el módulo de Inventario.')
+                        ->modalSubmitActionLabel('Sí, finalizar')
+                        ->visible(fn ($record) => $record->status === 'in_progress' && !$record->orderReturns()->where('status', 'pending')->exists())
+                        ->action(function (Dispatch $record): void {
+                            $hasPendingReturns = $record->orderReturns()->where('status', 'pending')->exists();
+                            if ($hasPendingReturns) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('No se puede finalizar')
+                                    ->body('Existen devoluciones pendientes de revisión para este despacho. Por favor, procéselas en Inventario > Devoluciones.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            $hasAnyReturns = $record->orderReturns()->exists();
+                            $newStatus = $hasAnyReturns ? 'completed' : 'delivered';
+                            $record->update(['status' => $newStatus]);
                             \Filament\Notifications\Notification::make()
-                                ->title('Error')
-                                ->body($e->getMessage())
-                                ->danger()
+                                ->title($hasAnyReturns ? 'Despacho Completado con Novedades' : 'Despacho Entregado Satisfactoriamente')
+                                ->success()
                                 ->send();
-                        }
-                    }),
-                Tables\Actions\Action::make('complete_dispatch')
-                    ->label('Finalizar Entrega')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Finalizar el viaje de despacho?')
-                    ->modalDescription('Esto marcará el despacho como finalizado. Si hay devoluciones pendientes, por favor resuélvalas primero en el módulo de Inventario.')
-                    ->modalSubmitActionLabel('Sí, finalizar')
-                    ->visible(fn ($record) => $record->status === 'in_progress' && !$record->orderReturns()->where('status', 'pending')->exists())
-                    ->action(function (Dispatch $record): void {
-                        $hasPendingReturns = $record->orderReturns()->where('status', 'pending')->exists();
-                        
-                        if ($hasPendingReturns) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('No se puede finalizar')
-                                ->body('Existen devoluciones pendientes de revisión para este despacho. Por favor, procéselas en Inventario > Devoluciones.')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
-
-                        $hasAnyReturns = $record->orderReturns()->exists();
-                        $newStatus = $hasAnyReturns ? 'completed' : 'delivered';
-
-                        $record->update(['status' => $newStatus]);
-
-                        \Filament\Notifications\Notification::make()
-                            ->title($hasAnyReturns ? 'Despacho Completado con Novedades' : 'Despacho Entregado Satisfactoriamente')
-                            ->success()
-                            ->send();
-                    }),
+                        }),
+                ])
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->tooltip('Más acciones')
+                ->color('gray')
+                ->button()
+                ->size('sm')
+                ->visible(fn ($record) => $record->status === 'in_progress'),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('export_excel')
