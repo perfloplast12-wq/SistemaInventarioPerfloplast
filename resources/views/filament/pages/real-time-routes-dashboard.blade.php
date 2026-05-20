@@ -232,6 +232,12 @@
                 </div>
 
                 <!-- Botones Accionadores -->
+                <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
+                   class="px-4 py-2.5 rounded-[14px] border border-slate-600/70 bg-slate-950/40 text-slate-100 font-bold text-xs transition-all duration-300 flex items-center gap-2 hover:border-sky-400/60 hover:bg-slate-900/90">
+                    <x-heroicon-o-table-cells class="w-4 h-4 text-sky-300" />
+                    Ver Tabla
+                </a>
+
                 <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}" 
                    class="dispatch-action px-4 py-2.5 border border-sky-300/30 font-bold text-xs transition-all duration-300 flex items-center gap-2">
                     <x-heroicon-o-plus class="w-4 h-4" />
@@ -242,12 +248,12 @@
 
         <div class="dispatch-kpis">
             <div class="dispatch-kpi">
-                <p class="text-[11px] font-bold text-slate-400">Rutas de hoy</p>
+                <p class="text-[11px] font-bold text-slate-400">Despachos</p>
                 <div class="mt-2 flex items-end justify-between gap-3">
                     <p class="text-2xl font-black text-white">{{ $stats['todos'] ?? 0 }}</p>
                     <x-heroicon-o-calendar-days class="w-5 h-5 text-sky-300" />
                 </div>
-                <p class="mt-2 text-[11px] font-semibold text-sky-300">Despachos programados</p>
+                <p class="mt-2 text-[11px] font-semibold text-sky-300">Registros visibles</p>
             </div>
             <div class="dispatch-kpi">
                 <p class="text-[11px] font-bold text-slate-400">En ruta</p>
@@ -685,6 +691,15 @@
                             this.selectedStop = null;
                             
                             this.renderSelectedRoute(e.detail.locations || [], this.selectedPilotStops);
+                        });
+
+                        window.addEventListener('dashboard-filter-changed', (e) => {
+                            this.selectedPilot = null;
+                            this.selectedPilotStops = [];
+                            this.activeStopId = null;
+                            this.selectedStop = null;
+                            this.clearSelectedRoute();
+                            this.updatePilotsMarkers(e.detail.pilots || []);
                         });
 
                         window.addEventListener('dispatch-cancelled', () => {

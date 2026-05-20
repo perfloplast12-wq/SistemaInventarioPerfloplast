@@ -535,7 +535,7 @@ class DispatchResource extends Resource
                     ->url(fn (Dispatch $record) => \App\Filament\Pages\RealTimeRoutesDashboard::getUrl([
                         'dispatch' => $record->id,
                     ]))
-                    ->visible(fn ($record) => $record->status === 'in_progress' && !auth()->user()?->hasRole('conductor'))
+                    ->visible(fn ($record) => !auth()->user()?->hasRole('conductor'))
                     ->modalHeading(fn ($record) => 'Ruta Diaria del Camión: ' . ($record->truck?->name ?? 'Sin asignar'))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar')

@@ -10,6 +10,7 @@ use App\Models\Color;
 use App\Services\DispatchService;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class RealTimeRoutesDashboard extends Page
@@ -57,9 +58,7 @@ class RealTimeRoutesDashboard extends Page
      */
     public function getTabsStats(): array
     {
-        $today = now()->toDateString();
-        
-        $baseQuery = Dispatch::whereDate('dispatch_date', $today);
+        $baseQuery = $this->dispatchesQuery();
 
         return [
             'todos' => (clone $baseQuery)->count(),
@@ -75,15 +74,18 @@ class RealTimeRoutesDashboard extends Page
      */
     public function getDispatches(): array
     {
-        $today = now()->toDateString();
-        $query = Dispatch::whereDate('dispatch_date', $today)
+        $query = $this->dispatchesQuery()
             ->with(['driver', 'truck', 'orders']);
 
         if ($this->activeTab !== 'todos') {
             $query->where('status', $this->activeTab);
         }
 
-        return $query->get()->map(function ($d) {
+        return $query
+            ->latest('dispatch_date')
+            ->limit(100)
+            ->get()
+            ->map(function ($d) {
             $totalOrders = $d->orders->count();
             $completedOrders = $d->orders->whereIn('status', ['completed', 'completed_with_return'])->count();
             $progress = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
@@ -107,6 +109,12 @@ class RealTimeRoutesDashboard extends Page
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
+        $this->selectedDispatchId = null;
+
+        $this->dispatch(
+            'dashboard-filter-changed',
+            pilots: $this->getActivePilotsLocations(),
+        );
     }
 
     /**
@@ -139,7 +147,9 @@ class RealTimeRoutesDashboard extends Page
 
         $totalOrders = $d->orders->count();
         $completedOrders = $d->orders->whereIn('status', ['completed', 'completed_with_return'])->count();
-        $pendingOrders = $d->orders->where('status', 'assigned')->count();
+        $pendingOrders = $d->orders
+            ->whereNotIn('status', ['completed', 'completed_with_return', 'returned'])
+            ->count();
         $returnsCount = OrderReturn::where('dispatch_id', $d->id)->count();
         $progress = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
 
@@ -223,10 +233,11 @@ class RealTimeRoutesDashboard extends Page
      */
     public function getActivePilotsLocations(): array
     {
-        $today = now()->toDateString();
-        $dispatches = Dispatch::whereDate('dispatch_date', $today)
-            ->where('status', 'in_progress')
-            ->with(['driver', 'truck'])
+        $dispatches = $this->dispatchesQuery()
+            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
+            ->with(['driver', 'truck', 'orders'])
+            ->latest('dispatch_date')
+            ->limit(100)
             ->get();
 
         $locations = [];
@@ -240,14 +251,37 @@ class RealTimeRoutesDashboard extends Page
                     'dispatch_id' => $d->id,
                     'driver_name' => $d->driver?->name ?? $d->driver_name ?? 'Sin Piloto',
                     'truck_name' => $d->truck?->name ?? 'Sin Camión',
+                    'status' => $d->status,
+                    'route' => $d->route,
                     'lat' => (float) $lastLoc->lat,
                     'lng' => (float) $lastLoc->lng,
                     'updated_at' => $lastLoc->created_at->diffForHumans(),
                     'speed' => $lastLoc->speed ?? 0,
+                    'source' => 'gps',
                 ];
             }
         }
         return $locations;
+    }
+
+    protected function dispatchesQuery(): Builder
+    {
+        $query = Dispatch::query();
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasRole('conductor')) {
+            $query->where('driver_id', $user->id);
+        }
+
+        if ($user->hasRole('sales')) {
+            $query->whereHas('orders', fn (Builder $q) => $q->where('created_by', $user->id));
+        }
+
+        return $query;
     }
 
     /**

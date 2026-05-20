@@ -46,6 +46,8 @@ class CreateDispatch extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return \App\Filament\Pages\RealTimeRoutesDashboard::getUrl([
+            'dispatch' => $this->getRecord()->id,
+        ]);
     }
 }

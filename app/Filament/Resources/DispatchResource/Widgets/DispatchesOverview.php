@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\DispatchResource\Widgets;
 
 use App\Models\Dispatch;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Carbon\Carbon;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
 
 class DispatchesOverview extends BaseWidget
@@ -20,27 +19,24 @@ class DispatchesOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        return Cache::remember('dispatches_overview_stats', 120, function () {
-            $today = Carbon::today();
-            $thisMonth = Carbon::now()->startOfMonth();
-
-            $dispatchesToday = Dispatch::whereDate('dispatch_date', $today)->count();
-            $completedMonth = Dispatch::where('status', 'delivered')->where('dispatch_date', '>=', $thisMonth)->count();
-            $pendingNow = Dispatch::whereIn('status', ['pending', 'in_transit'])->count();
+        return Cache::remember('dispatches_overview_stats_v2', 120, function () {
+            $totalDispatches = Dispatch::count();
+            $completed = Dispatch::whereIn('status', ['completed', 'delivered'])->count();
+            $activeNow = Dispatch::whereIn('status', ['pending', 'in_progress'])->count();
 
             return [
-                Stat::make('Ruta de Hoy', $dispatchesToday . ' Viajes')
-                    ->description('Asignados para fecha de hoy')
+                Stat::make('Despachos', $totalDispatches . ' Viajes')
+                    ->description('Registros visibles en la tabla')
                     ->descriptionIcon('heroicon-m-truck')
                     ->color('primary'),
-                    
-                Stat::make('Entregas del Mes', $completedMonth . ' Completados')
-                    ->description('Rendimiento mensual')
+
+                Stat::make('Entregas', $completed . ' Completados')
+                    ->description('Completados o entregados')
                     ->descriptionIcon('heroicon-m-check-circle')
                     ->color('success'),
-                    
-                Stat::make('En Cola o Tránsito', $pendingNow . ' Activos')
-                    ->description('Pendientes de entrega')
+
+                Stat::make('En Cola o Transito', $activeNow . ' Activos')
+                    ->description('Pendientes o en proceso')
                     ->descriptionIcon('heroicon-m-clock')
                     ->color('warning'),
             ];
