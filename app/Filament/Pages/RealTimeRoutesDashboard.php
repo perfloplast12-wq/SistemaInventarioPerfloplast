@@ -21,7 +21,10 @@ class RealTimeRoutesDashboard extends Page
     protected static ?string $title = 'Despachos';
     protected static ?string $slug = 'dispatch-map';
     protected static string $view = 'filament.pages.real-time-routes-dashboard';
-    protected ?string $maxContentWidth = 'full';
+    public function getMaxContentWidth(): \Filament\Support\Enums\MaxWidth|string|null
+    {
+        return \Filament\Support\Enums\MaxWidth::Full;
+    }
     protected static ?int $navigationSort = 1;
 
     public string $activeTab = 'todos';

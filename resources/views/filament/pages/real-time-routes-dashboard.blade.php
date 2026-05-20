@@ -102,7 +102,7 @@
             70%, 100% { transform: scale(2); opacity: 0; }
         }
 
-        @media (max-width: 1180px) {
+        @media (max-width: 1024px) {
             .dispatch-main {
                 grid-template-columns: 1fr;
             }
@@ -146,13 +146,13 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Botón Filtros -->
+                <!-- Botón Tabla -->
                 <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
                    class="px-4 py-2 rounded-xl bg-[#0a1120] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    Filtros
+                    Tabla
                 </a>
 
                 <!-- Botón Nuevo Despacho -->
@@ -456,10 +456,10 @@
                                             class="flex gap-4 relative cursor-pointer py-3 border-b border-slate-800/30 last:border-0"
                                             @click="zoomToStop(stop)"
                                         >
-                                            <!-- Indicador de Parada (Sólido) -->
+                                            <!-- Indicador de Parada (Sólido con línea) -->
                                             <div class="flex flex-col items-center shrink-0">
                                                 <div 
-                                                    class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs"
+                                                    class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs z-10 relative"
                                                     :class="stop.status === 'completed' 
                                                         ? 'bg-[#10b981] text-white' 
                                                         : (stop.status === 'returned' 
@@ -470,6 +470,7 @@
                                                 >
                                                     <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
                                                 </div>
+                                                <div class="w-[2px] bg-slate-800/80 grow my-1 group-last:hidden"></div>
                                             </div>
 
                                             <!-- Información de la Parada -->
