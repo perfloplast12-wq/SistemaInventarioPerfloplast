@@ -449,15 +449,75 @@ class DispatchResource extends Resource
                     ->query(fn (Builder $query, array $data) => $query->when($data['value'], fn ($q, $v) => $q->where('driver_name', 'like', "%$v%"))),
 
                 Tables\Filters\Filter::make('created_at')
-                    ->form([
-                        Forms\Components\DatePicker::make('from')->label('Desde'),
-                        Forms\Components\DatePicker::make('until')->label('Hasta'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-                            ->when($data['until'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
-                    }),
+                     ->form([
+                         \Filament\Forms\Components\Select::make('period')
+                             ->label('Período')
+                             ->options([
+                                 'today' => 'Hoy',
+                                 'this_week' => 'Esta Semana',
+                                 'this_month' => 'Este Mes',
+                                 'last_month' => 'Mes Pasado',
+                                 'custom' => 'Personalizado',
+                             ])
+                             ->native(false)
+                             ->live()
+                             ->afterStateUpdated(function (?string $state, \Filament\Forms\Set $set) {
+                                 if (!$state) return;
+                                 $now = \Illuminate\Support\Carbon::now();
+                                 switch ($state) {
+                                     case 'today':
+                                         $set('from', $now->toDateString());
+                                         $set('until', $now->toDateString());
+                                         break;
+                                     case 'this_week':
+                                         $set('from', $now->startOfWeek()->toDateString());
+                                         $set('until', $now->endOfWeek()->toDateString());
+                                         break;
+                                     case 'this_month':
+                                         $set('from', $now->startOfMonth()->toDateString());
+                                         $set('until', $now->endOfMonth()->toDateString());
+                                         break;
+                                     case 'last_month':
+                                         $prevMonth = \Illuminate\Support\Carbon::now()->subMonth();
+                                         $set('from', $prevMonth->startOfMonth()->toDateString());
+                                         $set('until', $prevMonth->endOfMonth()->toDateString());
+                                         break;
+                                 }
+                             }),
+                         \Filament\Forms\Components\DatePicker::make('from')
+                             ->label('Desde')
+                             ->displayFormat('d/m/Y')
+                             ->native(false)
+                             ->live()
+                             ->afterStateUpdated(fn (\Filament\Forms\Set $set) => $set('period', 'custom')),
+                         \Filament\Forms\Components\DatePicker::make('until')
+                             ->label('Hasta')
+                             ->displayFormat('d/m/Y')
+                             ->native(false)
+                             ->live()
+                             ->afterStateUpdated(fn (\Filament\Forms\Set $set) => $set('period', 'custom')),
+                     ])
+                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                         return $query
+                             ->when(
+                                 $data['from'],
+                                 fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '>=', $date),
+                             )
+                             ->when(
+                                 $data['until'],
+                                 fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '<=', $date),
+                             );
+                     })
+                     ->indicateUsing(function (array $data): array {
+                         $indicators = [];
+                         if ($data['from'] ?? null) {
+                             $indicators['from'] = 'Desde ' . \Illuminate\Support\Carbon::parse($data['from'])->format('d/m/Y');
+                         }
+                         if ($data['until'] ?? null) {
+                             $indicators['until'] = 'Hasta ' . \Illuminate\Support\Carbon::parse($data['until'])->format('d/m/Y');
+                         }
+                         return $indicators;
+                     }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

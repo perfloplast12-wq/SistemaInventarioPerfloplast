@@ -28,6 +28,16 @@ class InvoiceResource extends Resource
         return auth()->user()?->can('invoices.view') ?? false;
     }
 
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([]); // Read-only via pages
@@ -83,7 +93,6 @@ class InvoiceResource extends Resource
                     ->url(fn (Invoice $record): string => route('invoices.print', $record))
                     ->openUrlInNewTab(),
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('export_excel')
@@ -131,14 +140,52 @@ class InvoiceResource extends Resource
             ->filters([
                 Tables\Filters\Filter::make('invoice_date')
                     ->form([
+                        \Filament\Forms\Components\Select::make('period')
+                            ->label('Período')
+                            ->options([
+                                'today' => 'Hoy',
+                                'this_week' => 'Esta Semana',
+                                'this_month' => 'Este Mes',
+                                'last_month' => 'Mes Pasado',
+                                'custom' => 'Personalizado',
+                            ])
+                            ->native(false)
+                            ->live()
+                            ->afterStateUpdated(function (?string $state, \Filament\Forms\Set $set) {
+                                if (!$state) return;
+                                $now = \Illuminate\Support\Carbon::now();
+                                switch ($state) {
+                                    case 'today':
+                                        $set('from', $now->toDateString());
+                                        $set('until', $now->toDateString());
+                                        break;
+                                    case 'this_week':
+                                        $set('from', $now->startOfWeek()->toDateString());
+                                        $set('until', $now->endOfWeek()->toDateString());
+                                        break;
+                                    case 'this_month':
+                                        $set('from', $now->startOfMonth()->toDateString());
+                                        $set('until', $now->endOfMonth()->toDateString());
+                                        break;
+                                    case 'last_month':
+                                        $prevMonth = \Illuminate\Support\Carbon::now()->subMonth();
+                                        $set('from', $prevMonth->startOfMonth()->toDateString());
+                                        $set('until', $prevMonth->endOfMonth()->toDateString());
+                                        break;
+                                }
+                            }),
                         \Filament\Forms\Components\DatePicker::make('from')
                             ->label('Desde')
                             ->displayFormat('d/m/Y')
-                            ->native(false),
+                            ->native(false)
+                            ->live()
+                            ->afterStateUpdated(fn (\Filament\Forms\Set $set) => $set('period', 'custom')),
                         \Filament\Forms\Components\DatePicker::make('until')
                             ->label('Hasta')
                             ->displayFormat('d/m/Y')
-                            ->native(false),
+                            ->native(false)
+                            ->live()
+                            ->afterStateUpdated(fn (\Filament\Forms\Set $set) => $set('period', 'custom')),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         return $query
@@ -164,7 +211,6 @@ class InvoiceResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('bulk_export_excel')
                         ->label('Exportar Seleccionados')
                         ->icon('heroicon-o-table-cells')
