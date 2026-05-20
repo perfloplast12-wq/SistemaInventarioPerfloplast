@@ -60,8 +60,11 @@ class ViewSale extends ViewRecord
                 ->label('Imprimir Factura')
                 ->icon('heroicon-o-printer')
                 ->color('info')
-                ->visible(fn () => $this->record->status === 'confirmed')
-                ->url(fn () => route('invoices.print', ['invoice' => \App\Models\Invoice::where('sale_id', $this->record->id)->first()]))
+                ->visible(fn () => $this->record->status === 'confirmed' && \App\Models\Invoice::where('sale_id', $this->record->id)->exists())
+                ->url(fn () => {
+                    $invoice = \App\Models\Invoice::where('sale_id', $this->record->id)->first();
+                    return $invoice ? route('invoices.print', ['invoice' => $invoice->id]) : '#';
+                })
                 ->openUrlInNewTab(),
 
             Actions\Action::make('back_to_list')
