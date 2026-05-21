@@ -112,12 +112,7 @@
         }
 
         .dispatch-map-page .rtd-map-box::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 400;
-            pointer-events: none;
-            background: linear-gradient(180deg, rgba(3, 7, 18, 0.16), rgba(3, 7, 18, 0.1));
+            display: none;
         }
 
         @media (max-width: 1279px) {
@@ -139,16 +134,16 @@
             position: relative;
             border: 1px solid rgba(148, 163, 184, 0.14);
             transition: all 0.3s ease;
-            background: #07111f;
+            background: #e8f5ef;
             box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 18px 48px rgba(0,0,0,0.38);
         }
         .dark .dispatch-map-page .rtd-map-box,
         [data-theme="dark"] .dispatch-map-page .rtd-map-box {
-            background: #0b1728;
+            background: #e8f5ef;
             border-color: #1e293b;
             box-shadow: 0 10px 30px rgba(0,0,0,0.45);
         }
-        .dispatch-map-page .rtd-map-box { background: #07111f; }
+        .dispatch-map-page .rtd-map-box { background: #e8f5ef; }
 
         .dark .dispatch-map-page .bg-white,
         .dark .dispatch-map-page .dark\:bg-slate-900,
@@ -776,7 +771,7 @@
                 return {
                     map: null,
                     mapLayer: 'map', // 'map' or 'satellite'
-                    darkLayer: null,
+                    mapLayerBase: null,
                     satelliteLayer: null,
                     activeMarkers: {},
                     stopMarkers: [],
@@ -881,9 +876,9 @@
                         // Posicionar por defecto en el centro de Guatemala / Cobán
                         this.map = L.map('dispatch-dashboard-map', { zoomControl: false }).setView([15.47, -90.37], 8);
                         
-                        // Capa oscura premium (CARTO Dark Matter)
-                        this.darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+                        // Misma capa clara del mapa de vendedores.
+                        this.mapLayerBase = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                            attribution: '&copy; Google Maps',
                             maxZoom: 20
                         });
                         
@@ -893,8 +888,7 @@
                             maxZoom: 20
                         });
                         
-                        // Cargar capa oscura por defecto
-                        this.darkLayer.addTo(this.map);
+                        this.mapLayerBase.addTo(this.map);
                         
                         // Controles de Zoom en la parte inferior izquierda
                         L.control.zoom({ position: 'bottomleft' }).addTo(this.map);
@@ -910,11 +904,11 @@
                     setMapLayer(layer) {
                         this.mapLayer = layer;
                         if (layer === 'satellite') {
-                            this.map.removeLayer(this.darkLayer);
+                            this.map.removeLayer(this.mapLayerBase);
                             this.satelliteLayer.addTo(this.map);
                         } else {
                             this.map.removeLayer(this.satelliteLayer);
-                            this.darkLayer.addTo(this.map);
+                            this.mapLayerBase.addTo(this.map);
                         }
                     },
 
