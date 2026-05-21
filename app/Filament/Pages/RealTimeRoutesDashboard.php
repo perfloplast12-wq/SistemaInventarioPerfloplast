@@ -458,6 +458,7 @@ class RealTimeRoutesDashboard extends Page
                 // Recalcular y refrescar
                 if ($order->dispatch_id) {
                     $order->dispatch->recalculateTotals();
+                    $this->syncDispatchCompletionFromOrders($order->dispatch);
                 }
             });
 
@@ -527,6 +528,7 @@ class RealTimeRoutesDashboard extends Page
                 // Actualizar estado del pedido a devuelto
                 $order->update(['status' => 'returned']);
                 $dispatch->recalculateTotals();
+                $this->syncDispatchCompletionFromOrders($dispatch);
             });
 
             Notification::make()
@@ -642,5 +644,26 @@ class RealTimeRoutesDashboard extends Page
             locations: $this->getSelectedDriverLocations(),
             stops: $this->getSelectedDriverStops(),
         );
+    }
+
+    protected function syncDispatchCompletionFromOrders(Dispatch $dispatch): void
+    {
+        $dispatch->refresh();
+
+        if ($dispatch->status !== 'in_progress') {
+            return;
+        }
+
+        if ($dispatch->orders()->count() === 0) {
+            return;
+        }
+
+        $openOrders = $dispatch->orders()
+            ->whereNotIn('status', ['completed', 'completed_with_return', 'returned'])
+            ->count();
+
+        if ($openOrders === 0) {
+            app(DispatchService::class)->complete($dispatch);
+        }
     }
 }

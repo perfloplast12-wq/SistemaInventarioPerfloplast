@@ -159,7 +159,39 @@ class AdminPanelProvider extends PanelProvider
 
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn (): string => view('components.silent-tracker')->render(),
+                fn (): string => view('components.silent-tracker')->render() . <<<'HTML'
+                    <script>
+                        (() => {
+                            if (window.__dispatchesCrossTabSyncInstalled) return;
+                            window.__dispatchesCrossTabSyncInstalled = true;
+
+                            const syncKey = 'dispatches:last-change';
+                            let refreshTimer = null;
+
+                            const isDispatchesIndex = () => {
+                                const path = window.location.pathname.replace(/\/+$/, '');
+                                return path === '/admin/dispatches';
+                            };
+
+                            const refreshDispatchesIndex = () => {
+                                if (!isDispatchesIndex()) return;
+
+                                window.clearTimeout(refreshTimer);
+                                refreshTimer = window.setTimeout(() => {
+                                    window.location.reload();
+                                }, 250);
+                            };
+
+                            window.addEventListener('storage', (event) => {
+                                if (event.key === syncKey) {
+                                    refreshDispatchesIndex();
+                                }
+                            });
+
+                            window.addEventListener('dispatches-table-refresh-requested', refreshDispatchesIndex);
+                        })();
+                    </script>
+                HTML,
             )
 
             ->login(\App\Filament\Pages\Auth\Login::class)

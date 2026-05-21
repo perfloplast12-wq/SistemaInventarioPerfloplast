@@ -276,6 +276,32 @@
             overflow: visible !important;
         }
 
+        .dispatch-map-page .rtd-confirm-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 2147483100 !important;
+            isolation: isolate;
+        }
+
+        .dispatch-map-page .rtd-confirm-dialog {
+            position: relative;
+            z-index: 2147483101 !important;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96)),
+                radial-gradient(circle at 0% 0%, rgba(16,185,129,0.14), transparent 16rem);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255,255,255,0.82);
+        }
+
+        .dark .dispatch-map-page .rtd-confirm-dialog,
+        [data-theme="dark"] .dispatch-map-page .rtd-confirm-dialog {
+            background:
+                linear-gradient(180deg, rgba(10,25,41,0.98), rgba(8,21,36,0.98)),
+                radial-gradient(circle at 0% 0%, rgba(16,185,129,0.18), transparent 16rem);
+            border-color: rgba(148, 163, 184, 0.14);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+
         .dispatch-map-page .rtd-premium-btn {
             position: relative;
             overflow: hidden;
@@ -1108,6 +1134,51 @@
             </aside>
         </div>
 
+        {{-- COMPLETE STOP CONFIRMATION --}}
+        <div x-show="showCompleteModal" x-cloak x-transition
+             class="rtd-confirm-modal flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4">
+            <div class="rtd-confirm-dialog w-full max-w-md rounded-2xl p-5">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-base font-black text-slate-950 dark:text-white">Finalizar entrega</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                            Esta parada quedará marcada como completada y se actualizará el avance de la ruta.
+                        </p>
+                    </div>
+                    <button type="button" @click="showCompleteModal = false"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <template x-if="selectedStop">
+                    <div class="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Parada seleccionada</p>
+                        <p class="mt-1 text-sm font-extrabold text-slate-950 dark:text-white leading-tight" x-text="selectedStop.delivery_address"></p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400" x-text="selectedStop.customer_name || 'Cliente sin nombre'"></p>
+                    </div>
+                </template>
+
+                <div class="mt-5 flex items-center justify-end gap-3">
+                    <button type="button" @click="showCompleteModal = false"
+                        class="rtd-premium-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                        Cancelar
+                    </button>
+                    <button type="button" @click="confirmCompleteSelectedStop()"
+                        class="rtd-action-success px-4 py-2 rounded-xl text-xs font-black text-white transition-all active:scale-95">
+                        Sí, finalizar entrega
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- RETURN MODAL --}}
         <div x-show="showReturnModal" x-cloak x-transition
              class="rtd-return-modal flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
@@ -1183,6 +1254,7 @@
                     
                     // Modales
                     showReturnModal: false,
+                    showCompleteModal: false,
                     
                     // Polling
                     refreshTimer: null,
@@ -1232,6 +1304,13 @@
 
                         window.addEventListener('dispatch-data-changed', () => {
                             this.showReturnModal = false;
+                            this.showCompleteModal = false;
+                            try {
+                                localStorage.setItem('dispatches:last-change', JSON.stringify({
+                                    at: Date.now(),
+                                    source: 'dispatch-map',
+                                }));
+                            } catch (e) {}
                             window.dispatchEvent(new CustomEvent('dispatches-table-refresh-requested'));
                         });
 
@@ -1564,10 +1643,15 @@
 
                     // Acciones rápidas de la parada seleccionada en Alpine
                     async completeSelectedStop() {
-                        if (confirm('¿Estás seguro de marcar esta parada como entregada?')) {
-                            await this.$wire.completeOrder(this.activeStopId);
-                            await this.pollUbicaciones();
-                        }
+                        if (!this.activeStopId || !this.selectedStop) return;
+                        this.showCompleteModal = true;
+                    },
+
+                    async confirmCompleteSelectedStop() {
+                        if (!this.activeStopId) return;
+                        await this.$wire.completeOrder(this.activeStopId);
+                        this.showCompleteModal = false;
+                        await this.pollUbicaciones();
                     },
 
                     async reportSelectedStopReturn() {
