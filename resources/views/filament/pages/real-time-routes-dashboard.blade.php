@@ -270,6 +270,162 @@
             overflow: visible !important;
         }
 
+        .dispatch-map-page .rtd-premium-btn {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
+            color: #0f172a;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255,255,255,0.75);
+        }
+
+        .dispatch-map-page .rtd-premium-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0.34), transparent 42%);
+            pointer-events: none;
+        }
+
+        .dispatch-map-page .rtd-premium-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(124, 58, 237, 0.38);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14), 0 0 0 3px rgba(124, 58, 237, 0.08);
+        }
+
+        .dark .dispatch-map-page .rtd-premium-btn,
+        [data-theme="dark"] .dispatch-map-page .rtd-premium-btn {
+            border-color: rgba(148, 163, 184, 0.14);
+            background: linear-gradient(180deg, rgba(15, 31, 51, 0.96), rgba(8, 21, 36, 0.94));
+            color: #e2e8f0;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .dispatch-map-page .rtd-primary-btn {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 14px 30px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+
+        .dispatch-map-page .rtd-summary-card {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92)),
+                radial-gradient(circle at 12% 0%, rgba(124,58,237,0.08), transparent 20rem);
+            border-color: rgba(148, 163, 184, 0.24) !important;
+        }
+
+        .dark .dispatch-map-page .rtd-summary-card,
+        [data-theme="dark"] .dispatch-map-page .rtd-summary-card {
+            background:
+                linear-gradient(180deg, rgba(11, 27, 44, 0.98), rgba(8, 21, 36, 0.96)),
+                radial-gradient(circle at 12% 0%, rgba(124,58,237,0.14), transparent 20rem) !important;
+            border-color: rgba(148, 163, 184, 0.13) !important;
+        }
+
+        .dispatch-map-page .rtd-summary-node {
+            border-radius: 8px;
+            padding: 0.55rem 0.65rem;
+            min-width: 118px;
+            border: 1px solid transparent;
+            transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+        }
+
+        .dispatch-map-page .rtd-summary-node:hover {
+            transform: translateY(-1px);
+            background: rgba(99, 102, 241, 0.06);
+            border-color: rgba(99, 102, 241, 0.18);
+        }
+
+        .dark .dispatch-map-page .rtd-summary-node:hover,
+        [data-theme="dark"] .dispatch-map-page .rtd-summary-node:hover {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(129, 140, 248, 0.22);
+        }
+
+        .dispatch-map-page .rtd-stop-row {
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(255,255,255,0.72);
+            box-shadow: inset 3px 0 0 rgba(99,102,241,0.38);
+        }
+
+        .dispatch-map-page .rtd-stop-row:hover {
+            background: rgba(248,250,252,0.95);
+            border-color: rgba(99,102,241,0.24);
+        }
+
+        .dark .dispatch-map-page .rtd-stop-row,
+        [data-theme="dark"] .dispatch-map-page .rtd-stop-row {
+            background: rgba(15, 31, 51, 0.52);
+            border-color: rgba(148, 163, 184, 0.1);
+            box-shadow: inset 3px 0 0 rgba(99,102,241,0.52);
+        }
+
+        .dark .dispatch-map-page .rtd-stop-row:hover,
+        [data-theme="dark"] .dispatch-map-page .rtd-stop-row:hover {
+            background: rgba(20, 39, 63, 0.78);
+            border-color: rgba(129, 140, 248, 0.2);
+        }
+
+        .dispatch-map-page .rtd-status-pill {
+            border-radius: 6px;
+            padding: 0.2rem 0.48rem;
+            border: 1px solid currentColor;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .dispatch-map-page .rtd-pill-completed {
+            color: #047857 !important;
+            background: rgba(16,185,129,0.12);
+            border-color: rgba(16,185,129,0.18);
+        }
+
+        .dispatch-map-page .rtd-pill-pending {
+            color: #7c3aed !important;
+            background: rgba(124,58,237,0.12);
+            border-color: rgba(124,58,237,0.18);
+        }
+
+        .dispatch-map-page .rtd-pill-returned {
+            color: #c2410c !important;
+            background: rgba(249,115,22,0.12);
+            border-color: rgba(249,115,22,0.2);
+        }
+
+        .dark .dispatch-map-page .rtd-pill-completed,
+        [data-theme="dark"] .dispatch-map-page .rtd-pill-completed { color: #34d399 !important; }
+        .dark .dispatch-map-page .rtd-pill-pending,
+        [data-theme="dark"] .dispatch-map-page .rtd-pill-pending { color: #a78bfa !important; }
+        .dark .dispatch-map-page .rtd-pill-returned,
+        [data-theme="dark"] .dispatch-map-page .rtd-pill-returned { color: #fb923c !important; }
+
+        .dispatch-map-page .rtd-action-warning {
+            background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+            box-shadow: 0 12px 24px rgba(245, 158, 11, 0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+
+        .dispatch-map-page .rtd-action-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+            box-shadow: 0 12px 24px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255,255,255,0.16);
+        }
+
+        .dispatch-map-page .rtd-action-success {
+            background: linear-gradient(135deg, #10b981, #047857) !important;
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+
+        .dispatch-map-page .rtd-action-disabled {
+            background: linear-gradient(180deg, #f1f5f9, #e2e8f0) !important;
+            color: #94a3b8 !important;
+            box-shadow: none !important;
+        }
+
+        .dark .dispatch-map-page .rtd-action-disabled,
+        [data-theme="dark"] .dispatch-map-page .rtd-action-disabled {
+            background: linear-gradient(180deg, #172033, #111827) !important;
+            color: #64748b !important;
+        }
+
         .dispatch-map-page .rtd-return-dialog select,
         .dispatch-map-page .rtd-return-dialog option {
             color: #0f172a;
@@ -400,7 +556,7 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <!-- Botón Tabla -->
                         <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('index') }}"
-                           class="px-4 py-2 rounded-xl dark:bg-[#0b1728] bg-white border dark:border-slate-700 border-slate-200 dark:text-slate-300 text-slate-700 dark:hover:text-white hover:text-slate-900 font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
+                           class="rtd-premium-btn px-4 py-2 rounded-xl font-bold text-xs transition-all duration-300 flex items-center gap-2 active:scale-[0.98]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
@@ -409,7 +565,7 @@
 
                         <!-- Botón Nuevo Despacho -->
                         <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}"
-                           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25 transition-all active:scale-95">
+                           class="rtd-primary-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Nuevo Despacho
                         </a>
@@ -477,7 +633,7 @@
 
                 {{-- Route summary — below map, outside overflow:hidden --}}
                 <template x-if="selectedPilotStops.length > 0">
-                    <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                    <div class="rtd-summary-card rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                         <h5 class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2 mb-3">
                             <svg class="w-3.5 h-3.5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
@@ -487,7 +643,7 @@
                         <div class="rtd-summary-scroll">
                             <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
                                 <div class="flex items-center shrink-0">
-                                    <div class="flex flex-col items-center min-w-[100px] text-center cursor-pointer group" @click="zoomToStop(stop)">
+                                    <div class="rtd-summary-node flex flex-col items-center min-w-[100px] text-center cursor-pointer group" @click="zoomToStop(stop)">
                                         <div class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-md transition-transform group-hover:scale-110"
                                             :class="stop.status === 'completed' ? 'bg-emerald-500' : (stop.status === 'returned' ? 'bg-amber-500' : (stop.number === selectedPilotStops.length ? 'bg-red-500' : 'bg-violet-600'))">
                                             <span x-text="stop.status === 'completed' ? '✓' : (stop.number === selectedPilotStops.length ? 'P' : stop.number)"></span>
@@ -495,8 +651,8 @@
                                         <div class="mt-1.5 flex flex-col items-center gap-0.5">
                                             <span class="text-[10px] font-semibold text-slate-700 dark:text-slate-300 max-w-[90px] leading-tight text-center line-clamp-2"
                                                 x-text="stop.number === selectedPilotStops.length ? 'Destino' : getShortAddress(stop.delivery_address)"></span>
-                                            <span class="text-[9px] font-bold"
-                                                :class="stop.status === 'completed' ? 'text-emerald-500' : (stop.status === 'returned' ? 'text-amber-500' : 'text-violet-500')"
+                                            <span class="rtd-status-pill text-[9px] font-bold"
+                                                :class="stop.status === 'completed' ? 'rtd-pill-completed' : (stop.status === 'returned' ? 'rtd-pill-returned' : 'rtd-pill-pending')"
                                                 x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"></span>
                                             <span class="text-[9px] text-slate-400 dark:text-slate-500 font-mono" x-text="formatTime(stop, idx)"></span>
                                         </div>
@@ -606,7 +762,7 @@
 
                                 {{-- Ver lista --}}
                                 <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : '/admin/dispatches'"
-                                   class="block w-full text-center py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-lg shadow-violet-600/20">
+                                   class="rtd-primary-btn block w-full text-center py-2.5 rounded-xl text-white text-xs font-bold transition-all active:scale-[0.98]">
                                     Ver lista de despachos
                                 </a>
 
@@ -631,7 +787,7 @@
                                     </div>
                                     <div class="rtd-stops-scroll flex flex-col">
                                         <template x-for="(stop, idx) in selectedPilotStops" :key="stop.id">
-                                            <div class="flex gap-3 cursor-pointer py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg px-1 -mx-1 transition-colors"
+                                            <div class="rtd-stop-row flex gap-3 cursor-pointer py-2.5 rounded-lg px-2 transition-colors mb-2 last:mb-0"
                                                 @click="zoomToStop(stop)">
                                                 <div class="flex flex-col items-center shrink-0 pt-0.5">
                                                     <div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-white shadow"
@@ -647,8 +803,8 @@
                                                         <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight"
                                                             x-text="stop.number === selectedPilotStops.length ? 'Destino — ' + stop.delivery_address : stop.delivery_address"></p>
                                                         <div class="flex items-center gap-1.5 shrink-0">
-                                                            <span class="text-[9px] font-bold"
-                                                                :class="stop.status === 'completed' ? 'text-emerald-500' : (stop.status === 'returned' ? 'text-amber-500' : 'text-violet-500')"
+                                                            <span class="rtd-status-pill text-[9px] font-bold"
+                                                                :class="stop.status === 'completed' ? 'rtd-pill-completed' : (stop.status === 'returned' ? 'rtd-pill-returned' : 'rtd-pill-pending')"
                                                                 x-text="stop.status === 'completed' ? 'Completado' : (stop.status === 'returned' ? 'Devuelto' : 'Pendiente')"></span>
                                                             <span class="text-[9px] text-slate-400 font-mono" x-text="formatTime(stop, stop.number - 1)"></span>
                                                         </div>
@@ -674,29 +830,29 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <button type="button" @click="reportSelectedStopReturn()"
                                                 :disabled="!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned'))"
-                                                class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[10px] font-bold transition-all shadow-sm"
+                                                class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[10px] font-bold transition-all"
                                                 :class="(!activeStopId || (selectedStop && (selectedStop.status === 'completed' || selectedStop.status === 'returned')))
-                                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-700'
-                                                    : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 active:scale-95'">
+                                                    ? 'rtd-action-disabled cursor-not-allowed border border-slate-200 dark:border-slate-700'
+                                                    : 'rtd-action-warning text-white active:scale-95'">
                                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.27 16A2 2 0 005.07 19z"/></svg>
                                                 Reportar Devolución
                                             </button>
                                             <button type="button" @click="cancelActiveDispatch()"
-                                                class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold transition-all active:scale-95 shadow-sm shadow-red-500/20">
+                                                class="rtd-action-danger flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-white text-[10px] font-bold transition-all active:scale-95">
                                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 Cancelar Despacho
                                             </button>
                                         </div>
                                         <template x-if="activeStopId && selectedStop && selectedStop.status !== 'completed' && selectedStop.status !== 'returned'">
                                             <button type="button" @click="completeSelectedStop()"
-                                                class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-emerald-500/20">
+                                                class="rtd-action-success flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-bold transition-all active:scale-95">
                                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                                 Finalizar Entrega
                                             </button>
                                         </template>
                                         <template x-if="selectedPilot.status === 'completed'">
                                             <button type="button" @click="finishActiveDispatch()"
-                                                class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-violet-600/20">
+                                                class="rtd-primary-btn flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-bold transition-all active:scale-95">
                                                 Liquidar Despacho y Facturar
                                             </button>
                                         </template>
