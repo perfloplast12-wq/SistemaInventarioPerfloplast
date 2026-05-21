@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Dispatch;
 use App\Models\DispatchLocation;
+use App\Services\DispatchMapDataService;
+use App\Services\GpsTrackingThrottle;
 use Illuminate\Http\Request;
 
 class TrackingController extends Controller
 {
+    public function __construct(
+        protected GpsTrackingThrottle $gpsThrottle,
+        protected DispatchMapDataService $dispatchMapData,
+    ) {}
+
     public function store(Request $request)
     {
         try {
             $user = auth()->user();
-            
+
             $validated = $request->validate([
                 'dispatch_id' => 'nullable|exists:dispatches,id',
                 'lat' => 'required|numeric',
@@ -24,7 +31,9 @@ class TrackingController extends Controller
             ]);
 
             $isOffline = $request->input('status') === 'offline';
-            
+            $lat = (float) $validated['lat'];
+            $lng = (float) $validated['lng'];
+
             if ($request->filled('dispatch_id')) {
                 if ($isOffline) {
                     // Señal de desconexión: guardar en DB usando la última posición pero con speed = -1
@@ -42,21 +51,34 @@ class TrackingController extends Controller
                             'created_at' => now(),
                         ]);
                         event(new \App\Events\LocationUpdated($location, true));
+                        $this->dispatchMapData->forgetForUser($user);
                     }
                 } else {
+                    $throttleKey = $this->gpsThrottle->cacheKey('dispatch', (int) $validated['dispatch_id']);
+
+                    if (! $this->gpsThrottle->shouldPersist($throttleKey, $lat, $lng)) {
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => 'Location throttled',
+                        ]);
+                    }
+
                     $location = DispatchLocation::create([
                         'dispatch_id' => $validated['dispatch_id'],
-                        'lat' => $validated['lat'],
-                        'lng' => $validated['lng'],
+                        'lat' => $lat,
+                        'lng' => $lng,
                         'speed' => $validated['speed'] ?? null,
                         'heading' => $validated['heading'] ?? null,
                         'created_at' => now(),
                     ]);
+                    $this->gpsThrottle->remember($throttleKey, $lat, $lng);
+                    $this->dispatchMapData->forgetForUser($user);
+
                     try {
                         event(new \App\Events\LocationUpdated($location));
                     } catch (\Exception $e) {}
                 }
-            } else if ($user) {
+            } elseif ($user) {
                 // Rastreo general de usuario (Vendedores)
                 if ($isOffline) {
                     // Señal de desconexión: marcar última ubicación con accuracy = -1
@@ -74,17 +96,29 @@ class TrackingController extends Controller
                             'accuracy' => -1, // Marcador especial: usuario desconectado
                             'created_at' => now(),
                         ]);
+                        $this->dispatchMapData->forgetForUser($user);
                     }
                 } else {
-                    $location = \App\Models\UserLocation::create([
+                    $throttleKey = $this->gpsThrottle->cacheKey('user', $user->id);
+
+                    if (! $this->gpsThrottle->shouldPersist($throttleKey, $lat, $lng)) {
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => 'Location throttled',
+                        ]);
+                    }
+
+                    \App\Models\UserLocation::create([
                         'user_id' => $user->id,
-                        'lat' => $validated['lat'],
-                        'lng' => $validated['lng'],
+                        'lat' => $lat,
+                        'lng' => $lng,
                         'speed' => $validated['speed'],
                         'heading' => $validated['heading'],
                         'accuracy' => $validated['accuracy'] ?? null,
                         'created_at' => now(),
                     ]);
+                    $this->gpsThrottle->remember($throttleKey, $lat, $lng);
+                    $this->dispatchMapData->forgetForUser($user);
                 }
             }
 

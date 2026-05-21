@@ -26,7 +26,9 @@
                     config.dispatchId = data.dispatch_id;
                     config.shouldTrack = true;
                 }
+                return data.dispatch_id || null;
             } catch (e) {}
+            return null;
         };
         
         const updateLockUI = (isLocked) => {
@@ -52,8 +54,8 @@
             const now = Date.now();
             const diff = (now - lastSuccess) / 1000;
             
-            // Si nunca ha habido éxito o han pasado más de 20s (bajamos a 20s para ser más estrictos)
-            if (lastSuccess === 0 || diff > 20) {
+            // Si nunca ha habido éxito o han pasado más de 60s (generoso para desktop)
+            if (lastSuccess === 0 || diff > 60) {
                 updateLockUI(true);
             } else {
                 updateLockUI(false);
@@ -68,14 +70,15 @@
         };
 
         const sendLocation = async (pos) => {
-            if (!config.shouldTrack) return;
+            if (!config.shouldTrack) return false;
             try {
                 const { latitude, longitude, speed, heading, accuracy } = pos.coords;
-                await fetch('/api/tracking', {
+                const resp = await fetch('/api/tracking', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': config.csrfToken
                     },
                     body: JSON.stringify({
@@ -88,24 +91,62 @@
                         status: 'online'
                     })
                 });
+                return resp.ok;
             } catch (e) {}
+            return false;
+        };
+
+        const requestCurrentPosition = (highAccuracy = true) => {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: highAccuracy,
+                    timeout: 15000,
+                    maximumAge: highAccuracy ? 0 : 60000
+                });
+            });
+        };
+
+        const requestPositionWithFallback = async () => {
+            try {
+                return await requestCurrentPosition(true);
+            } catch (e) {
+                console.log('[Tracker] High accuracy failed, trying low accuracy...');
+                return await requestCurrentPosition(false);
+            }
         };
 
         const startWatch = () => {
             if (watchId) navigator.geolocation.clearWatch(watchId);
             
-            watchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    setStorageTime(Date.now());
-                    updateLockUI(false);
-                    sendLocation(pos);
-                },
-                (err) => {
-                    console.error('GPS Watch Error:', err);
-                    updateLockUI(true);
-                },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
+            // Intentar primero con high accuracy, si falla reintentar sin ella
+            const tryWatch = (highAccuracy) => {
+                if (watchId) navigator.geolocation.clearWatch(watchId);
+                watchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        setStorageTime(Date.now());
+                        updateLockUI(false);
+                        sendLocation(pos);
+                    },
+                    (err) => {
+                        console.error('GPS Watch Error:', err);
+                        if (highAccuracy) {
+                            console.log('[Tracker] Watch high accuracy failed, retrying with low accuracy...');
+                            setTimeout(() => tryWatch(false), 1000);
+                        } else {
+                            // Incluso con low accuracy falló — mostrar lock pero reintentar
+                            updateLockUI(true);
+                            setTimeout(() => tryWatch(false), 10000);
+                        }
+                    },
+                    { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: highAccuracy ? 0 : 60000 }
+                );
+            };
+            tryWatch(true);
         };
 
         // Inyectar CSS preventivo para que no se vea nada antes de que JS decida
@@ -135,17 +176,26 @@
             }
         });
         
-        window.retryGpsConnection = (e) => {
+        window.retryGpsConnection = async (e) => {
             if (e) { e.preventDefault(); e.stopPropagation(); }
-            console.log('Retry requested...');
-            startWatch();
-            // Intentar forzar el prompt
-            navigator.geolocation.getCurrentPosition(() => {
+            config.shouldTrack = true;
+            await syncActiveDispatch();
+
+            try {
+                // Intentar con high accuracy, fallback a low accuracy (funciona en desktop)
+                const pos = await requestPositionWithFallback();
+                const saved = await sendLocation(pos);
                 setStorageTime(Date.now());
-                updateLockUI(false);
-            }, (err) => {
+                updateLockUI(!saved && !!config.dispatchId);
+                startWatch();
+            } catch (err) {
+                console.error('GPS retry error:', err);
+                // Incluso con fallback, si falló, mostrar mensaje más amigable
                 updateLockUI(true);
-            }, { enableHighAccuracy: true, timeout: 5000 });
+                // Reintentar watch automáticamente con low accuracy
+                setTimeout(() => startWatch(), 2000);
+            }
+
             return false;
         };
 

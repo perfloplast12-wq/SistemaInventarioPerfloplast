@@ -799,11 +799,6 @@
         x-data="realTimeDashboardComponent()"
         class="dispatch-map-page min-h-screen dark:bg-[#07111f] bg-slate-50 dark:text-white text-slate-900"
     >
-        @php
-            $stats = $this->getTabsStats();
-            $dispatches = $this->getDispatches();
-        @endphp
-
         <div class="rtd-shell">
             <!-- COLUMNA IZQUIERDA -->
             <div class="flex flex-col gap-5 min-w-0">
@@ -855,10 +850,13 @@
                             ];
                         @endphp
                         @foreach ($tabs as $key => $t)
-                            <button wire:click="setTab('{{ $key }}')"
-                                class="rtd-map-filter-btn filter-{{ $key }} {{ $activeTab === $key ? 'is-active' : '' }} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200">
+                            <button type="button"
+                                @click="setActiveTab('{{ $key }}')"
+                                :class="activeTab === '{{ $key }}' ? 'rtd-map-filter-btn filter-{{ $key }} is-active' : 'rtd-map-filter-btn filter-{{ $key }}'"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200">
                                 {{ $t['label'] }}
-                                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black text-white {{ $t['color'] }}">{{ $stats[$key] ?? 0 }}</span>
+                                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black text-white {{ $t['color'] }}"
+                                    x-text="tabsStats['{{ $key }}'] ?? 0">{{ $tabsStats[$key] ?? 0 }}</span>
                             </button>
                         @endforeach
                     </div>
@@ -885,16 +883,18 @@
                 <div id="dispatch-map-card" class="rtd-map-box w-full shadow-2xl bg-slate-950">
                     <div id="dispatch-dashboard-map" class="absolute inset-0 z-0" wire:ignore></div>
                     <template x-if="selectedPilot">
-                        <div class="absolute bottom-4 left-4 z-[900] flex items-center gap-3 bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 shadow-2xl min-w-[240px]">
+                        <div class="absolute bottom-4 left-4 z-[900] flex items-center gap-3 bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 shadow-2xl min-w-[270px]">
                             <div class="w-9 h-9 rounded-full bg-[#13223f] border border-slate-700/50 flex items-center justify-center text-xs font-black text-white shrink-0" x-text="selectedPilot.driver_initials"></div>
-                            <div>
+                            <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs font-bold text-white" x-text="selectedPilot.driver_name + ' (' + selectedPilot.truck_name + ')'"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span class="text-[10px] text-emerald-400 font-bold" x-text="selectedPilot.status === 'in_progress' ? 'En ruta' : 'Completado'"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full" :class="getPilotLocationDetails()?.is_online ? 'bg-emerald-500' : 'bg-amber-400'"></span>
+                                    <span class="text-[10px] font-bold"
+                                        :class="getPilotLocationDetails()?.is_online ? 'text-emerald-400' : 'text-amber-300'"
+                                        x-text="getPilotLocationDetails()?.is_online ? 'GPS en línea' : 'GPS sin señal reciente'"></span>
                                 </div>
-                                <p class="text-[10px] text-slate-400 mt-0.5" x-text="'Velocidad: ' + (getPilotLocationDetails() ? getPilotLocationDetails().speed : '45') + ' km/h'"></p>
-                                <p class="text-[10px] text-slate-400" x-text="'Última actualización: ' + (getPilotLocationDetails() ? getPilotLocationDetails().updated_at : 'hace 1 min')"></p>
+                                <p class="text-[10px] text-slate-400 mt-0.5" x-text="getPilotLocationDetails() ? ('Velocidad: ' + getPilotLocationDetails().speed + ' km/h') : 'Sin registro GPS'"></p>
+                                <p class="text-[10px] text-slate-400 truncate" x-text="getPilotLocationDetails() ? ('Última actualización: ' + getPilotLocationDetails().last_seen_exact) : 'Esperando primera ubicación'"></p>
                             </div>
                         </div>
                     </template>
@@ -964,28 +964,28 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Pilotos disponibles</p>
-                                    <span class="text-[10px] font-bold text-violet-500">{{ count($dispatches) }} total</span>
+                                    <span class="text-[10px] font-bold text-violet-500" x-text="dispatchList.length + ' total'">{{ count($dispatchList) }} total</span>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    @forelse ($dispatches as $d)
-                                        <div wire:click="selectDriver({{ $d['driver_id'] }})"
+                                    <template x-if="dispatchList.length === 0">
+                                        <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">No hay pilotos para este filtro.</div>
+                                    </template>
+                                    <template x-for="d in dispatchList" :key="d.driver_id">
+                                        <div @click="selectPilot(d.driver_id)"
                                              class="rtd-driver-card flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer transition-all group">
                                              <div class="flex items-center gap-2.5 min-w-0">
-                                                 <div class="rtd-avatar-premium w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 transition-all">
-                                                     {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
-                                                 </div>
+                                                 <div class="rtd-avatar-premium w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 transition-all"
+                                                     x-text="(d.driver_name || 'SP').substring(0, 2).toUpperCase()"></div>
                                                  <div class="min-w-0">
-                                                     <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ $d['driver_name'] }}</p>
-                                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ $d['truck_name'] }}</p>
+                                                     <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate" x-text="d.driver_name"></p>
+                                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate" x-text="d.truck_name"></p>
                                                  </div>
                                              </div>
-                                             <span class="rtd-status-badge text-[9px] shrink-0 {{ $d['status'] === 'in_progress' ? 'is-active' : '' }}">
-                                                 {{ $d['status'] === 'in_progress' ? 'En ruta' : ($d['status'] === 'pending' ? 'Pendiente' : 'Completado') }}
-                                             </span>
+                                             <span class="rtd-status-badge text-[9px] shrink-0"
+                                                 :class="d.status === 'in_progress' ? 'is-active' : ''"
+                                                 x-text="d.status === 'in_progress' ? 'En ruta' : (d.status === 'pending' ? 'Pendiente' : 'Completado')"></span>
                                         </div>
-                                    @empty
-                                         <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">No hay pilotos para este filtro.</div>
-                                    @endforelse
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -1028,6 +1028,40 @@
                             </div>
 
                             <div class="p-5 flex flex-col gap-4">
+
+                                <div class="rtd-gps-card rounded-xl border p-3"
+                                    :class="getPilotLocationDetails()?.is_online ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-amber-500/25 bg-amber-500/10'">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p class="text-[10px] font-black uppercase tracking-wider"
+                                                :class="getPilotLocationDetails()?.is_online ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'">
+                                                GPS del piloto
+                                            </p>
+                                            <p class="text-xs font-extrabold text-slate-900 dark:text-white mt-0.5"
+                                                x-text="getPilotLocationDetails()?.is_online ? 'En línea ahora' : (getPilotLocationDetails() ? 'Última señal recibida' : 'Sin datos recibidos')"></p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-black"
+                                            :class="getPilotLocationDetails()?.is_online ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                            <span x-text="getPilotLocationDetails()?.is_online ? 'Activo' : 'Revisar'"></span>
+                                        </span>
+                                    </div>
+                                    <div class="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                                        <div class="rounded-lg bg-white/70 dark:bg-slate-950/35 border border-white/60 dark:border-white/10 p-2">
+                                            <p class="font-bold text-slate-500 dark:text-slate-400">Hora</p>
+                                            <p class="font-black text-slate-900 dark:text-white truncate" x-text="getPilotLocationDetails()?.last_seen_exact || 'Sin registro'"></p>
+                                        </div>
+                                        <div class="rounded-lg bg-white/70 dark:bg-slate-950/35 border border-white/60 dark:border-white/10 p-2">
+                                            <p class="font-bold text-slate-500 dark:text-slate-400">Velocidad</p>
+                                            <p class="font-black text-slate-900 dark:text-white" x-text="getPilotLocationDetails() ? (getPilotLocationDetails().speed + ' km/h') : '0 km/h'"></p>
+                                        </div>
+                                        <div class="rounded-lg bg-white/70 dark:bg-slate-950/35 border border-white/60 dark:border-white/10 p-2 col-span-2">
+                                            <p class="font-bold text-slate-500 dark:text-slate-400">Posición</p>
+                                            <p class="font-mono font-black text-slate-900 dark:text-white truncate"
+                                                x-text="getPilotLocationDetails() ? (Number(getPilotLocationDetails().lat).toFixed(6) + ', ' + Number(getPilotLocationDetails().lng).toFixed(6)) : 'Sin coordenadas'"></p>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {{-- Ver lista --}}
                                 <a :href="selectedPilot.latest_dispatch_id ? '/admin/dispatches/' + selectedPilot.latest_dispatch_id : '/admin/dispatches'"
@@ -1246,6 +1280,8 @@
                     activeMarkers: {},
                     stopMarkers: [],
                     routeLine: null,
+                    mapIsInteracting: false,
+                    pendingLocationData: null,
                     
                     selectedPilot: null,
                     selectedPilotStops: [],
@@ -1258,10 +1294,15 @@
                     
                     // Polling
                     refreshTimer: null,
+
+                    activeTab: @json($activeTab),
+                    tabsStats: @json($tabsStats),
+                    dispatchList: @json($dispatchList),
+                    cachedPilots: @json($initialPilots),
                     
                     async init() {
-                        this.selectedPilot = @json($this->getSelectedDriverDetails());
-                        this.selectedPilotStops = @json($this->getSelectedDriverStops());
+                        this.selectedPilot = @json($initialSelectedDetails);
+                        this.selectedPilotStops = @json($initialSelectedStops);
                         
                         await this.loadLeaflet();
                         this.initMap();
@@ -1282,7 +1323,29 @@
                             this.activeStopId = null;
                             this.selectedStop = null;
                             this.clearSelectedRoute();
-                            this.updatePilotsMarkers(e.detail.pilots || []);
+                            this.updatePilotsMarkers(e.detail.pilots || [], true);
+                        });
+
+                        window.addEventListener('dashboard-tab-changed', (e) => {
+                            this.activeTab = e.detail.tab || this.activeTab;
+                            this.tabsStats = e.detail.stats || this.tabsStats;
+                            this.dispatchList = e.detail.dispatches || this.dispatchList;
+                            this.cachedPilots = e.detail.pilots || this.cachedPilots;
+                            this.selectedPilot = null;
+                            this.selectedPilotStops = [];
+                            this.activeStopId = null;
+                            this.selectedStop = null;
+                            this.clearSelectedRoute();
+                            this.updatePilotsMarkers(this.cachedPilots, true);
+                        });
+
+                        window.addEventListener('dispatch-list-updated', (e) => {
+                            this.tabsStats = e.detail.stats || this.tabsStats;
+                            this.dispatchList = e.detail.dispatches || this.dispatchList;
+                            this.cachedPilots = e.detail.pilots || this.cachedPilots;
+                            if (!this.selectedPilot) {
+                                this.updatePilotsMarkers(this.cachedPilots, false);
+                            }
                         });
 
                         window.addEventListener('dispatch-cancelled', () => {
@@ -1371,12 +1434,40 @@
                         // Controles de Zoom en la parte inferior izquierda
                         L.control.zoom({ position: 'bottomleft' }).addTo(this.map);
 
+                        this.map.on('movestart zoomstart', () => {
+                            this.mapIsInteracting = true;
+                        });
+
+                        this.map.on('moveend zoomend', () => {
+                            this.mapIsInteracting = false;
+                            if (this.pendingLocationData) {
+                                const data = this.pendingLocationData;
+                                this.pendingLocationData = null;
+                                setTimeout(() => this.applyRealtimeData(data, false), 250);
+                            }
+                        });
+
                         // Si hay un piloto pre-seleccionado, cargar su ruta
                         if (this.selectedPilot) {
-                            this.renderSelectedRoute(@json($this->getSelectedDriverLocations()), this.selectedPilotStops);
+                            this.$wire.refreshLocations().then((data) => {
+                                if (data?.selectedLocations) {
+                                    this.renderSelectedRoute(data.selectedLocations, this.selectedPilotStops);
+                                }
+                            });
                         } else {
                             this.loadAllActivePilots();
                         }
+                    },
+
+                    async setActiveTab(tab) {
+                        if (this.activeTab === tab) return;
+                        this.activeTab = tab;
+                        await this.$wire.setTab(tab);
+                    },
+
+                    async selectPilot(driverId) {
+                        if (!driverId) return;
+                        await this.$wire.selectDriver(driverId);
                     },
 
                     setMapLayer(layer) {
@@ -1417,9 +1508,7 @@
 
                     getPilotLocationDetails() {
                         if (!this.selectedPilot) return null;
-                        const pilots = @json($this->getActivePilotsLocations());
-                        const found = pilots.find(p => p.driver_id === this.selectedPilot.driver_id);
-                        return found || { speed: 45, updated_at: 'hace 1 min' };
+                        return this.selectedPilot.location || null;
                     },
 
                     formatTime(stop, idx) {
@@ -1444,11 +1533,10 @@
                     // Carga y dibuja todos los pilotos activos en el mapa
                     loadAllActivePilots() {
                         this.clearSelectedRoute();
-                        const pilots = @json($this->getActivePilotsLocations());
-                        this.updatePilotsMarkers(pilots);
+                        this.updatePilotsMarkers(this.cachedPilots || [], true);
                     },
 
-                    updatePilotsMarkers(pilots) {
+                    updatePilotsMarkers(pilots, shouldFit = false) {
                         // Deduplicar pilotos por `driver_id`
                         const seen = {};
                         const uniquePilots = [];
@@ -1525,14 +1613,14 @@
                         });
 
                         // Ajustar la vista si no hay piloto seleccionado y hay marcadores
-                        if (!this.selectedPilot && pilots.length > 0) {
+                        if (shouldFit && !this.selectedPilot && pilots.length > 0) {
                             const group = L.featureGroup(Object.values(this.activeMarkers));
                             this.map.fitBounds(group.getBounds().pad(0.2));
                         }
                     },
 
                     // Dibuja la ruta y las paradas del piloto seleccionado
-                    renderSelectedRoute(locations, stops) {
+                    renderSelectedRoute(locations, stops, shouldFit = true) {
                         this.clearSelectedRoute();
                         
                         // 1. Dibujar línea de recorrido (morada premium idéntica a la foto)
@@ -1613,7 +1701,7 @@
                         }
 
                         // Enfocar y centrar la ruta completa
-                        if (bounds.length > 0) {
+                        if (shouldFit && bounds.length > 0) {
                             this.map.fitBounds(bounds, { padding: [50, 50] });
                         }
                     },
@@ -1692,14 +1780,30 @@
                     async pollUbicaciones() {
                         try {
                             const data = await this.$wire.refreshLocations();
-                            if (!this.selectedPilot) {
-                                this.updatePilotsMarkers(data.pilots);
-                            } else {
-                                this.renderSelectedRoute(data.selectedLocations, this.selectedPilotStops);
+                            if (this.mapIsInteracting) {
+                                this.pendingLocationData = data;
+                                return;
                             }
+
+                            this.applyRealtimeData(data, false);
                         } catch (e) {
                             console.error('[Error polling dispatch locations]', e);
                         }
+                    },
+
+                    applyRealtimeData(data, shouldFit = false) {
+                        if (!this.selectedPilot) {
+                            this.updatePilotsMarkers(data.pilots || [], shouldFit);
+                            return;
+                        }
+
+                        if (data.selectedDetails) {
+                            this.selectedPilot = data.selectedDetails;
+                        }
+                        if (data.selectedStops) {
+                            this.selectedPilotStops = data.selectedStops;
+                        }
+                        this.renderSelectedRoute(data.selectedLocations || [], this.selectedPilotStops, shouldFit);
                     }
                 }
             }

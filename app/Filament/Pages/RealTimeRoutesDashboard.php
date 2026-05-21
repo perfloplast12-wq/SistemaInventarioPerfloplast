@@ -5,39 +5,66 @@ namespace App\Filament\Pages;
 use App\Models\Dispatch;
 use App\Models\Order;
 use App\Models\OrderReturn;
-use App\Models\Product;
-use App\Models\Color;
+use App\Services\DispatchMapDataService;
 use App\Services\DispatchService;
-use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Renderless;
 
 class RealTimeRoutesDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-truck';
+
     protected static ?string $navigationGroup = 'LOGÍSTICA';
+
     protected static ?string $navigationLabel = 'Despachos';
+
     protected static ?string $title = 'Despachos';
+
     protected static ?string $slug = 'dispatch-map';
+
     protected static string $view = 'filament.pages.real-time-routes-dashboard';
+
+    protected static ?int $navigationSort = 1;
+
+    public string $activeTab = 'todos';
+
+    public ?int $selectedDispatchId = null;
+
+    public ?int $selectedDriverId = null;
+
+    /** @var array<string, int> */
+    public array $tabsStats = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public array $dispatchList = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public array $initialPilots = [];
+
+    public ?array $initialSelectedDetails = null;
+
+    /** @var array<int, array<string, mixed>> */
+    public array $initialSelectedStops = [];
+
+    public ?int $returnOrderId = null;
+
+    public ?int $returnProductId = null;
+
+    public ?int $returnColorId = null;
+
+    public float $returnQuantity = 0;
+
+    public string $returnReason = '';
+
+    public string $returnNotes = '';
+
     public function getMaxContentWidth(): \Filament\Support\Enums\MaxWidth|string|null
     {
         return \Filament\Support\Enums\MaxWidth::Full;
     }
-    protected static ?int $navigationSort = 1;
-
-    public string $activeTab = 'todos';
-    public ?int $selectedDispatchId = null;
-    public ?int $selectedDriverId = null;
-
-    // Campos para el modal de Devolución
-    public ?int $returnOrderId = null;
-    public ?int $returnProductId = null;
-    public ?int $returnColorId = null;
-    public float $returnQuantity = 0;
-    public string $returnReason = '';
-    public string $returnNotes = '';
 
     public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
     {
@@ -59,10 +86,13 @@ class RealTimeRoutesDashboard extends Page
                 $this->selectedDriverId = $dispatch->driver_id;
             }
 
+            $this->loadSnapshot();
+            $this->hydrateInitialSelection();
+
             return;
         }
 
-        $defaultDispatch = $this->dispatchesQuery()
+        $defaultDispatch = $this->mapService()->scopeQuery(auth()->user())
             ->whereNotNull('driver_id')
             ->orderByRaw("CASE status WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END")
             ->latest('dispatch_date')
@@ -72,390 +102,158 @@ class RealTimeRoutesDashboard extends Page
             $this->selectedDispatchId = $defaultDispatch->id;
             $this->selectedDriverId = $defaultDispatch->driver_id;
         }
+
+        $this->loadSnapshot();
+        $this->hydrateInitialSelection();
     }
 
-    /**
-     * Obtener estadísticas de los despachos para los badges superiores
-     */
-    public function getTabsStats(): array
+    protected function hydrateInitialSelection(): void
     {
-        $baseQuery = $this->dispatchesQuery();
-
-        return [
-            'todos' => (clone $baseQuery)->count(),
-            'in_progress' => (clone $baseQuery)->where('status', 'in_progress')->count(),
-            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
-            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
-            'delivered' => (clone $baseQuery)->where('status', 'delivered')->count(),
-        ];
-    }
-
-    /**
-     * Obtener los despachos filtrados por pestaña
-     */
-    public function getDispatches(): array
-    {
-        $query = $this->dispatchesQuery()
-            ->with(['driver', 'truck', 'orders']);
-
-        if ($this->activeTab !== 'todos') {
-            $query->where('status', $this->activeTab);
+        if (! $this->selectedDriverId) {
+            return;
         }
 
-        $grouped = $query
-            ->latest('dispatch_date')
-            ->limit(100)
-            ->get()
-            ->groupBy(fn ($d) => $d->driver_id ?? strtolower(trim($d->driver_name ?? '')));
+        $payload = $this->mapService()->selectedDriverPayload(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
 
-        return $grouped
-            ->map(function ($dispatches) {
-                $first = $dispatches->first();
-                $driverName = $first->driver?->name ?? $first->driver_name ?? 'Sin Piloto';
-
-                $truckNames = $dispatches->pluck('truck.name')->filter()->unique()->values()->toArray();
-                $truckName = count($truckNames) === 1 ? $truckNames[0] : implode(', ', array_slice($truckNames, 0, 2));
-                if (count($truckNames) > 1) {
-                    $truckName .= ' +';
-                }
-
-                $routes = $dispatches->pluck('route')->filter()->unique()->values()->toArray();
-                $route = count($routes) === 1 ? $routes[0] : implode(', ', array_slice($routes, 0, 2));
-                if (count($routes) > 2) {
-                    $route .= ' +';
-                }
-
-                $allOrders = $dispatches->flatMap(fn ($d) => $d->orders);
-                $totalOrders = $allOrders->count();
-                $completedOrders = $allOrders->whereIn('status', ['completed', 'completed_with_return'])->count();
-                $progress = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
-
-                return [
-                    'driver_id' => $first->driver_id ?? null,
-                    'id' => $first->id,
-                    'dispatch_number' => $first->dispatch_number,
-                    'driver_name' => $driverName,
-                    'truck_name' => $truckName ?: 'Sin Camión',
-                    'status' => $dispatches->pluck('status')->contains('in_progress') ? 'in_progress' : ($dispatches->pluck('status')->contains('pending') ? 'pending' : 'completed'),
-                    'progress' => $progress,
-                    'route' => $route ?: 'Sin ruta',
-                    'dispatch_count' => $dispatches->count(),
-                    'total_orders' => $totalOrders,
-                    'completed_orders' => $completedOrders,
-                    'pending_orders' => $totalOrders - $completedOrders,
-                ];
-            })
-            ->values()
-            ->toArray();
+        $this->initialSelectedDetails = $payload['details'];
+        $this->initialSelectedStops = $payload['stops'];
     }
 
-    /**
-     * Cambiar de pestaña
-     */
+    protected function loadSnapshot(): void
+    {
+        $snapshot = $this->mapService()->snapshot(auth()->user(), $this->activeTab);
+        $this->tabsStats = $snapshot['stats'];
+        $this->dispatchList = $snapshot['dispatches'];
+        $this->initialPilots = $snapshot['pilots'];
+    }
+
+    protected function broadcastSnapshot(): void
+    {
+        $this->loadSnapshot();
+
+        $this->dispatch(
+            'dispatch-list-updated',
+            stats: $this->tabsStats,
+            dispatches: $this->dispatchList,
+            pilots: $this->initialPilots,
+        );
+    }
+
+    public function getTabsStats(): array
+    {
+        return $this->tabsStats ?: $this->mapService()->tabsStats(auth()->user());
+    }
+
+    public function getDispatches(): array
+    {
+        return $this->dispatchList ?: $this->mapService()->dispatchList(auth()->user(), $this->activeTab);
+    }
+
+    public function getActivePilotsLocations(): array
+    {
+        return $this->mapService()->activePilotsLocations(auth()->user(), $this->activeTab);
+    }
+
+    #[Renderless]
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
         $this->selectedDispatchId = null;
         $this->selectedDriverId = null;
 
+        $this->mapService()->forgetForUser(auth()->user());
+        $snapshot = $this->mapService()->snapshot(auth()->user(), $this->activeTab);
+        $this->tabsStats = $snapshot['stats'];
+        $this->dispatchList = $snapshot['dispatches'];
+
         $this->dispatch(
-            'dashboard-filter-changed',
-            pilots: $this->getActivePilotsLocations(),
+            'dashboard-tab-changed',
+            tab: $tab,
+            stats: $snapshot['stats'],
+            dispatches: $snapshot['dispatches'],
+            pilots: $snapshot['pilots'],
         );
     }
 
-    /**
-     * Seleccionar un piloto en particular
-     */
+    #[Renderless]
     public function selectDriver(int $driverId): void
     {
         $this->selectedDriverId = $driverId;
-        $this->selectedDispatchId = $this->getDriverLatestDispatchId($driverId);
+        $this->selectedDispatchId = $this->mapService()->driverLatestDispatchId(
+            auth()->user(),
+            $driverId,
+            $this->activeTab,
+        );
+
+        $payload = $this->mapService()->selectedDriverPayload(
+            auth()->user(),
+            $driverId,
+            $this->activeTab,
+        );
 
         $this->dispatch(
             'dispatch-selected',
             driverId: $driverId,
-            details: $this->getSelectedDriverDetails(),
-            locations: $this->getSelectedDriverLocations(),
-            stops: $this->getSelectedDriverStops(),
+            details: $payload['details'],
+            locations: $payload['locations'],
+            stops: $payload['stops'],
         );
     }
 
-    /**
-     * Obtener los detalles del piloto seleccionado (todos los despachos del mismo conductor)
-     */
     public function getSelectedDriverDetails(): ?array
     {
-        if (!$this->selectedDriverId) return null;
-
-        $dispatches = $this->dispatchesQuery()
-            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
-            ->with(['driver', 'truck', 'orders'])
-            ->where('driver_id', $this->selectedDriverId)
-            ->get();
-
-        if ($dispatches->isEmpty()) {
+        if (! $this->selectedDriverId) {
             return null;
         }
 
-        $driverName = $dispatches->first()->driver?->name ?? $dispatches->first()->driver_name ?? 'Sin Piloto';
-        $driverInitials = strtoupper(substr($driverName, 0, 2));
-
-        $truckNames = $dispatches->pluck('truck.name')->filter()->unique()->values()->toArray();
-        $truckName = count($truckNames) === 1 ? $truckNames[0] : implode(', ', array_slice($truckNames, 0, 2));
-        if (count($truckNames) > 1) {
-            $truckName .= ' +';
-        }
-
-        $routes = $dispatches->pluck('route')->filter()->unique()->values()->toArray();
-        $route = count($routes) === 1 ? $routes[0] : implode(', ', array_slice($routes, 0, 2));
-        if (count($routes) > 2) {
-            $route .= ' +';
-        }
-
-        $allOrders = $dispatches->flatMap(fn($d) => $d->orders);
-        $totalOrders = $allOrders->count();
-        $completedOrders = $allOrders->whereIn('status', ['completed', 'completed_with_return'])->count();
-        $pendingOrders = $allOrders->whereNotIn('status', ['completed', 'completed_with_return', 'returned'])->count();
-        $returnsCount = OrderReturn::whereIn('dispatch_id', $dispatches->pluck('id'))->count();
-
-        $status = $dispatches->pluck('status')->contains('in_progress')
-            ? 'in_progress'
-            : ($dispatches->pluck('status')->contains('pending') ? 'pending' : 'completed');
-
-        $progress = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
-
-        $dispatchIds = $dispatches->pluck('id')->unique()->values()->toArray();
-        $latestDispatchId = $dispatches->sortByDesc('dispatch_date')->first()->id;
-
-        return [
-            'driver_id' => $this->selectedDriverId,
-            'latest_dispatch_id' => $latestDispatchId,
-            'dispatch_ids' => $dispatchIds,
-            'dispatch_count' => $dispatches->count(),
-            'driver_initials' => $driverInitials,
-            'driver_name' => $driverName,
-            'truck_name' => $truckName ?: 'Sin Camión',
-            'status' => $status,
-            'route' => $route ?: 'Sin ruta',
-            'stats' => [
-                'total' => $totalOrders,
-                'completed' => $completedOrders,
-                'pending' => $pendingOrders,
-                'returns' => $returnsCount,
-            ],
-            'progress' => $progress,
-        ];
+        return $this->mapService()->selectedDriverDetails(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
     }
 
-    /**
-     * Obtener las coordenadas del recorrido del piloto seleccionado
-     */
     public function getSelectedDriverLocations(): array
     {
-        if (!$this->selectedDriverId) return [];
-
-        $dispatches = $this->dispatchesQuery()
-            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
-            ->with([])
-            ->where('driver_id', $this->selectedDriverId)
-            ->get();
-
-        $bestDispatch = null;
-        $bestLocationTime = null;
-
-        foreach ($dispatches as $dispatch) {
-            $lastLoc = \App\Models\DispatchLocation::where('dispatch_id', $dispatch->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            if (!$lastLoc) {
-                continue;
-            }
-
-            if (!$bestLocationTime || $lastLoc->created_at > $bestLocationTime) {
-                $bestLocationTime = $lastLoc->created_at;
-                $bestDispatch = $dispatch;
-            }
-        }
-
-        if (!$bestDispatch) {
+        if (! $this->selectedDriverId) {
             return [];
         }
 
-        return \App\Models\DispatchLocation::where('dispatch_id', $bestDispatch->id)
-            ->orderBy('created_at', 'asc')
-            ->get()
-            ->map(fn($loc) => [
-                'lat' => (float) $loc->lat,
-                'lng' => (float) $loc->lng,
-                'created_at' => $loc->created_at->format('H:i:s'),
-            ])
-            ->toArray();
+        return $this->mapService()->selectedDriverLocations(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
     }
 
-    /**
-     * Obtener las paradas (pedidos) de todos los despachos del piloto seleccionado
-     */
     public function getSelectedDriverStops(): array
     {
-        if (!$this->selectedDriverId) return [];
-
-        $dispatchIds = $this->dispatchesQuery()
-            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
-            ->where('driver_id', $this->selectedDriverId)
-            ->pluck('id')
-            ->toArray();
-
-        if (empty($dispatchIds)) {
+        if (! $this->selectedDriverId) {
             return [];
         }
 
-        return Order::with(['items.product', 'items.color'])
-            ->whereIn('dispatch_id', $dispatchIds)
-            ->get()
-            ->map(function ($order, $index) {
-                return [
-                    'id' => $order->id,
-                    'dispatch_id' => $order->dispatch_id,
-                    'number' => $index + 1,
-                    'order_number' => $order->order_number,
-                    'customer_name' => $order->customer_name,
-                    'delivery_address' => $order->delivery_address,
-                    'status' => $order->status,
-                    'lat' => (float) $order->lat,
-                    'lng' => (float) $order->lng,
-                    'total' => $order->total,
-                    'phone' => $order->phone,
-                    'items' => $order->items->map(fn($item) => [
-                        'id' => $item->id,
-                        'product_id' => $item->product_id,
-                        'color_id' => $item->color_id,
-                        'product_name' => $item->product?->name ?? 'Producto',
-                        'color_name' => $item->color?->name ?? 'Sin Color',
-                        'quantity' => $item->quantity,
-                        'subtotal' => $item->subtotal,
-                    ])->toArray(),
-                ];
-            })
-            ->toArray();
+        return $this->mapService()->selectedDriverStops(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
     }
 
-    /**
-     * Obtener la ubicación en tiempo real de todos los pilotos activos (en progreso)
-     */
-    public function getActivePilotsLocations(): array
-    {
-        $dispatches = $this->dispatchesQuery()
-            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
-            ->with(['driver', 'truck', 'orders'])
-            ->latest('dispatch_date')
-            ->limit(100)
-            ->get();
-
-        $rows = [];
-        foreach ($dispatches as $d) {
-            $lastLoc = \App\Models\DispatchLocation::where('dispatch_id', $d->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            if (!$lastLoc) {
-                continue;
-            }
-
-            $rows[] = [
-                'driver_id' => $d->driver_id ?? null,
-                'driver_key' => $d->driver_id ?? strtolower(trim($d->driver_name ?? '')),
-                'dispatch_id' => $d->id,
-                'driver_name' => $d->driver?->name ?? $d->driver_name ?? 'Sin Piloto',
-                'truck_name' => $d->truck?->name ?? 'Sin Camión',
-                'status' => $d->status,
-                'route' => $d->route,
-                'lat' => (float) $lastLoc->lat,
-                'lng' => (float) $lastLoc->lng,
-                'timestamp' => $lastLoc->created_at->timestamp,
-                'updated_at' => $lastLoc->created_at->diffForHumans(),
-                'speed' => $lastLoc->speed ?? 0,
-                'total_orders' => $d->orders->count(),
-                'completed_orders' => $d->orders->whereIn('status', ['completed', 'completed_with_return'])->count(),
-                'pending_orders' => $d->orders->whereNotIn('status', ['completed', 'completed_with_return', 'returned'])->count(),
-                'dispatch_count' => 1,
-            ];
-        }
-
-        return collect($rows)
-            ->groupBy('driver_key')
-            ->map(function ($items) {
-                $latest = $items->sortByDesc('timestamp')->first();
-                $truckNames = $items->pluck('truck_name')->filter()->unique()->values()->toArray();
-                $truckName = count($truckNames) === 1 ? $truckNames[0] : implode(', ', array_slice($truckNames, 0, 2));
-                if (count($truckNames) > 1) {
-                    $truckName .= ' +';
-                }
-
-                return [
-                    'driver_id' => $latest['driver_id'],
-                    'driver_name' => $latest['driver_name'],
-                    'truck_name' => $truckName ?: 'Sin Camión',
-                    'route' => $latest['route'] ?: 'Sin ruta',
-                    'status' => $items->pluck('status')->contains('in_progress') ? 'in_progress' : ($items->pluck('status')->contains('pending') ? 'pending' : 'completed'),
-                    'lat' => $latest['lat'],
-                    'lng' => $latest['lng'],
-                    'updated_at' => $latest['updated_at'],
-                    'speed' => $latest['speed'],
-                    'dispatch_ids' => $items->pluck('dispatch_id')->unique()->values()->toArray(),
-                    'total_orders' => $items->sum('total_orders'),
-                    'completed_orders' => $items->sum('completed_orders'),
-                    'pending_orders' => $items->sum('pending_orders'),
-                    'dispatch_count' => $items->sum('dispatch_count'),
-                ];
-            })
-            ->values()
-            ->toArray();
-    }
-
-    protected function getDriverLatestDispatchId(int $driverId): ?int
-    {
-        return $this->dispatchesQuery()
-            ->when($this->activeTab !== 'todos', fn (Builder $query) => $query->where('status', $this->activeTab))
-            ->where('driver_id', $driverId)
-            ->latest('dispatch_date')
-            ->value('id');
-    }
-
-    protected function dispatchesQuery(): Builder
-    {
-        $query = Dispatch::query();
-        $user = auth()->user();
-
-        if (!$user) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        if ($user->hasRole('conductor')) {
-            $query->where('driver_id', $user->id);
-        }
-
-        if ($user->hasRole('sales')) {
-            $query->whereHas('orders', fn (Builder $q) => $q->where('created_by', $user->id));
-        }
-
-        return $query;
-    }
-
-    /**
-     * Completar una parada individual (Entregar Pedido)
-     */
     public function completeOrder(int $orderId): void
     {
         try {
             DB::transaction(function () use ($orderId) {
                 $order = Order::find($orderId);
-                if (!$order) throw new \Exception('Pedido no encontrado.');
-                
+                if (! $order) {
+                    throw new \Exception('Pedido no encontrado.');
+                }
+
                 $order->update(['status' => 'completed']);
-                
-                // Recalcular y refrescar
+
                 if ($order->dispatch_id) {
                     $order->dispatch->recalculateTotals();
                     $this->syncDispatchCompletionFromOrders($order->dispatch);
@@ -468,6 +266,7 @@ class RealTimeRoutesDashboard extends Page
                 ->success()
                 ->send();
 
+            $this->invalidateMapCache();
             $this->syncSelectedDriverState();
         } catch (\Exception $e) {
             Notification::make()
@@ -478,14 +277,11 @@ class RealTimeRoutesDashboard extends Page
         }
     }
 
-    /**
-     * Iniciar el modal para reportar devolución
-     */
     public function initReturnModal(int $orderId): void
     {
         $this->returnOrderId = $orderId;
         $order = Order::with('items.product')->find($orderId);
-        
+
         if ($order && $order->items->first()) {
             $item = $order->items->first();
             $this->returnProductId = $item->product_id;
@@ -495,21 +291,22 @@ class RealTimeRoutesDashboard extends Page
 
         $this->returnReason = 'El cliente no se encontraba';
         $this->returnNotes = '';
-        
+
         $this->dispatch('open-return-modal');
     }
 
-    /**
-     * Guardar devolución de producto y actualizar estado del pedido
-     */
     public function submitReturn(): void
     {
         try {
             DB::transaction(function () {
                 $order = Order::find($this->returnOrderId);
-                if (!$order) throw new \Exception('Pedido no encontrado.');
+                if (! $order) {
+                    throw new \Exception('Pedido no encontrado.');
+                }
                 $dispatch = $order->dispatch;
-                if (!$dispatch) throw new \Exception('El pedido no tiene un despacho asignado.');
+                if (! $dispatch) {
+                    throw new \Exception('El pedido no tiene un despacho asignado.');
+                }
 
                 OrderReturn::create([
                     'dispatch_id' => $dispatch->id,
@@ -520,12 +317,11 @@ class RealTimeRoutesDashboard extends Page
                     'truck_id' => $dispatch->truck_id,
                     'quantity' => $this->returnQuantity,
                     'reason' => $this->returnReason,
-                    'status' => 'pending', // Espera revisión de bodega
+                    'status' => 'pending',
                     'notes' => $this->returnNotes,
                     'created_by' => auth()->id(),
                 ]);
 
-                // Actualizar estado del pedido a devuelto
                 $order->update(['status' => 'returned']);
                 $dispatch->recalculateTotals();
                 $this->syncDispatchCompletionFromOrders($dispatch);
@@ -538,6 +334,7 @@ class RealTimeRoutesDashboard extends Page
                 ->send();
 
             $this->dispatch('close-return-modal');
+            $this->invalidateMapCache();
             $this->syncSelectedDriverState();
         } catch (\Exception $e) {
             Notification::make()
@@ -548,19 +345,18 @@ class RealTimeRoutesDashboard extends Page
         }
     }
 
-    /**
-     * Finalizar el Despacho Completo (Carga entregada global)
-     */
     public function finishDispatchGlobal(int $dispatchId): void
     {
         try {
             $dispatch = Dispatch::find($dispatchId);
-            if (!$dispatch) throw new \Exception('Despacho no encontrado.');
+            if (! $dispatch) {
+                throw new \Exception('Despacho no encontrado.');
+            }
 
             if ($dispatch->status === 'in_progress') {
                 app(DispatchService::class)->complete($dispatch);
             }
-            
+
             app(DispatchService::class)->deliver($dispatch);
 
             Notification::make()
@@ -571,6 +367,8 @@ class RealTimeRoutesDashboard extends Page
 
             $this->selectedDriverId = null;
             $this->selectedDispatchId = null;
+            $this->invalidateMapCache();
+            $this->broadcastSnapshot();
             $this->dispatch('dispatch-data-changed');
         } catch (\Exception $e) {
             Notification::make()
@@ -581,14 +379,13 @@ class RealTimeRoutesDashboard extends Page
         }
     }
 
-    /**
-     * Cancelar despacho y devolver stock
-     */
     public function cancelDispatchGlobal(int $dispatchId): void
     {
         try {
             $dispatch = Dispatch::find($dispatchId);
-            if (!$dispatch) throw new \Exception('Despacho no encontrado.');
+            if (! $dispatch) {
+                throw new \Exception('Despacho no encontrado.');
+            }
 
             app(DispatchService::class)->cancel($dispatch);
 
@@ -600,6 +397,8 @@ class RealTimeRoutesDashboard extends Page
 
             $this->selectedDispatchId = null;
             $this->selectedDriverId = null;
+            $this->invalidateMapCache();
+            $this->broadcastSnapshot();
             $this->dispatch('dispatch-data-changed');
             $this->dispatch('dispatch-cancelled');
         } catch (\Exception $e) {
@@ -611,14 +410,22 @@ class RealTimeRoutesDashboard extends Page
         }
     }
 
-    /**
-     * Endpoint interno para polling del mapa desde Javascript
-     */
+    #[Renderless]
     public function refreshLocations(): array
     {
+        $service = $this->mapService();
+
         return [
-            'pilots' => $this->getActivePilotsLocations(),
-            'selectedLocations' => $this->getSelectedDriverLocations(),
+            'pilots' => $service->activePilotsLocations(auth()->user(), $this->activeTab),
+            'selectedLocations' => $this->selectedDriverId
+                ? $service->selectedDriverLocations(auth()->user(), $this->selectedDriverId, $this->activeTab)
+                : [],
+            'selectedDetails' => $this->selectedDriverId
+                ? $service->selectedDriverDetails(auth()->user(), $this->selectedDriverId, $this->activeTab)
+                : null,
+            'selectedStops' => $this->selectedDriverId
+                ? $service->selectedDriverStops(auth()->user(), $this->selectedDriverId, $this->activeTab)
+                : [],
         ];
     }
 
@@ -626,23 +433,33 @@ class RealTimeRoutesDashboard extends Page
     {
         $this->dispatch('dispatch-data-changed');
 
-        if (!$this->selectedDriverId) {
+        if (! $this->selectedDriverId) {
             $this->dispatch(
                 'dashboard-filter-changed',
-                pilots: $this->getActivePilotsLocations(),
+                pilots: $this->mapService()->activePilotsLocations(auth()->user(), $this->activeTab),
             );
 
             return;
         }
 
-        $this->selectedDispatchId = $this->getDriverLatestDispatchId($this->selectedDriverId);
+        $this->selectedDispatchId = $this->mapService()->driverLatestDispatchId(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
+
+        $payload = $this->mapService()->selectedDriverPayload(
+            auth()->user(),
+            $this->selectedDriverId,
+            $this->activeTab,
+        );
 
         $this->dispatch(
             'dispatch-selected',
             driverId: $this->selectedDriverId,
-            details: $this->getSelectedDriverDetails(),
-            locations: $this->getSelectedDriverLocations(),
-            stops: $this->getSelectedDriverStops(),
+            details: $payload['details'],
+            locations: $payload['locations'],
+            stops: $payload['stops'],
         );
     }
 
@@ -665,5 +482,21 @@ class RealTimeRoutesDashboard extends Page
         if ($openOrders === 0) {
             app(DispatchService::class)->complete($dispatch);
         }
+    }
+
+    protected function invalidateMapCache(): void
+    {
+        $this->mapService()->forgetForUser(auth()->user());
+        $this->loadSnapshot();
+    }
+
+    protected function mapService(): DispatchMapDataService
+    {
+        return app(DispatchMapDataService::class);
+    }
+
+    protected function dispatchesQuery(): Builder
+    {
+        return $this->mapService()->scopeQuery(auth()->user());
     }
 }

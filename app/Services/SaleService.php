@@ -67,9 +67,8 @@ class SaleService
             // 4. Actualizar estado inmediatamente para que el usuario no espere
             $sale->update(['status' => 'confirmed']);
 
-            // 5. Enviar lógica pesada (Movimientos, Pedidos, Factura) a la cola de Redis
-            // Se ejecutará después de que se confirme esta transacción en DB.
-            \App\Jobs\ConfirmSaleJob::dispatch($sale)->afterCommit();
+            // 5. Procesar inventario/pedido/factura después de responder al navegador (sin worker en DO).
+            \App\Jobs\ConfirmSaleJob::dispatch($sale)->afterCommit()->afterResponse();
         });
     }
 

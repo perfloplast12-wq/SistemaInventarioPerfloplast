@@ -19,7 +19,7 @@
             // Heartbeat: cada 10s verificar si se perdió el GPS
             this.heartbeatTimer = setInterval(() => {
                 const secsSinceGps = (Date.now() - this.lastGpsTime) / 1000;
-                if (secsSinceGps > 30 && !this.showLock) {
+                if (secsSinceGps > 60 && !this.showLock) {
                     // GPS perdido por más de 30 seg — notificar al servidor
                     this.sendOfflineSignal();
                 }
@@ -72,9 +72,28 @@
             (pos) => { 
                 this.handleNewPosition(pos); 
                 this.showLock = false; 
+                this.startTracking(); 
             },
-            (err) => { if (err.code === 1) this.showLock = true; },
-            { enableHighAccuracy: true }
+            (err) => { 
+                if (err.code === 1) {
+                    this.showLock = true;
+                } else {
+                    // Timeout o error de hardware — reintentar sin high accuracy (funciona en desktop)
+                    navigator.geolocation.getCurrentPosition(
+                        (pos2) => {
+                            this.handleNewPosition(pos2); 
+                            this.showLock = false; 
+                            this.startTracking();
+                        },
+                        (err2) => { 
+                            if (err2.code === 1) this.showLock = true;
+                            else this.showLock = false; // No bloquear si es timeout
+                        },
+                        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                    );
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     },
     
@@ -84,27 +103,42 @@
             this.watchId = null;
         }
         
-        this.watchId = navigator.geolocation.watchPosition(
-            (pos) => { 
-                this.lastGpsTime = Date.now();
-                this.handleNewPosition(pos); 
-                this.showLock = false; 
-            },
-            (err) => { 
-                if (err.code === 1) this.showLock = true;
-                // GPS timeout o error — enviar señal offline
-                this.sendOfflineSignal();
-                // Reintentar watchPosition
+        // Intentar con high accuracy, fallback sin ella (desktop)
+        const tryWatch = (highAccuracy) => {
+            if (this.watchId) {
+                navigator.geolocation.clearWatch(this.watchId);
                 this.watchId = null;
-                setTimeout(() => this.startTracking(), 5000);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+            }
+            
+            this.watchId = navigator.geolocation.watchPosition(
+                (pos) => { 
+                    this.lastGpsTime = Date.now();
+                    this.handleNewPosition(pos); 
+                    this.showLock = false; 
+                },
+                (err) => { 
+                    if (err.code === 1) {
+                        this.showLock = true;
+                    } else {
+                        this.sendOfflineSignal();
+                        this.watchId = null;
+                        if (highAccuracy) {
+                            setTimeout(() => tryWatch(false), 2000);
+                        } else {
+                            setTimeout(() => tryWatch(false), 10000);
+                        }
+                    }
+                },
+                { enableHighAccuracy: highAccuracy, timeout: 15000, maximumAge: highAccuracy ? 0 : 60000 }
+            );
+        };
+        tryWatch(true);
 
-        // Intento silencioso para ocultar el bloqueo si ya hay permiso
+        // Intento silencioso: si ya hay permiso, ocultar el bloqueo inmediatamente
         navigator.geolocation.getCurrentPosition(
             (pos) => { this.showLock = false; },
-            (err) => { if (err.code === 1) this.showLock = true; }
+            (err) => { if (err.code === 1) this.showLock = true; },
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
         );
     },
 
@@ -129,6 +163,9 @@
         const { latitude, longitude, speed, heading, accuracy } = position.coords;
         this.accuracy = accuracy;
         this.lastUpdate = new Date().toLocaleTimeString();
+
+        // Notificar al silent-tracker global que el GPS está vivo
+        try { localStorage.setItem('gps_last_success', Date.now()); } catch(e) {}
 
         const point = {
             dispatch_id: this.dispatchId,
