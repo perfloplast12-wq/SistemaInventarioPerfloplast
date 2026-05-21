@@ -224,21 +224,27 @@
         }
 
         .dispatch-map-page > .rtd-shell > div > div:nth-child(2) {
-            margin-bottom: -4.35rem;
-            padding: 0.75rem;
+            margin-bottom: -4.6rem;
+            padding: 0.75rem 0.85rem;
             position: relative;
-            z-index: 20;
+            z-index: 950;
+            pointer-events: none;
         }
 
         .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div {
-            background: rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(14px);
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(18px) saturate(1.25);
             border-radius: 8px !important;
+            border: 1px solid rgba(148, 163, 184, 0.28) !important;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255,255,255,0.78);
         }
 
         .dark .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div,
         [data-theme="dark"] .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div {
-            background: rgba(7, 17, 31, 0.88) !important;
+            background: rgba(7, 17, 31, 0.96) !important;
+            border-color: rgba(148, 163, 184, 0.16) !important;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .dispatch-map-page > .rtd-shell > div > div:nth-child(2) + .rtd-map-box {
@@ -426,6 +432,244 @@
             color: #64748b !important;
         }
 
+        .dispatch-map-page .rtd-filter-strip,
+        .dispatch-map-page .rtd-view-strip {
+            overflow: hidden;
+        }
+
+        .dispatch-map-page .rtd-map-filter-btn {
+            position: relative;
+            border: 1px solid transparent;
+            color: #334155;
+        }
+
+        .dispatch-map-page .rtd-map-filter-btn:not(.is-active):hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: #312e81;
+            border-color: rgba(99, 102, 241, 0.16);
+        }
+
+        .dark .dispatch-map-page .rtd-map-filter-btn,
+        [data-theme="dark"] .dispatch-map-page .rtd-map-filter-btn {
+            color: #cbd5e1;
+        }
+
+        .dark .dispatch-map-page .rtd-map-filter-btn:not(.is-active):hover,
+        [data-theme="dark"] .dispatch-map-page .rtd-map-filter-btn:not(.is-active):hover {
+            background: rgba(99, 102, 241, 0.13);
+            color: #ffffff;
+            border-color: rgba(129, 140, 248, 0.2);
+        }
+
+        .dispatch-map-page .rtd-map-filter-btn.is-active {
+            color: #ffffff !important;
+            border-color: rgba(255,255,255,0.22);
+            box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22), inset 0 1px 0 rgba(255,255,255,0.22);
+        }
+
+        .dispatch-map-page .rtd-map-filter-btn.filter-todos.is-active { background: linear-gradient(135deg, #7c3aed, #4f46e5) !important; }
+        .dispatch-map-page .rtd-map-filter-btn.filter-in_progress.is-active { background: linear-gradient(135deg, #0ea5e9, #2563eb) !important; }
+        .dispatch-map-page .rtd-map-filter-btn.filter-completed.is-active { background: linear-gradient(135deg, #10b981, #047857) !important; }
+        .dispatch-map-page .rtd-map-filter-btn.filter-pending.is-active { background: linear-gradient(135deg, #f59e0b, #b45309) !important; }
+        .dispatch-map-page .rtd-map-filter-btn.filter-delivered.is-active { background: linear-gradient(135deg, #f97316, #dc2626) !important; }
+
+        .dispatch-map-page .rtd-view-btn,
+        .dispatch-map-page .rtd-view-strip button {
+            color: #475569;
+            border: 1px solid transparent;
+        }
+
+        .dispatch-map-page .rtd-view-btn:hover,
+        .dispatch-map-page .rtd-view-strip button:hover {
+            color: #111827;
+            background: rgba(15, 23, 42, 0.06);
+        }
+
+        .dispatch-map-page .rtd-view-btn.is-active,
+        .dispatch-map-page .rtd-view-strip button.is-active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #111827, #334155) !important;
+            border-color: rgba(255,255,255,0.24);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2), inset 0 1px 0 rgba(255,255,255,0.16);
+        }
+
+        .dark .dispatch-map-page .rtd-view-btn,
+        .dark .dispatch-map-page .rtd-view-strip button,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-btn,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-strip button {
+            color: #cbd5e1;
+        }
+
+        .dark .dispatch-map-page .rtd-view-btn:hover,
+        .dark .dispatch-map-page .rtd-view-strip button:hover,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-btn:hover,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-strip button:hover {
+            color: #ffffff;
+            background: rgba(148, 163, 184, 0.1);
+        }
+
+        .dark .dispatch-map-page .rtd-view-btn.is-active,
+        .dark .dispatch-map-page .rtd-view-strip button.is-active,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-btn.is-active,
+        [data-theme="dark"] .dispatch-map-page .rtd-view-strip button.is-active {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+            box-shadow: 0 12px 24px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255,255,255,0.16);
+        }
+
+        .dispatch-map-page .rtd-fullscreen-btn {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,245,249,0.94)) !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+            color: #334155 !important;
+            box-shadow: 0 10px 22px rgba(15,23,42,0.14);
+        }
+
+        .dispatch-map-page .rtd-fullscreen-btn:hover {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+            border-color: rgba(255,255,255,0.18) !important;
+        }
+
+        .dark .dispatch-map-page .rtd-fullscreen-btn,
+        [data-theme="dark"] .dispatch-map-page .rtd-fullscreen-btn {
+            background: linear-gradient(180deg, rgba(15,31,51,0.98), rgba(8,21,36,0.96)) !important;
+            border-color: rgba(148, 163, 184, 0.16) !important;
+            color: #cbd5e1 !important;
+        }
+
+        .dispatch-map-page .rtd-side-panel {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94)),
+                radial-gradient(circle at 0% 0%, rgba(99,102,241,0.1), transparent 16rem) !important;
+        }
+
+        .dark .dispatch-map-page .rtd-side-panel,
+        [data-theme="dark"] .dispatch-map-page .rtd-side-panel {
+            background:
+                linear-gradient(180deg, rgba(9, 24, 40, 0.98), rgba(8, 21, 36, 0.96)),
+                radial-gradient(circle at 0% 0%, rgba(99,102,241,0.16), transparent 15rem) !important;
+        }
+
+        .dispatch-map-page .rtd-empty-state {
+            background:
+                linear-gradient(135deg, rgba(99,102,241,0.1), rgba(14,165,233,0.08)),
+                rgba(255,255,255,0.72) !important;
+            border-color: rgba(99,102,241,0.22) !important;
+        }
+
+        .dark .dispatch-map-page .rtd-empty-state,
+        [data-theme="dark"] .dispatch-map-page .rtd-empty-state {
+            background:
+                linear-gradient(135deg, rgba(99,102,241,0.16), rgba(14,165,233,0.08)),
+                rgba(15, 31, 51, 0.58) !important;
+            border-color: rgba(129,140,248,0.18) !important;
+        }
+
+        .dispatch-map-page .rtd-empty-icon,
+        .dispatch-map-page .rtd-avatar-premium {
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            box-shadow: 0 12px 26px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.22);
+            border: 1px solid rgba(255,255,255,0.38);
+            color: white;
+        }
+
+        .dispatch-map-page .rtd-driver-card {
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.86)),
+                linear-gradient(90deg, rgba(124,58,237,0.12), transparent 42%) !important;
+            border-color: rgba(148,163,184,0.24) !important;
+            box-shadow: 0 10px 26px rgba(15,23,42,0.08);
+        }
+
+        .dispatch-map-page .rtd-driver-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, #7c3aed, #06b6d4);
+        }
+
+        .dispatch-map-page .rtd-driver-card:hover {
+            transform: translateY(-1px);
+            border-color: rgba(124,58,237,0.34) !important;
+            box-shadow: 0 16px 32px rgba(15,23,42,0.12);
+        }
+
+        .dark .dispatch-map-page .rtd-driver-card,
+        [data-theme="dark"] .dispatch-map-page .rtd-driver-card {
+            background:
+                linear-gradient(180deg, rgba(15, 31, 51, 0.8), rgba(8, 21, 36, 0.8)),
+                linear-gradient(90deg, rgba(124,58,237,0.16), transparent 42%) !important;
+            border-color: rgba(148,163,184,0.12) !important;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+        }
+
+        .dispatch-map-page .rtd-status-badge {
+            border-radius: 999px;
+            padding: 0.42rem 0.72rem;
+            font-weight: 900;
+            border: 1px solid rgba(14,165,233,0.28);
+            color: #0369a1;
+            background: rgba(14,165,233,0.1);
+        }
+
+        .dispatch-map-page .rtd-status-badge.is-active {
+            color: #047857;
+            border-color: rgba(16,185,129,0.28);
+            background: rgba(16,185,129,0.12);
+        }
+
+        .dark .dispatch-map-page .rtd-status-badge,
+        [data-theme="dark"] .dispatch-map-page .rtd-status-badge {
+            color: #7dd3fc;
+            background: rgba(14,165,233,0.12);
+        }
+
+        .dark .dispatch-map-page .rtd-status-badge.is-active,
+        [data-theme="dark"] .dispatch-map-page .rtd-status-badge.is-active {
+            color: #34d399;
+            background: rgba(16,185,129,0.14);
+        }
+
+        .dispatch-map-page .rtd-identity-card {
+            background:
+                linear-gradient(135deg, rgba(124,58,237,0.1), rgba(14,165,233,0.08)),
+                rgba(255,255,255,0.68);
+        }
+
+        .dark .dispatch-map-page .rtd-identity-card,
+        [data-theme="dark"] .dispatch-map-page .rtd-identity-card {
+            background:
+                linear-gradient(135deg, rgba(124,58,237,0.16), rgba(14,165,233,0.08)),
+                rgba(15, 31, 51, 0.62);
+        }
+
+        .dispatch-map-page .rtd-metrics-grid {
+            gap: 0.65rem;
+            padding: 0.85rem;
+            background: transparent !important;
+        }
+
+        .dispatch-map-page .rtd-metric-card {
+            border-radius: 8px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: rgba(255,255,255,0.75);
+            box-shadow: 0 10px 22px rgba(15,23,42,0.07);
+        }
+
+        .dark .dispatch-map-page .rtd-metric-card,
+        [data-theme="dark"] .dispatch-map-page .rtd-metric-card {
+            background: rgba(15,31,51,0.6);
+            border-color: rgba(148,163,184,0.1);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+        }
+
+        .dispatch-map-page .rtd-metric-card.total { box-shadow: inset 0 3px 0 #6366f1, 0 10px 22px rgba(15,23,42,0.07); }
+        .dispatch-map-page .rtd-metric-card.done { box-shadow: inset 0 3px 0 #10b981, 0 10px 22px rgba(15,23,42,0.07); }
+        .dispatch-map-page .rtd-metric-card.pending { box-shadow: inset 0 3px 0 #8b5cf6, 0 10px 22px rgba(15,23,42,0.07); }
+        .dispatch-map-page .rtd-metric-card.returns { box-shadow: inset 0 3px 0 #f97316, 0 10px 22px rgba(15,23,42,0.07); }
+
         .dispatch-map-page .rtd-return-dialog select,
         .dispatch-map-page .rtd-return-dialog option {
             color: #0f172a;
@@ -574,7 +818,7 @@
 
                 {{-- Filter tabs + map controls --}}
                 <div class="flex items-center justify-between flex-wrap gap-3">
-                    <div class="flex flex-wrap items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-1">
+                    <div class="rtd-filter-strip flex flex-wrap items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-1">
                         @php
                             $tabs = [
                                 'todos'       => ['label' => 'Todos',          'color' => 'bg-violet-500'],
@@ -586,25 +830,24 @@
                         @endphp
                         @foreach ($tabs as $key => $t)
                             <button wire:click="setTab('{{ $key }}')"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200
-                                    {{ $activeTab === $key ? 'bg-violet-600 text-white shadow' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                class="rtd-map-filter-btn filter-{{ $key }} {{ $activeTab === $key ? 'is-active' : '' }} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200">
                                 {{ $t['label'] }}
                                 <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black text-white {{ $t['color'] }}">{{ $stats[$key] ?? 0 }}</span>
                             </button>
                         @endforeach
                     </div>
                     <div class="flex items-center gap-2">
-                        <div class="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 gap-1">
+                        <div class="rtd-view-strip flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 gap-1">
                             <span class="text-[10px] text-slate-400 font-bold px-2">Vista</span>
                             <button type="button" @click="setMapLayer('map')"
-                                :class="mapLayer === 'map' ? 'bg-violet-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
-                                class="px-3 py-1 rounded-lg text-[10px] font-bold transition-all">Mapa</button>
+                                :class="mapLayer === 'map' ? 'is-active' : ''"
+                                class="rtd-view-btn px-3 py-1 rounded-lg text-[10px] font-bold transition-all">Mapa</button>
                             <button type="button" @click="setMapLayer('satellite')"
-                                :class="mapLayer === 'satellite' ? 'bg-violet-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                                :class="mapLayer === 'satellite' ? 'is-active' : ''"
                                 class="px-3 py-1 rounded-lg text-[10px] font-bold transition-all">Satélite</button>
                         </div>
                         <button type="button" @click="toggleFullscreen()"
-                            class="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                            class="rtd-fullscreen-btn w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M16 4h4v4M4 16v4h4M16 20h4v-4"/>
                             </svg>
@@ -670,7 +913,7 @@
 
             {{-- ════════════════════════════════════ RIGHT COLUMN ══ --}}
             <aside class="w-full xl:w-[360px] xl:sticky xl:top-[4.5rem] self-start shrink-0">
-                <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="rtd-side-panel rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
 
                     {{-- Panel header --}}
                     <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
@@ -685,8 +928,8 @@
                     {{-- No pilot selected --}}
                     <template x-if="!selectedPilot">
                         <div class="p-5 flex flex-col gap-4">
-                            <div class="flex flex-col items-center justify-center text-center py-8 px-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                                <div class="w-12 h-12 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-500 mb-3">
+                            <div class="rtd-empty-state flex flex-col items-center justify-center text-center py-8 px-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                                <div class="rtd-empty-icon w-12 h-12 rounded-2xl flex items-center justify-center mb-3">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
                                 </div>
                                 <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Selecciona un piloto</p>
@@ -700,9 +943,9 @@
                                 <div class="flex flex-col gap-2">
                                     @forelse ($dispatches as $d)
                                         <div wire:click="selectDriver({{ $d['driver_id'] }})"
-                                             class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-all group">
+                                             class="rtd-driver-card flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer transition-all group">
                                              <div class="flex items-center gap-2.5 min-w-0">
-                                                 <div class="w-8 h-8 rounded-lg bg-[#13223f] border border-slate-700/50 flex items-center justify-center text-[11px] font-black text-white shrink-0 transition-all">
+                                                 <div class="rtd-avatar-premium w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 transition-all">
                                                      {{ strtoupper(substr($d['driver_name'], 0, 2)) }}
                                                  </div>
                                                  <div class="min-w-0">
@@ -710,7 +953,7 @@
                                                      <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ $d['truck_name'] }}</p>
                                                  </div>
                                              </div>
-                                             <span class="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 {{ $d['status'] === 'in_progress' ? 'bg-sky-500/10 text-sky-500 border border-sky-500/20' : ($d['status'] === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20') }}">
+                                             <span class="rtd-status-badge text-[9px] shrink-0 {{ $d['status'] === 'in_progress' ? 'is-active' : '' }}">
                                                  {{ $d['status'] === 'in_progress' ? 'En ruta' : ($d['status'] === 'pending' ? 'Pendiente' : 'Completado') }}
                                              </span>
                                         </div>
@@ -727,32 +970,32 @@
                         <div class="flex flex-col">
 
                             {{-- Identity --}}
-                            <div class="flex items-center gap-3 px-5 py-4">
-                                <div class="w-11 h-11 rounded-full bg-[#13223f] border border-slate-700/50 flex items-center justify-center font-black text-sm text-white shrink-0" x-text="selectedPilot.driver_initials"></div>
+                            <div class="rtd-identity-card flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                                <div class="rtd-avatar-premium w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0" x-text="selectedPilot.driver_initials"></div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedPilot.driver_name"></p>
                                     <p class="text-xs text-slate-500 dark:text-slate-400" x-text="selectedPilot.truck_name"></p>
                                 </div>
-                                <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wide"
-                                    :class="selectedPilot.status === 'in_progress' ? 'bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20' : 'bg-sky-500/10 text-sky-500 border border-sky-500/20'"
+                                <span class="rtd-status-badge text-[10px] shrink-0"
+                                    :class="selectedPilot.status === 'in_progress' ? 'is-active' : ''"
                                     x-text="selectedPilot.status === 'in_progress' ? 'En Proceso' : 'Completado'"></span>
                             </div>
 
                             {{-- Metrics --}}
-                            <div class="grid grid-cols-4 border-y border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-                                <div class="flex flex-col items-center py-3 px-1 text-center">
+                            <div class="rtd-metrics-grid grid grid-cols-4 border-y border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+                                <div class="rtd-metric-card total flex flex-col items-center py-3 px-1 text-center">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Entregas</span>
                                     <span class="text-xl font-black text-slate-900 dark:text-white mt-0.5" x-text="selectedPilot.stats.total"></span>
                                 </div>
-                                <div class="flex flex-col items-center py-3 px-1 text-center border-l border-slate-100 dark:border-slate-800">
+                                <div class="rtd-metric-card done flex flex-col items-center py-3 px-1 text-center">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Compl.</span>
                                     <span class="text-xl font-black text-emerald-500 mt-0.5" x-text="selectedPilot.stats.completed"></span>
                                 </div>
-                                <div class="flex flex-col items-center py-3 px-1 text-center border-l border-slate-100 dark:border-slate-800">
+                                <div class="rtd-metric-card pending flex flex-col items-center py-3 px-1 text-center">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Pend.</span>
                                     <span class="text-xl font-black text-violet-500 mt-0.5" x-text="selectedPilot.stats.pending"></span>
                                 </div>
-                                <div class="flex flex-col items-center py-3 px-1 text-center border-l border-slate-100 dark:border-slate-800">
+                                <div class="rtd-metric-card returns flex flex-col items-center py-3 px-1 text-center">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Devol.</span>
                                     <span class="text-xl font-black text-orange-500 mt-0.5" x-text="selectedPilot.stats.returns"></span>
                                 </div>
