@@ -51,7 +51,6 @@ class RealTimeRoutesDashboard extends Page
 
     public function mount(): void
     {
-        // Si hay un despacho en la URL, seleccionarlo por defecto
         if (request()->query('dispatch')) {
             $dispatchId = (int) request()->query('dispatch');
             $dispatch = Dispatch::find($dispatchId);
@@ -59,6 +58,19 @@ class RealTimeRoutesDashboard extends Page
                 $this->selectedDispatchId = $dispatchId;
                 $this->selectedDriverId = $dispatch->driver_id;
             }
+
+            return;
+        }
+
+        $defaultDispatch = $this->dispatchesQuery()
+            ->whereNotNull('driver_id')
+            ->orderByRaw("CASE status WHEN 'in_progress' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END")
+            ->latest('dispatch_date')
+            ->first();
+
+        if ($defaultDispatch) {
+            $this->selectedDispatchId = $defaultDispatch->id;
+            $this->selectedDriverId = $defaultDispatch->driver_id;
         }
     }
 

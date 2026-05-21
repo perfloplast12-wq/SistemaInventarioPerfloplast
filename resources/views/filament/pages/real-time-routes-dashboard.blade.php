@@ -7,16 +7,97 @@
             max-width: none;
             font-family: 'Outfit', sans-serif;
             position: relative;
+            min-height: calc(100vh - 4rem);
+            margin: -1.5rem;
+            padding: 1.5rem;
+            background:
+                radial-gradient(circle at 18% 8%, rgba(79, 70, 229, 0.16), transparent 28rem),
+                linear-gradient(180deg, #06111f 0%, #071827 100%);
+            color: #f8fafc;
+        }
+
+        .fi-main:has(.dispatch-map-page),
+        .fi-page:has(.dispatch-map-page),
+        .fi-page-content:has(.dispatch-map-page) {
+            max-width: none !important;
+            background: #07111f !important;
+        }
+
+        .dispatch-map-page .rtd-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 1rem;
+            align-items: start;
+            width: 100%;
+        }
+
+        .dispatch-map-page .rtd-card {
+            background: rgba(10, 25, 41, 0.92) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+        }
+
+        .dispatch-map-page .rtd-control {
+            background: rgba(10, 24, 39, 0.95) !important;
+            border-color: rgba(148, 163, 184, 0.14) !important;
+            color: #cbd5e1 !important;
+        }
+
+        .dispatch-map-page .rtd-muted {
+            color: #94a3b8 !important;
+        }
+
+        .dispatch-map-page .rtd-title,
+        .dispatch-map-page .rtd-text {
+            color: #ffffff !important;
+        }
+
+        .dispatch-map-page .rtd-map-tools {
+            position: absolute;
+            right: 0.75rem;
+            top: 0.75rem;
+            z-index: 900;
+        }
+
+        .dispatch-map-page .rtd-tabs {
+            position: absolute;
+            left: 0.75rem;
+            top: 0.75rem;
+            z-index: 900;
+            background: rgba(7, 17, 31, 0.86) !important;
+            backdrop-filter: blur(14px);
+        }
+
+        .dispatch-map-page .rtd-map-box::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 400;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(3, 7, 18, 0.16), rgba(3, 7, 18, 0.1));
+        }
+
+        @media (max-width: 1279px) {
+            .dispatch-map-page .rtd-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .dispatch-map-page {
+                margin: -1rem;
+                padding: 1rem;
+            }
         }
 
         /* Contenedor del mapa: 620px de alto, overflow:hidden, NUNCA contiene el resumen */
         .dispatch-map-page .rtd-map-box {
             height: 620px !important;
-            border-radius: 18px;
+            border-radius: 8px;
             overflow: hidden;
             position: relative;
-            border: 1px solid;
+            border: 1px solid rgba(148, 163, 184, 0.14);
             transition: all 0.3s ease;
+            background: #07111f;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 18px 48px rgba(0,0,0,0.38);
         }
         .dark .dispatch-map-page .rtd-map-box,
         [data-theme="dark"] .dispatch-map-page .rtd-map-box {
@@ -24,10 +105,77 @@
             border-color: #1e293b;
             box-shadow: 0 10px 30px rgba(0,0,0,0.45);
         }
-        .dispatch-map-page .rtd-map-box {
-            background: #ffffff;
-            border-color: #e2e8f0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        .dispatch-map-page .rtd-map-box { background: #07111f; }
+
+        .dispatch-map-page .bg-white,
+        .dispatch-map-page .dark\:bg-slate-900,
+        .dispatch-map-page .bg-slate-50,
+        .dispatch-map-page .dark\:bg-slate-950 {
+            background-color: rgba(10, 25, 41, 0.92) !important;
+        }
+
+        .dispatch-map-page .border-slate-100,
+        .dispatch-map-page .border-slate-200,
+        .dispatch-map-page .border-slate-700,
+        .dispatch-map-page .border-slate-800,
+        .dispatch-map-page .dark\:border-slate-700,
+        .dispatch-map-page .dark\:border-slate-800 {
+            border-color: rgba(148, 163, 184, 0.13) !important;
+        }
+
+        .dispatch-map-page .text-slate-900,
+        .dispatch-map-page .text-slate-800,
+        .dispatch-map-page .text-slate-700,
+        .dispatch-map-page .dark\:text-white,
+        .dispatch-map-page .dark\:text-slate-200 {
+            color: #f8fafc !important;
+        }
+
+        .dispatch-map-page .text-slate-600,
+        .dispatch-map-page .text-slate-500,
+        .dispatch-map-page .text-slate-400,
+        .dispatch-map-page .dark\:text-slate-300,
+        .dispatch-map-page .dark\:text-slate-400,
+        .dispatch-map-page .dark\:text-slate-500 {
+            color: #94a3b8 !important;
+        }
+
+        .dispatch-map-page .rounded-2xl,
+        .dispatch-map-page .rounded-xl {
+            border-radius: 8px !important;
+        }
+
+        .dispatch-map-page .shadow-sm,
+        .dispatch-map-page .shadow,
+        .dispatch-map-page .shadow-2xl {
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        .dispatch-map-page > .rtd-shell > div > div:first-child > div:first-child > span {
+            display: none !important;
+        }
+
+        .dispatch-map-page > .rtd-shell > div > div:nth-child(2) {
+            margin-bottom: -4.35rem;
+            padding: 0.75rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div {
+            background: rgba(7, 17, 31, 0.88) !important;
+            backdrop-filter: blur(14px);
+            border-radius: 8px !important;
+        }
+
+        .dispatch-map-page > .rtd-shell > div > div:nth-child(2) + .rtd-map-box {
+            padding-top: 0;
+        }
+
+        .dispatch-map-page aside > div {
+            background: rgba(10, 25, 41, 0.94) !important;
+            border-color: rgba(148, 163, 184, 0.13) !important;
+            border-radius: 8px !important;
         }
 
         /* Resumen de ruta horizontal con scroll */
@@ -124,7 +272,7 @@
             $dispatches = $this->getDispatches();
         @endphp
 
-        <div class="grid xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start w-full">
+        <div class="rtd-shell">
             <!-- COLUMNA IZQUIERDA -->
             <div class="flex flex-col gap-5 min-w-0">
                 <!-- CABECERA PRINCIPAL -->
@@ -150,14 +298,14 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
-                            Tabla
+                            Filtros
                         </a>
 
                         <!-- Botón Nuevo Despacho -->
                         <a href="{{ \App\Filament\Resources\DispatchResource::getUrl('create') }}"
                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25 transition-all active:scale-95">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            + Nuevo Despacho
+                            Nuevo Despacho
                         </a>
                     </div>
                 </div>
