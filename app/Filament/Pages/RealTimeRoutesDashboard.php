@@ -467,9 +467,7 @@ class RealTimeRoutesDashboard extends Page
                 ->success()
                 ->send();
 
-            if ($this->selectedDriverId) {
-                $this->selectDriver($this->selectedDriverId);
-            }
+            $this->syncSelectedDriverState();
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
@@ -538,9 +536,7 @@ class RealTimeRoutesDashboard extends Page
                 ->send();
 
             $this->dispatch('close-return-modal');
-            if ($this->selectedDriverId) {
-                $this->selectDriver($this->selectedDriverId);
-            }
+            $this->syncSelectedDriverState();
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
@@ -573,6 +569,7 @@ class RealTimeRoutesDashboard extends Page
 
             $this->selectedDriverId = null;
             $this->selectedDispatchId = null;
+            $this->dispatch('dispatch-data-changed');
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
@@ -600,6 +597,8 @@ class RealTimeRoutesDashboard extends Page
                 ->send();
 
             $this->selectedDispatchId = null;
+            $this->selectedDriverId = null;
+            $this->dispatch('dispatch-data-changed');
             $this->dispatch('dispatch-cancelled');
         } catch (\Exception $e) {
             Notification::make()
@@ -619,5 +618,29 @@ class RealTimeRoutesDashboard extends Page
             'pilots' => $this->getActivePilotsLocations(),
             'selectedLocations' => $this->getSelectedDriverLocations(),
         ];
+    }
+
+    protected function syncSelectedDriverState(): void
+    {
+        $this->dispatch('dispatch-data-changed');
+
+        if (!$this->selectedDriverId) {
+            $this->dispatch(
+                'dashboard-filter-changed',
+                pilots: $this->getActivePilotsLocations(),
+            );
+
+            return;
+        }
+
+        $this->selectedDispatchId = $this->getDriverLatestDispatchId($this->selectedDriverId);
+
+        $this->dispatch(
+            'dispatch-selected',
+            driverId: $this->selectedDriverId,
+            details: $this->getSelectedDriverDetails(),
+            locations: $this->getSelectedDriverLocations(),
+            stops: $this->getSelectedDriverStops(),
+        );
     }
 }

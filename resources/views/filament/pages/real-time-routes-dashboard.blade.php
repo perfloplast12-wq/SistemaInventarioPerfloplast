@@ -11,6 +11,14 @@
             margin: -1.5rem;
             padding: 1.5rem;
             background:
+                radial-gradient(circle at 18% 8%, rgba(99, 102, 241, 0.12), transparent 28rem),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #0f172a;
+        }
+
+        .dark .dispatch-map-page,
+        [data-theme="dark"] .dispatch-map-page {
+            background:
                 radial-gradient(circle at 18% 8%, rgba(79, 70, 229, 0.16), transparent 28rem),
                 linear-gradient(180deg, #06111f 0%, #071827 100%);
             color: #f8fafc;
@@ -20,6 +28,15 @@
         .fi-page:has(.dispatch-map-page),
         .fi-page-content:has(.dispatch-map-page) {
             max-width: none !important;
+            background: #eef2ff !important;
+        }
+
+        .dark .fi-main:has(.dispatch-map-page),
+        .dark .fi-page:has(.dispatch-map-page),
+        .dark .fi-page-content:has(.dispatch-map-page),
+        [data-theme="dark"] .fi-main:has(.dispatch-map-page),
+        [data-theme="dark"] .fi-page:has(.dispatch-map-page),
+        [data-theme="dark"] .fi-page-content:has(.dispatch-map-page) {
             background: #07111f !important;
         }
 
@@ -32,23 +49,49 @@
         }
 
         .dispatch-map-page .rtd-card {
+            background: rgba(255, 255, 255, 0.94) !important;
+            border: 1px solid rgba(148, 163, 184, 0.28) !important;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        .dark .dispatch-map-page .rtd-card,
+        [data-theme="dark"] .dispatch-map-page .rtd-card {
             background: rgba(10, 25, 41, 0.92) !important;
-            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            border-color: rgba(148, 163, 184, 0.12) !important;
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
         }
 
         .dispatch-map-page .rtd-control {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(148, 163, 184, 0.35) !important;
+            color: #334155 !important;
+        }
+
+        .dark .dispatch-map-page .rtd-control,
+        [data-theme="dark"] .dispatch-map-page .rtd-control {
             background: rgba(10, 24, 39, 0.95) !important;
             border-color: rgba(148, 163, 184, 0.14) !important;
             color: #cbd5e1 !important;
         }
 
         .dispatch-map-page .rtd-muted {
+            color: #64748b !important;
+        }
+
+        .dark .dispatch-map-page .rtd-muted,
+        [data-theme="dark"] .dispatch-map-page .rtd-muted {
             color: #94a3b8 !important;
         }
 
         .dispatch-map-page .rtd-title,
         .dispatch-map-page .rtd-text {
+            color: #0f172a !important;
+        }
+
+        .dark .dispatch-map-page .rtd-title,
+        .dark .dispatch-map-page .rtd-text,
+        [data-theme="dark"] .dispatch-map-page .rtd-title,
+        [data-theme="dark"] .dispatch-map-page .rtd-text {
             color: #ffffff !important;
         }
 
@@ -107,36 +150,57 @@
         }
         .dispatch-map-page .rtd-map-box { background: #07111f; }
 
-        .dispatch-map-page .bg-white,
-        .dispatch-map-page .dark\:bg-slate-900,
-        .dispatch-map-page .bg-slate-50,
-        .dispatch-map-page .dark\:bg-slate-950 {
+        .dark .dispatch-map-page .bg-white,
+        .dark .dispatch-map-page .dark\:bg-slate-900,
+        .dark .dispatch-map-page .bg-slate-50,
+        .dark .dispatch-map-page .dark\:bg-slate-950,
+        [data-theme="dark"] .dispatch-map-page .bg-white,
+        [data-theme="dark"] .dispatch-map-page .dark\:bg-slate-900,
+        [data-theme="dark"] .dispatch-map-page .bg-slate-50,
+        [data-theme="dark"] .dispatch-map-page .dark\:bg-slate-950 {
             background-color: rgba(10, 25, 41, 0.92) !important;
         }
 
-        .dispatch-map-page .border-slate-100,
-        .dispatch-map-page .border-slate-200,
-        .dispatch-map-page .border-slate-700,
-        .dispatch-map-page .border-slate-800,
-        .dispatch-map-page .dark\:border-slate-700,
-        .dispatch-map-page .dark\:border-slate-800 {
+        .dark .dispatch-map-page .border-slate-100,
+        .dark .dispatch-map-page .border-slate-200,
+        .dark .dispatch-map-page .border-slate-700,
+        .dark .dispatch-map-page .border-slate-800,
+        .dark .dispatch-map-page .dark\:border-slate-700,
+        .dark .dispatch-map-page .dark\:border-slate-800,
+        [data-theme="dark"] .dispatch-map-page .border-slate-100,
+        [data-theme="dark"] .dispatch-map-page .border-slate-200,
+        [data-theme="dark"] .dispatch-map-page .border-slate-700,
+        [data-theme="dark"] .dispatch-map-page .border-slate-800,
+        [data-theme="dark"] .dispatch-map-page .dark\:border-slate-700,
+        [data-theme="dark"] .dispatch-map-page .dark\:border-slate-800 {
             border-color: rgba(148, 163, 184, 0.13) !important;
         }
 
-        .dispatch-map-page .text-slate-900,
-        .dispatch-map-page .text-slate-800,
-        .dispatch-map-page .text-slate-700,
-        .dispatch-map-page .dark\:text-white,
-        .dispatch-map-page .dark\:text-slate-200 {
+        .dark .dispatch-map-page .text-slate-900,
+        .dark .dispatch-map-page .text-slate-800,
+        .dark .dispatch-map-page .text-slate-700,
+        .dark .dispatch-map-page .dark\:text-white,
+        .dark .dispatch-map-page .dark\:text-slate-200,
+        [data-theme="dark"] .dispatch-map-page .text-slate-900,
+        [data-theme="dark"] .dispatch-map-page .text-slate-800,
+        [data-theme="dark"] .dispatch-map-page .text-slate-700,
+        [data-theme="dark"] .dispatch-map-page .dark\:text-white,
+        [data-theme="dark"] .dispatch-map-page .dark\:text-slate-200 {
             color: #f8fafc !important;
         }
 
-        .dispatch-map-page .text-slate-600,
-        .dispatch-map-page .text-slate-500,
-        .dispatch-map-page .text-slate-400,
-        .dispatch-map-page .dark\:text-slate-300,
-        .dispatch-map-page .dark\:text-slate-400,
-        .dispatch-map-page .dark\:text-slate-500 {
+        .dark .dispatch-map-page .text-slate-600,
+        .dark .dispatch-map-page .text-slate-500,
+        .dark .dispatch-map-page .text-slate-400,
+        .dark .dispatch-map-page .dark\:text-slate-300,
+        .dark .dispatch-map-page .dark\:text-slate-400,
+        .dark .dispatch-map-page .dark\:text-slate-500,
+        [data-theme="dark"] .dispatch-map-page .text-slate-600,
+        [data-theme="dark"] .dispatch-map-page .text-slate-500,
+        [data-theme="dark"] .dispatch-map-page .text-slate-400,
+        [data-theme="dark"] .dispatch-map-page .dark\:text-slate-300,
+        [data-theme="dark"] .dispatch-map-page .dark\:text-slate-400,
+        [data-theme="dark"] .dispatch-map-page .dark\:text-slate-500 {
             color: #94a3b8 !important;
         }
 
@@ -148,6 +212,15 @@
         .dispatch-map-page .shadow-sm,
         .dispatch-map-page .shadow,
         .dispatch-map-page .shadow-2xl {
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        .dark .dispatch-map-page .shadow-sm,
+        .dark .dispatch-map-page .shadow,
+        .dark .dispatch-map-page .shadow-2xl,
+        [data-theme="dark"] .dispatch-map-page .shadow-sm,
+        [data-theme="dark"] .dispatch-map-page .shadow,
+        [data-theme="dark"] .dispatch-map-page .shadow-2xl {
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22) !important;
         }
 
@@ -163,9 +236,14 @@
         }
 
         .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div {
-            background: rgba(7, 17, 31, 0.88) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(14px);
             border-radius: 8px !important;
+        }
+
+        .dark .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div,
+        [data-theme="dark"] .dispatch-map-page > .rtd-shell > div > div:nth-child(2) > div {
+            background: rgba(7, 17, 31, 0.88) !important;
         }
 
         .dispatch-map-page > .rtd-shell > div > div:nth-child(2) + .rtd-map-box {
@@ -173,9 +251,42 @@
         }
 
         .dispatch-map-page aside > div {
+            background: rgba(255, 255, 255, 0.94) !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+            border-radius: 8px !important;
+        }
+
+        .dark .dispatch-map-page aside > div,
+        [data-theme="dark"] .dispatch-map-page aside > div {
             background: rgba(10, 25, 41, 0.94) !important;
             border-color: rgba(148, 163, 184, 0.13) !important;
-            border-radius: 8px !important;
+        }
+
+        .dispatch-map-page .rtd-return-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 2147483000 !important;
+            isolation: isolate;
+        }
+
+        .dispatch-map-page .rtd-return-dialog {
+            position: relative;
+            z-index: 2147483001 !important;
+            overflow: visible !important;
+        }
+
+        .dispatch-map-page .rtd-return-dialog select,
+        .dispatch-map-page .rtd-return-dialog option {
+            color: #0f172a;
+            background: #ffffff;
+        }
+
+        .dark .dispatch-map-page .rtd-return-dialog select,
+        .dark .dispatch-map-page .rtd-return-dialog option,
+        [data-theme="dark"] .dispatch-map-page .rtd-return-dialog select,
+        [data-theme="dark"] .dispatch-map-page .rtd-return-dialog option {
+            color: #f8fafc;
+            background: #0b1728;
         }
 
         /* Resumen de ruta horizontal con scroll */
@@ -605,8 +716,8 @@
 
         {{-- RETURN MODAL --}}
         <div x-show="showReturnModal" x-cloak x-transition
-             class="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5">
+             class="rtd-return-modal flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+            <div class="rtd-return-dialog bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5">
                 <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2"><span>⚠️</span> Reportar Devolución</h3>
                     <button @click="showReturnModal = false" class="text-slate-400 hover:text-slate-900 dark:hover:text-white font-black text-lg leading-none">✕</button>
@@ -723,6 +834,11 @@
 
                         window.addEventListener('close-return-modal', () => {
                             this.showReturnModal = false;
+                        });
+
+                        window.addEventListener('dispatch-data-changed', () => {
+                            this.showReturnModal = false;
+                            window.dispatchEvent(new CustomEvent('dispatches-table-refresh-requested'));
                         });
 
                         // Redimensionar mapa al entrar/salir de pantalla completa
@@ -1054,21 +1170,22 @@
                     },
 
                     // Acciones rápidas de la parada seleccionada en Alpine
-                    completeSelectedStop() {
+                    async completeSelectedStop() {
                         if (confirm('¿Estás seguro de marcar esta parada como entregada?')) {
-                            this.$wire.completeOrder(this.activeStopId);
+                            await this.$wire.completeOrder(this.activeStopId);
+                            await this.pollUbicaciones();
                         }
                     },
 
-                    reportSelectedStopReturn() {
-                        this.$wire.initReturnModal(this.activeStopId);
+                    async reportSelectedStopReturn() {
+                        await this.$wire.initReturnModal(this.activeStopId);
                     },
 
                     getActiveDispatchId() {
                         return this.selectedPilot?.latest_dispatch_id || (this.selectedPilot?.dispatch_ids?.length ? this.selectedPilot.dispatch_ids[0] : null);
                     },
 
-                    finishActiveDispatch() {
+                    async finishActiveDispatch() {
                         const dispatchId = this.getActiveDispatchId();
                         if (!dispatchId) {
                             alert('No se encontró un despacho válido para este piloto.');
@@ -1076,11 +1193,12 @@
                         }
 
                         if (confirm('¿Desea liquidar el despacho de este piloto? Se generarán las facturas correspondientes para los pedidos.')) {
-                            this.$wire.finishDispatchGlobal(dispatchId);
+                            await this.$wire.finishDispatchGlobal(dispatchId);
+                            await this.pollUbicaciones();
                         }
                     },
 
-                    cancelActiveDispatch() {
+                    async cancelActiveDispatch() {
                         const dispatchId = this.getActiveDispatchId();
                         if (!dispatchId) {
                             alert('No se encontró un despacho válido para este piloto.');
@@ -1088,7 +1206,8 @@
                         }
 
                         if (confirm('¡ATENCIÓN! ¿Está seguro de cancelar este despacho? Se revertirá la transferencia de stock de inventario.')) {
-                            this.$wire.cancelDispatchGlobal(dispatchId);
+                            await this.$wire.cancelDispatchGlobal(dispatchId);
+                            await this.pollUbicaciones();
                         }
                     },
 

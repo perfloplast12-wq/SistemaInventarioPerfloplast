@@ -755,7 +755,7 @@ class DispatchResource extends Resource
                         );
                     }),
             ])
-            ->poll('120s')
+            ->poll('10s')
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
